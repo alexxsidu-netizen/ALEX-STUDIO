@@ -90,6 +90,9 @@ pre{background:#080918;border:1px solid var(--line);border-radius:14px;padding:1
 .hi{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
 .hi:last-child{border:0}.hi .t{flex:1;min-width:140px;font-weight:700;word-break:break-word}
 .hi small{display:block;color:var(--mu);font:12px ui-monospace,monospace;margin-top:3px;font-weight:400}
+.pcid{font:800 34px ui-monospace,monospace;letter-spacing:3px;text-align:center;padding:18px 8px;border-radius:16px;border:1px solid var(--line);background:#080918;margin:6px 0 4px;background-image:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;word-break:break-all}
+.pcid.none{font-size:16px;letter-spacing:0;color:var(--mu);-webkit-text-fill-color:var(--mu)}
+.pcmeta{text-align:center;font:12px ui-monospace,monospace;color:var(--mu)}
 .page{display:none;animation:fade .25s}.page.on{display:block}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media(min-width:900px){
@@ -144,6 +147,16 @@ pre{background:#080918;border:1px solid var(--line);border-radius:14px;padding:1
     <input type="text" id="aid" inputmode="numeric" placeholder="contoh: 1234567890">
     <button class="btn ghost" id="chkA">Cek status</button>
     <div id="aRes"></div>
+  </div>
+
+  <div class="card">
+    <h2>Cloud PC (AnyDesk)</h2>
+    <p class="sub" style="margin:0 0 6px">ID AnyDesk dikirim otomatis oleh workflow saat PC menyala.</p>
+    <div class="pcid none" id="pcId">Belum ada ID</div>
+    <div class="pcmeta" id="pcMeta"></div>
+    <div class="row" id="pcBtns">
+      <button class="btn ghost" id="pcRef">↻ Refresh</button>
+    </div>
   </div>
 
   <div class="card">
@@ -304,7 +317,7 @@ $('#copyLog').onclick=()=>{try{navigator.clipboard.writeText(logs.join('\n'))}ca
 function go(p){
   $$('.page').forEach(e=>e.classList.toggle('on',e.id==='p-'+p));
   $$('[data-p]').forEach(e=>e.classList.toggle('on',e.dataset.p===p));
-  if(p==='home')badges();
+  if(p==='home'){badges();loadPC()}
   scrollTo(0,0);
 }
 $$('[data-p]').forEach(b=>b.onclick=()=>go(b.dataset.p));
@@ -408,6 +421,36 @@ function renderHist(){
     box.appendChild(d);
   });
 }
+
+/* ---------- Cloud PC (AnyDesk) ---------- */
+function fmtPC(id){return String(id).replace(/\s/g,'').replace(/(\d{3})(?=\d)/g,'$1 ')}
+function ago(ms){
+  const s=Math.max(0,Math.floor((Date.now()-ms)/1000));
+  if(s<60)return s+' detik lalu';
+  if(s<3600)return Math.floor(s/60)+' menit lalu';
+  return Math.floor(s/3600)+' jam '+Math.floor((s%3600)/60)+' menit lalu';
+}
+async function loadPC(){
+  const idEl=$('#pcId'),meta=$('#pcMeta'),btns=$('#pcBtns');
+  btns.querySelectorAll('.copy').forEach(e=>e.remove());
+  meta.textContent='Memuat...';
+  try{
+    const j=await api('/cloudpc',{},15000);
+    if(!j.id){
+      idEl.className='pcid none';idEl.textContent='Belum ada ID';
+      meta.textContent='Jalankan workflow Cloud Windows PC dulu, lalu tekan Refresh.';
+      return;
+    }
+    idEl.className='pcid';idEl.textContent=fmtPC(j.id);
+    meta.textContent='Diterima '+ago(j.at);
+    copyBtn(btns,String(j.id),'Salin ID');
+    log('Cloud PC ID dimuat');
+  }catch(e){
+    idEl.className='pcid none';idEl.textContent='Gagal memuat';
+    meta.textContent=e.message;
+  }
+}
+$('#pcRef').onclick=loadPC;
 
 /* ---------- cek asset ID ---------- */
 $('#chkA').onclick=async()=>{
@@ -740,6 +783,7 @@ $('#goA').onclick=async()=>{
 /* ---------- init ---------- */
 loadSettings();render();renderHist();
 ping().catch(()=>{});
+loadPC();
 </script>
 </body>
 </html>
