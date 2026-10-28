@@ -1,9 +1,11 @@
-const VERSION = "3.4.0-pages";
+const VERSION = "3.5.0-pages";
 const API = "https://apis.roblox.com/assets/v1";
 const MAX_BYTES = 20 * 1024 * 1024;
+const GH_REPO = "alexxsidu-netizen/ALEX-STUDIO";
+const GH_WF = "cloudpc.yml";
 const CORS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "x-api-key, content-type, x-report-token",
+  "Access-Control-Allow-Headers": "x-api-key, content-type, x-report-token, x-pc-key",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Expose-Headers": "x-filename, content-type",
 };
@@ -154,6 +156,38 @@ async function assetInfo(key, id) {
   return json({ ok: true, asset: d });
 }
 
+/* ---------- Cloud PC: helper GitHub ---------- */
+const pcAuth = (req, env) =>
+  !!env.CLOUDPC_TOKEN && (req.headers.get("x-pc-key") || "") === env.CLOUDPC_TOKEN;
+
+const gh = (env, path, init = {}) =>
+  fetch("https://api.github.com/repos/" + GH_REPO + path, {
+    ...init,
+    headers: {
+      authorization: "Bearer " + env.GH_PAT,
+      accept: "application/vnd.github+json",
+      "x-github-api-version": "2022-11-28",
+      "user-agent": "ALEX-STUDIO",
+      ...(init.headers || {}),
+    },
+  });
+
+function ghErr(status, d) {
+  if (status === 401) return "GH_PAT tidak valid atau sudah kedaluwarsa";
+  if (status === 403) return "GH_PAT tidak punya izin Actions (Read and write)";
+  if (status === 404) return "Workflow " + GH_WF + " tidak ditemukan di repo, atau token tidak punya akses";
+  if (status === 422) return "Workflow belum punya trigger workflow_dispatch";
+  return (d && d.message) || ("GitHub membalas " + status);
+}
+
+async function pcRuns(env) {
+  const r = await gh(env, "/actions/workflows/" + GH_WF + "/runs?per_page=5");
+  if (!r.ok) return { err: r.status, runs: [] };
+  const d = await r.json().catch(() => ({}));
+  const live = ["queued", "in_progress", "waiting", "pending", "requested"];
+  return { runs: (d.workflow_runs || []).filter((x) => live.includes(x.status)) };
+}
+
 /* ---------- router ---------- */
 async function handle(req, env) {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
@@ -201,6 +235,8 @@ async function handle(req, env) {
   }
 
   /* ---------- Cloud PC (AnyDesk) ---------- */
+
+  // dipanggil oleh workflow setelah ID AnyDesk didapat
   if (url.pathname === "/cloudpc/report" && req.method === "POST") {
     if (!env.CLOUDPC) return json({ error: "KV CLOUDPC belum di-bind" }, 500);
     const tok = req.headers.get("x-report-token") || "";
@@ -213,10 +249,62 @@ async function handle(req, env) {
     return json({ ok: true });
   }
 
+  // status + ID + password (butuh kunci akses)
   if (url.pathname === "/cloudpc" && req.method === "GET") {
     if (!env.CLOUDPC) return json({ error: "KV CLOUDPC belum di-bind" }, 500);
+    if (!pcAuth(req, env)) return json({ error: "Kunci akses salah atau belum diisi" }, 401);
+    let state = "unknown";
+    if (env.GH_PAT) {
+      const s = await pcRuns(env);
+      if (!s.err) state = s.runs.length ? "on" : "off";
+    }
     const v = await env.CLOUDPC.get("anydesk");
-    return json(v ? { ok: true, ...JSON.parse(v) } : { ok: true, id: null });
+    const o = v ? JSON.parse(v) : {};
+    const id = state === "off" ? null : (o.id || null);
+    return json({
+      ok: true,
+      state,
+      id,
+      at: id ? o.at : null,
+      password: id ? (env.CLOUDPC_PASSWORD || null) : null,
+    });
+  }
+
+  // nyalakan PC (jalankan workflow)
+  if (url.pathname === "/cloudpc/start" && req.method === "POST") {
+    if (!env.CLOUDPC) return json({ error: "KV CLOUDPC belum di-bind" }, 500);
+    if (!pcAuth(req, env)) return json({ error: "Kunci akses salah atau belum diisi" }, 401);
+    if (!env.GH_PAT) return json({ error: "Secret GH_PAT belum diisi" }, 500);
+    const cur = await pcRuns(env);
+    if (cur.err) return json({ error: ghErr(cur.err, {}) }, 502);
+    if (cur.runs.length) return json({ ok: true, already: true });
+    await env.CLOUDPC.delete("anydesk");
+    const r = await gh(env, "/actions/workflows/" + GH_WF + "/dispatches", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ ref: "main" }),
+    });
+    if (r.status !== 204) {
+      const d = await r.json().catch(() => ({}));
+      return json({ error: ghErr(r.status, d) }, 502);
+    }
+    return json({ ok: true });
+  }
+
+  // matikan PC (batalkan workflow yang sedang jalan)
+  if (url.pathname === "/cloudpc/stop" && req.method === "POST") {
+    if (!env.CLOUDPC) return json({ error: "KV CLOUDPC belum di-bind" }, 500);
+    if (!pcAuth(req, env)) return json({ error: "Kunci akses salah atau belum diisi" }, 401);
+    if (!env.GH_PAT) return json({ error: "Secret GH_PAT belum diisi" }, 500);
+    const cur = await pcRuns(env);
+    if (cur.err) return json({ error: ghErr(cur.err, {}) }, 502);
+    let n = 0;
+    for (const run of cur.runs) {
+      const r = await gh(env, "/actions/runs/" + run.id + "/cancel", { method: "POST" });
+      if (r.status === 202) n++;
+    }
+    await env.CLOUDPC.delete("anydesk");
+    return json({ ok: true, cancelled: n });
   }
 
   // selain API di atas: tampilkan file web (index.html)
