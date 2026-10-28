@@ -1,0 +1,139 @@
+name: Cloud Windows PC
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloud-pc
+  cancel-in-progress: true
+
+jobs:
+  cloudpc:
+    runs-on: windows-latest
+    timeout-minutes: 355
+    env:
+      ANYDESK_PASSWORD: ${{ secrets.ANYDESK_PASSWORD }}
+      REPORT_URL: ${{ secrets.REPORT_URL }}
+      REPORT_TOKEN: ${{ secrets.REPORT_TOKEN }}
+      ANYDESK_DIR: C:\ProgramData\AnyDesk
+
+    steps:
+      - name: Validasi secret
+        shell: pwsh
+        run: |
+          $pw = $env:ANYDESK_PASSWORD
+          if ([string]::IsNullOrWhiteSpace($pw)) { throw "Secret ANYDESK_PASSWORD belum diisi." }
+          if ($pw.Length -lt 12) { throw "Password minimal 12 karakter." }
+          if ([string]::IsNullOrWhiteSpace($env:REPORT_URL)) { throw "Secret REPORT_URL belum diisi." }
+          if ([string]::IsNullOrWhiteSpace($env:REPORT_TOKEN)) { throw "Secret REPORT_TOKEN belum diisi." }
+          Write-Host "::add-mask::$pw"
+          Write-Host "::add-mask::$($env:REPORT_TOKEN)"
+
+      - name: Install AnyDesk
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          New-Item -Path $env:ANYDESK_DIR -ItemType Directory -Force | Out-Null
+          $exe = Join-Path $env:ANYDESK_DIR "AnyDesk.exe"
+          Invoke-WebRequest -Uri "https://download.anydesk.com/AnyDesk.exe" -OutFile $exe
+
+          $sig = Get-AuthenticodeSignature $exe
+          if ($sig.Status -ne "Valid" -or $sig.SignerCertificate.Subject -notmatch "AnyDesk") {
+            throw "Tanda tangan AnyDesk.exe tidak valid: $($sig.Status)"
+          }
+
+          Start-Process -FilePath $exe `
+            -ArgumentList "--install `"$env:ANYDESK_DIR`" --start-with-win --silent" -Wait
+          Start-Sleep -Seconds 5
+
+          $svc = Get-Service | Where-Object { $_.Name -like "*AnyDesk*" -or $_.DisplayName -like "*AnyDesk*" } | Select-Object -First 1
+          if ($svc) {
+            Write-Host "Service ditemukan: $($svc.Name)"
+            Start-Service $svc.Name -ErrorAction SilentlyContinue
+          } else {
+            Write-Host "Service tidak ada, menjalankan AnyDesk sebagai proses"
+            Start-Process -FilePath $exe
+          }
+          Start-Sleep -Seconds 5
+
+      - name: Set password, ambil ID, kirim ke ALEX STUDIO
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $exe = Join-Path $env:ANYDESK_DIR "AnyDesk.exe"
+
+          function Set-AnyDeskPassword {
+            $psi = [System.Diagnostics.ProcessStartInfo]@{
+              FileName              = $exe
+              Arguments             = "--set-password"
+              RedirectStandardInput = $true
+              UseShellExecute       = $false
+              CreateNoWindow        = $true
+            }
+            $p = [System.Diagnostics.Process]::Start($psi)
+            $p.StandardInput.WriteLine($env:ANYDESK_PASSWORD)
+            $p.StandardInput.Close()
+            if (-not $p.WaitForExit(20000)) { $p.Kill() }
+          }
+
+          Set-AnyDeskPassword
+          Start-Sleep -Seconds 3
+
+          $svc = Get-Service | Where-Object { $_.Name -like "*AnyDesk*" -or $_.DisplayName -like "*AnyDesk*" } | Select-Object -First 1
+          if ($svc) {
+            Restart-Service $svc.Name -Force
+            Start-Sleep -Seconds 5
+            Set-AnyDeskPassword
+          } else {
+            Write-Host "Service AnyDesk tidak ditemukan, lanjut tanpa restart"
+          }
+
+          $id = ""
+          $idFile = Join-Path $env:RUNNER_TEMP "anydesk-id.txt"
+          for ($i = 0; $i -lt 15 -and -not $id; $i++) {
+            Start-Process -FilePath $exe -ArgumentList "--get-id" -NoNewWindow -Wait `
+              -RedirectStandardOutput $idFile
+            if (Test-Path $idFile) { $id = (Get-Content $idFile -Raw).Trim() }
+            if (-not $id) { Start-Sleep -Seconds 3 }
+          }
+          Remove-Item $idFile -Force -ErrorAction SilentlyContinue
+          if (-not $id) { throw "Gagal mengambil AnyDesk ID." }
+
+          $id = $id -replace '\s',''
+          Write-Host "::add-mask::$id"
+
+          $body = @{ id = $id } | ConvertTo-Json -Compress
+          $uri = $env:REPORT_URL.TrimEnd('/') + "/cloudpc/report"
+          $ok = $false
+          for ($i = 0; $i -lt 6 -and -not $ok; $i++) {
+            try {
+              Invoke-RestMethod -Method Post -Uri $uri `
+                -Headers @{ "x-report-token" = $env:REPORT_TOKEN } `
+                -ContentType "application/json" -Body $body | Out-Null
+              $ok = $true
+            } catch {
+              Start-Sleep -Seconds 4
+            }
+          }
+          if (-not $ok) { throw "Gagal mengirim ID ke ALEX STUDIO (cek REPORT_URL dan REPORT_TOKEN)." }
+          Write-Host "ID AnyDesk terkirim ke ALEX STUDIO."
+
+      - name: Keep alive
+        shell: pwsh
+        run: |
+          $end = (Get-Date).AddMinutes(345)
+          while ((Get-Date) -lt $end) {
+            Start-Sleep -Seconds 60
+            Write-Host "[alive] $(Get-Date -Format 'HH:mm:ss')"
+          }
+
+      - name: Bersihkan (selalu jalan)
+        if: always()
+        shell: pwsh
+        run: |
+          Get-Service | Where-Object { $_.Name -like "*AnyDesk*" } | Stop-Service -Force -ErrorAction SilentlyContinue
+          Get-Process -Name "AnyDesk*" -ErrorAction SilentlyContinue | Stop-Process -Force
+          Remove-Item $env:ANYDESK_DIR -Recurse -Force -ErrorAction SilentlyContinue
