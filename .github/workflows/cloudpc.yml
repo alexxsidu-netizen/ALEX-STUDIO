@@ -107,6 +107,7 @@ jobs:
 
           $body = @{ id = $id } | ConvertTo-Json -Compress
           $uri = $env:REPORT_URL.TrimEnd('/') + "/cloudpc/report"
+          Write-Host "Mengirim ke: $uri"
           $ok = $false
           for ($i = 0; $i -lt 6 -and -not $ok; $i++) {
             try {
@@ -115,6 +116,9 @@ jobs:
                 -ContentType "application/json" -Body $body | Out-Null
               $ok = $true
             } catch {
+              $code = ""
+              if ($_.Exception.Response) { $code = [int]$_.Exception.Response.StatusCode }
+              Write-Host "Percobaan $($i+1) gagal (HTTP $code): $($_.Exception.Message)"
               Start-Sleep -Seconds 4
             }
           }
