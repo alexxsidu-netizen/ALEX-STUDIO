@@ -48,7 +48,7 @@ h2{font-size:18px;margin:0 0 14px}
 .hero h1{margin-top:0}
 .chipinfo{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
 .badge{font:600 12px ui-monospace,monospace;padding:7px 11px;border-radius:99px;border:1px solid var(--line);background:rgba(7,8,18,.5);color:var(--mu)}
-.badge.ok{color:var(--ok);border-color:rgba(52,211,153,.4)}.badge.no{color:var(--warn);border-color:rgba(251,191,36,.4)}
+.badge.ok{color:var(--ok);border-color:rgba(52,211,153,.4)}.badge.no{color:var(--warn);border-color:rgba(251,191,36,.4)}.badge.bad{color:var(--err);border-color:rgba(251,113,133,.4)}
 .drop{border:2px dashed #3a3f6b;border-radius:22px;padding:32px 16px;text-align:center;cursor:pointer;transition:.2s;margin-bottom:18px;background:rgba(139,92,246,.05)}
 .drop.hot{border-color:var(--a2);background:rgba(34,211,238,.1);transform:scale(1.01)}
 .drop .ic{width:68px;height:68px;margin:0 auto 14px;border-radius:20px;background:var(--grad);display:grid;place-items:center;font-size:28px;color:#fff;box-shadow:0 8px 24px rgba(139,92,246,.4)}
@@ -62,7 +62,7 @@ input:focus,select:focus{border-color:var(--a);box-shadow:0 0 0 3px rgba(139,92,
 .btn:active{transform:scale(.98)}
 .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--tx);box-shadow:none}
 .btn.danger{background:transparent;border:1px solid rgba(251,113,133,.5);color:var(--err);box-shadow:none}
-.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn:disabled{opacity:.5;cursor:not-allowed}
 .row{display:flex;gap:10px;flex-wrap:wrap}.row .btn{flex:1;min-width:150px}
 .chips{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 .chip{padding:13px 0;border-radius:14px;border:1px solid var(--line);background:var(--panel2);color:var(--tx);font-weight:700;cursor:pointer}
@@ -91,16 +91,10 @@ pre{background:#080918;border:1px solid var(--line);border-radius:14px;padding:1
 .hi{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
 .hi:last-child{border:0}.hi .t{flex:1;min-width:140px;font-weight:700;word-break:break-word}
 .hi small{display:block;color:var(--mu);font:12px ui-monospace,monospace;margin-top:3px;font-weight:400}
-.pcbadge{display:inline-block;font:700 12px ui-monospace,monospace;letter-spacing:1.5px;padding:6px 12px;border-radius:99px;border:1px solid var(--line);color:var(--mu);margin-bottom:10px}
-.pcbadge.on{color:var(--ok);border-color:rgba(52,211,153,.5)}
-.pcbadge.wait{color:var(--warn);border-color:rgba(251,191,36,.5)}
-.pcbadge.off{color:var(--err);border-color:rgba(251,113,133,.5)}
-.pcid{font:800 32px ui-monospace,monospace;letter-spacing:3px;text-align:center;padding:18px 8px;border-radius:16px;border:1px solid var(--line);background:#080918;margin:6px 0 4px;background-image:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;word-break:break-all}
+.pcid{font:800 34px ui-monospace,monospace;letter-spacing:3px;text-align:center;padding:18px 8px;border-radius:16px;border:1px solid var(--line);background:#080918;margin:10px 0 4px;background-image:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;word-break:break-all}
 .pcid.none{font-size:16px;letter-spacing:0;color:var(--mu);-webkit-text-fill-color:var(--mu)}
-.pcmeta{text-align:center;font:12px ui-monospace,monospace;color:var(--mu);line-height:1.5}
-.pcpw{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#080918;margin-top:12px}
-.pcpw span{font:700 14px ui-monospace,monospace;flex:1;min-width:120px;word-break:break-all}
-.pcpw small{color:var(--mu);font:12px ui-monospace,monospace;width:100%}
+.pcmeta{text-align:center;font:12px ui-monospace,monospace;color:var(--mu);word-break:break-word}
+.pccopy{text-align:center}
 .page{display:none;animation:fade .25s}.page.on{display:block}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media(min-width:900px){
@@ -159,15 +153,16 @@ pre{background:#080918;border:1px solid var(--line);border-radius:14px;padding:1
 
   <div class="card">
     <h2>Cloud PC (AnyDesk)</h2>
-    <span class="pcbadge" id="pcBadge">CEK...</span>
-    <div class="pcid none" id="pcId">Memuat...</div>
+    <span class="badge" id="pcState">STATUS: -</span>
+    <div class="pcid none" id="pcId">Belum ada ID</div>
     <div class="pcmeta" id="pcMeta"></div>
-    <div class="pcpw" id="pcPw" style="display:none"></div>
+    <div class="pccopy" id="pcCopy"></div>
     <div class="row">
-      <button class="btn" id="pcOn">⏻ Nyalakan</button>
+      <button class="btn" id="pcOn">▶ Nyalakan</button>
       <button class="btn danger" id="pcOff">■ Matikan</button>
     </div>
     <button class="btn ghost" id="pcRef">↻ Refresh</button>
+    <div class="msg" id="pcMsg"></div>
   </div>
 
   <div class="card">
@@ -282,13 +277,14 @@ pre{background:#080918;border:1px solid var(--line);border-radius:14px;padding:1
   </div>
 
   <div class="card">
-    <h2>Kunci Cloud PC</h2>
-    <p class="sub" style="margin:0 0 6px">Kunci akses untuk menyalakan, mematikan, dan melihat ID serta password Cloud PC. Isinya sama dengan CLOUDPC_TOKEN di Cloudflare. Disimpan di browser ini saja.</p>
-    <input type="password" id="pck" placeholder="Tempel kunci akses di sini" autocomplete="off">
-    <div class="hint" id="pckHint"></div>
-    <button class="btn" id="savePck">Simpan Kunci</button>
-    <button class="btn ghost" id="delPck">Hapus Kunci</button>
-    <div class="msg" id="mPck"></div>
+    <h2>Kunci Akses Cloud PC</h2>
+    <p class="sub">Isi dengan nilai yang sama persis dengan variabel <b>CLOUDPC_TOKEN</b> di Cloudflare. Disimpan di browser ini saja.</p>
+    <label style="margin-top:0">Kunci akses</label>
+    <input type="password" id="pckey" placeholder="Tempel kunci akses di sini" autocomplete="off">
+    <div class="hint" id="pckeyHint"></div>
+    <button class="btn" id="savePk">Simpan Kunci Akses</button>
+    <button class="btn ghost" id="delPk">Hapus kunci akses</button>
+    <div class="msg" id="mPk"></div>
   </div>
 
   <div class="card">
@@ -338,7 +334,7 @@ $('#copyLog').onclick=()=>{try{navigator.clipboard.writeText(logs.join('\n'))}ca
 function go(p){
   $$('.page').forEach(e=>e.classList.toggle('on',e.id==='p-'+p));
   $$('[data-p]').forEach(e=>e.classList.toggle('on',e.dataset.p===p));
-  if(p==='home'){badges();loadPC(true)}
+  if(p==='home'){badges();loadPC()}
   scrollTo(0,0);
 }
 $$('[data-p]').forEach(b=>b.onclick=()=>go(b.dataset.p));
@@ -355,6 +351,10 @@ async function api(path,opt={},timeout=180000){
   const h=Object.assign({},opt.headers||{});
   const k=LS.get('key');
   if(k&&!h['x-api-key'])h['x-api-key']=k;
+  if(path.indexOf('/cloudpc')===0){
+    const pk=LS.get('pckey');
+    if(pk&&!h['x-pc-key'])h['x-pc-key']=pk;
+  }
   const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),timeout);
   let r;
   try{r=await fetch(base()+path,Object.assign({},opt,{headers:h,signal:ctl.signal}))}
@@ -392,8 +392,8 @@ function loadSettings(){
   $('#key').placeholder=has?'••••••••• (tersimpan)':'Tempel API key di sini';
   $('#keyHint').textContent=has?'✓ API key tersimpan di browser ini. Isi lagi hanya jika ingin menggantinya.':'Belum ada API key tersimpan.';
   const hp=!!LS.get('pckey');
-  $('#pck').placeholder=hp?'••••••••• (tersimpan)':'Tempel kunci akses di sini';
-  $('#pckHint').textContent=hp?'✓ Kunci tersimpan di browser ini. Isi lagi hanya jika ingin menggantinya.':'Belum ada kunci tersimpan.';
+  $('#pckey').placeholder=hp?'••••••••• (tersimpan)':'Tempel kunci akses di sini';
+  $('#pckeyHint').textContent=hp?'✓ Kunci akses tersimpan di browser ini. Isi lagi hanya jika ingin menggantinya.':'Belum ada kunci akses tersimpan.';
   badges();
 }
 function msg(el,t,ok){el.textContent=t;el.className='msg '+(ok?'ok':'err')}
@@ -418,13 +418,18 @@ $('#saveK').onclick=async()=>{
   }catch(e){msg($('#mK'),'✗ '+e.message,false);log('Validasi key gagal: '+e.message)}
 };
 $('#delK').onclick=()=>{LS.del('key');loadSettings();msg($('#mK'),'API key dihapus.',true)};
-$('#savePck').onclick=()=>{
-  const k=$('#pck').value.trim();
-  if(!k)return msg($('#mPck'),'Isi kunci dulu.',false);
-  LS.set('pckey',k);$('#pck').value='';loadSettings();
-  msg($('#mPck'),'✓ Kunci Cloud PC tersimpan.',true);log('Kunci Cloud PC tersimpan');
+$('#savePk').onclick=async()=>{
+  const k=$('#pckey').value.trim();
+  if(!k)return msg($('#mPk'),'Isi kunci akses dulu.',false);
+  const u=normUrl($('#be').value);LS.set('be',u);
+  msg($('#mPk'),'Mengecek kunci...',true);
+  try{
+    await api('/cloudpc',{headers:{'x-pc-key':k}},20000);
+    LS.set('pckey',k);$('#pckey').value='';loadSettings();
+    msg($('#mPk'),'✓ Kunci akses benar dan disimpan.',true);log('Kunci akses Cloud PC tersimpan');
+  }catch(e){msg($('#mPk'),'✗ '+e.message,false);log('Kunci akses gagal: '+e.message)}
 };
-$('#delPck').onclick=()=>{LS.del('pckey');loadSettings();msg($('#mPck'),'Kunci dihapus.',true)};
+$('#delPk').onclick=()=>{LS.del('pckey');loadSettings();msg($('#mPk'),'Kunci akses dihapus.',true)};
 $('#test').onclick=async()=>{
   const o=$('#out');o.style.display='block';o.style.color='var(--ok)';o.textContent='...';
   const u=normUrl($('#be').value);LS.set('be',u);$('#be').value=u;
@@ -439,7 +444,6 @@ function copyBtn(parent,text,label){
   const b=document.createElement('button');b.className='copy';b.textContent=label||'Salin';
   b.onclick=()=>{try{navigator.clipboard.writeText(text);b.textContent='✓ Tersalin'}catch{b.textContent='✗'}};
   parent.appendChild(b);
-  return b;
 }
 function renderHist(){
   const box=$('#hist');box.innerHTML='';
@@ -455,8 +459,6 @@ function renderHist(){
 }
 
 /* ---------- Cloud PC (AnyDesk) ---------- */
-let pcTimer=null,pcWait=0,pcShowPw=false,pcBusy=false;
-const pcKey=()=>LS.get('pckey');
 function fmtPC(id){return String(id).replace(/\s/g,'').replace(/(\d{3})(?=\d)/g,'$1 ')}
 function ago(ms){
   const s=Math.max(0,Math.floor((Date.now()-ms)/1000));
@@ -464,94 +466,75 @@ function ago(ms){
   if(s<3600)return Math.floor(s/60)+' menit lalu';
   return Math.floor(s/3600)+' jam '+Math.floor((s%3600)/60)+' menit lalu';
 }
-const pcCall=(path,method)=>api(path,{method:method||'GET',headers:{'x-pc-key':pcKey()}},25000);
-function pcStopPoll(){if(pcTimer){clearInterval(pcTimer);pcTimer=null}}
-function pcPoll(){
-  pcStopPoll();let n=0;
-  pcTimer=setInterval(()=>{if(++n>72){pcStopPoll();return}loadPC(true)},5000);
-}
-function pcUi(badge,cls,idText,idHas,meta,on,off){
-  const b=$('#pcBadge');b.textContent=badge;b.className='pcbadge '+cls;
-  const i=$('#pcId');i.textContent=idText;i.className='pcid'+(idHas?'':' none');
-  $('#pcMeta').textContent=meta||'';
-  $('#pcOn').disabled=pcBusy||!on;$('#pcOff').disabled=pcBusy||!off;
-}
-function pcRenderPw(pw){
-  const box=$('#pcPw');box.innerHTML='';
-  if(!pw){box.style.display='none';return}
-  box.style.display='flex';
-  const sm=document.createElement('small');sm.textContent='Password AnyDesk';box.appendChild(sm);
-  const sp=document.createElement('span');sp.textContent=pcShowPw?pw:'••••••••••••';box.appendChild(sp);
-  const eye=document.createElement('button');eye.className='copy';eye.textContent=pcShowPw?'Sembunyi':'Lihat';
-  eye.onclick=()=>{pcShowPw=!pcShowPw;pcRenderPw(pw)};box.appendChild(eye);
-  copyBtn(box,pw,'Salin');
-}
-function pcRenderId(id){
-  const old=$('#pcIdBtns');if(old)old.remove();
-  if(!id)return;
-  const d=document.createElement('div');d.id='pcIdBtns';d.style.textAlign='center';
-  copyBtn(d,String(id),'Salin ID');
-  $('#pcMeta').after(d);
-}
-async function loadPC(quiet){
-  pcRenderId(null);
-  if(!pcKey()){
-    pcStopPoll();pcRenderPw(null);
-    pcUi('KUNCI BELUM ADA','off','Isi kunci dulu',false,'Buka Settings, lalu isi Kunci Cloud PC.',false,false);
-    return;
+function setPcState(t,cls){const e=$('#pcState');e.textContent='STATUS: '+t;e.className='badge '+(cls||'')}
+async function loadPC(){
+  const idEl=$('#pcId'),meta=$('#pcMeta'),cp=$('#pcCopy');
+  cp.innerHTML='';
+  if(!LS.get('pckey')){
+    setPcState('KUNCI BELUM DIISI','no');
+    idEl.className='pcid none';idEl.textContent='Kunci akses belum diisi';
+    meta.textContent='Buka Settings, isi Kunci Akses Cloud PC (nilai CLOUDPC_TOKEN).';
+    return null;
   }
-  if(!quiet)$('#pcMeta').textContent='Memuat...';
-  let j;
-  try{j=await pcCall('/cloudpc')}
-  catch(e){
-    pcRenderPw(null);
-    pcUi('ERROR','off','Gagal memuat',false,e.message,false,false);
-    return;
-  }
-  const waiting=j.state==='off'&&Date.now()<pcWait;
-  if(j.id&&j.state!=='off'){
-    pcStopPoll();
-    pcUi('MENYALA','on',fmtPC(j.id),true,'ID diterima '+ago(j.at)+'. Buka AnyDesk lalu masukkan ID dan password.',false,true);
-    pcRenderId(j.id);pcRenderPw(j.password);
-  }else if(j.state==='on'||waiting){
-    pcRenderPw(null);
-    pcUi('MENYIAPKAN','wait',waiting&&j.state!=='on'?'Memulai workflow...':'Menunggu ID...',false,'PC sedang disiapkan, biasanya 1 sampai 2 menit. Halaman ini memeriksa otomatis.',false,j.state==='on');
-    if(!pcTimer)pcPoll();
-  }else if(j.state==='off'){
-    pcStopPoll();pcRenderPw(null);
-    pcUi('MATI','off','PC mati',false,'Tekan Nyalakan untuk menghidupkan Cloud PC.',true,false);
-  }else{
-    pcRenderPw(null);
-    pcUi('TIDAK DIKETAHUI','wait',j.id?fmtPC(j.id):'Status tidak diketahui',!!j.id,'Backend belum bisa membaca status dari GitHub. Cek secret GH_PAT di Cloudflare.',true,true);
-    if(j.id){pcRenderId(j.id);pcRenderPw(j.password)}
-  }
-}
-$('#pcRef').onclick=()=>loadPC(false);
-$('#pcOn').onclick=async()=>{
-  pcBusy=true;$('#pcOn').disabled=true;$('#pcOff').disabled=true;
-  $('#pcMeta').textContent='Menyalakan...';
+  meta.textContent='Memuat...';
   try{
-    await pcCall('/cloudpc/start','POST');
-    pcWait=Date.now()+45000;log('Cloud PC: perintah nyala dikirim');
+    const j=await api('/cloudpc',{},15000);
+    if(j.state==='on')setPcState('MENYALA','ok');
+    else if(j.state==='off')setPcState('MATI','no');
+    else setPcState('TIDAK DIKETAHUI','no');
+    if(!j.id){
+      idEl.className='pcid none';idEl.textContent='Belum ada ID';
+      meta.textContent=j.state==='on'?'PC sedang menyala, menunggu ID dari workflow...':'Tekan Nyalakan untuk menjalankan Cloud PC.';
+      return j;
+    }
+    idEl.className='pcid';idEl.textContent=fmtPC(j.id);
+    meta.textContent='Diterima '+ago(j.at);
+    copyBtn(cp,String(j.id),'Salin ID');
+    if(j.password)copyBtn(cp,String(j.password),'Salin password');
+    log('Cloud PC ID dimuat');
+    return j;
   }catch(e){
-    pcBusy=false;log('Cloud PC gagal nyala: '+e.message);
-    pcUi('ERROR','off','Gagal menyalakan',false,e.message,true,false);return;
+    setPcState('ERROR','bad');
+    idEl.className='pcid none';idEl.textContent='Gagal memuat';
+    meta.textContent=e.message;
+    return null;
   }
-  pcBusy=false;await loadPC(true);pcPoll();
+}
+let pollTok=0;
+async function pollPC(){
+  const my=++pollTok;
+  for(let i=0;i<24&&my===pollTok;i++){
+    await sleep(10000);
+    if(my!==pollTok)return;
+    const j=await loadPC();
+    if(j&&j.id)return;
+  }
+}
+$('#pcRef').onclick=()=>{pollTok++;loadPC()};
+$('#pcOn').onclick=async()=>{
+  const m=$('#pcMsg'),b=$('#pcOn');
+  if(!LS.get('pckey'))return msg(m,'Isi Kunci Akses di Settings dulu.',false);
+  b.disabled=true;msg(m,'Mengirim perintah nyala...',true);
+  try{
+    const j=await api('/cloudpc/start',{method:'POST'},30000);
+    msg(m,j.already?'PC sudah menyala.':'Perintah dikirim. Tunggu 1–2 menit, ID muncul otomatis.',true);
+    log('Cloud PC: start');
+    await loadPC();pollPC();
+  }catch(e){msg(m,'✗ '+e.message,false);log('Start gagal: '+e.message)}
+  b.disabled=false;
 };
 $('#pcOff').onclick=async()=>{
-  if(!confirm('Matikan Cloud PC sekarang? Koneksi AnyDesk akan terputus.'))return;
-  pcBusy=true;$('#pcOn').disabled=true;$('#pcOff').disabled=true;
-  $('#pcMeta').textContent='Mematikan...';
+  const m=$('#pcMsg'),b=$('#pcOff');
+  if(!LS.get('pckey'))return msg(m,'Isi Kunci Akses di Settings dulu.',false);
+  if(!confirm('Matikan Cloud PC sekarang?'))return;
+  b.disabled=true;msg(m,'Mematikan...',true);pollTok++;
   try{
-    await pcCall('/cloudpc/stop','POST');
-    pcWait=0;log('Cloud PC: perintah mati dikirim');
-  }catch(e){
-    pcBusy=false;log('Cloud PC gagal mati: '+e.message);
-    pcUi('ERROR','off','Gagal mematikan',false,e.message,false,true);return;
-  }
-  pcBusy=false;pcStopPoll();
-  await sleep(2500);await loadPC(true);
+    const j=await api('/cloudpc/stop',{method:'POST'},30000);
+    msg(m,'PC dimatikan ('+(j.cancelled||0)+' proses dibatalkan).',true);
+    log('Cloud PC: stop');
+    await loadPC();
+  }catch(e){msg(m,'✗ '+e.message,false);log('Stop gagal: '+e.message)}
+  b.disabled=false;
 };
 
 /* ---------- cek asset ID ---------- */
@@ -885,7 +868,7 @@ $('#goA').onclick=async()=>{
 /* ---------- init ---------- */
 loadSettings();render();renderHist();
 ping().catch(()=>{});
-loadPC(true);
+loadPC();
 </script>
 </body>
 </html>
