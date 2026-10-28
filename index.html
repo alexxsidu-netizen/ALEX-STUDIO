@@ -18,7 +18,6 @@ body{margin:0;color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Rob
   background:radial-gradient(700px 420px at 85% -5%,rgba(139,92,246,.28),transparent 60%),
              radial-gradient(600px 400px at -10% 25%,rgba(34,211,238,.14),transparent 60%),var(--bg);
   background-attachment:fixed}
-/* header */
 .top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:12px 16px;
   padding-top:calc(12px + env(safe-area-inset-top,0px));
   background:rgba(7,8,18,.78);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
@@ -28,20 +27,17 @@ body{margin:0;color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Rob
 .pill{margin-left:auto;font:600 11px ui-monospace,monospace;letter-spacing:1.5px;padding:8px 12px;border:1px solid var(--line);border-radius:99px;color:var(--mu);display:flex;align-items:center;gap:8px;background:rgba(20,23,51,.6)}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--mu)}
 .dot.on{background:var(--ok);box-shadow:0 0 10px var(--ok)}.dot.off{background:var(--err);box-shadow:0 0 10px var(--err)}
-/* sidebar desktop */
 .side{display:none}
 .sec{font:600 11px ui-monospace,monospace;letter-spacing:3px;color:var(--mu);margin:16px 8px 8px}
 .nav{display:flex;align-items:center;gap:12px;width:100%;padding:11px;border-radius:14px;border:1px solid transparent;background:none;color:var(--mu);font-size:15px;font-weight:600;cursor:pointer;text-align:left;margin-bottom:4px}
 .nav i{font-style:normal;width:34px;height:34px;border-radius:10px;background:var(--panel2);display:grid;place-items:center}
 .nav.on{color:var(--tx);background:linear-gradient(90deg,rgba(139,92,246,.22),transparent);border-color:#3b3470}
 .nav.on i{background:var(--grad);color:#fff}
-/* bottom nav mobile */
 .bnav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:grid;grid-template-columns:repeat(4,1fr);
   padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));background:rgba(10,11,26,.92);backdrop-filter:blur(16px);border-top:1px solid var(--line)}
 .bn{background:none;border:0;color:var(--mu);display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 0;font-size:11px;font-weight:700;cursor:pointer;border-radius:12px}
 .bn i{font-style:normal;font-size:18px;width:44px;height:28px;border-radius:14px;display:grid;place-items:center}
 .bn.on{color:var(--tx)}.bn.on i{background:var(--grad);color:#fff}
-/* layout */
 main{max-width:760px;margin:0 auto;padding:22px 16px 110px}
 .eyebrow{font:600 12px ui-monospace,monospace;letter-spacing:3px;color:var(--a2);text-transform:uppercase}
 h1{font-size:30px;margin:6px 0 8px;letter-spacing:-.5px}
@@ -87,7 +83,7 @@ input[type=range]{flex:1;accent-color:var(--a);height:28px}
 .st.ok{color:var(--ok)}.st.err{color:var(--err)}
 .copy{margin:6px 6px 0 0;border:1px solid var(--line);background:rgba(139,92,246,.15);color:var(--tx);border-radius:10px;padding:6px 12px;cursor:pointer;font-size:12px;font-weight:700}
 pre{background:#080918;border:1px solid var(--line);border-radius:14px;padding:14px;font:12px ui-monospace,monospace;color:var(--ok);overflow:auto;margin:14px 0 0;white-space:pre-wrap;word-break:break-word;max-height:260px}
-.msg{font:13px ui-monospace,monospace;margin-top:10px;word-break:break-word}.msg.ok{color:var(--ok)}.msg.err{color:var(--err)}
+.msg{font:13px ui-monospace,monospace;margin-top:10px;word-break:break-word;line-height:1.5}.msg.ok{color:var(--ok)}.msg.err{color:var(--err)}
 .grid{display:grid;gap:14px;grid-template-columns:1fr 1fr;margin-bottom:6px}
 .stat{padding:16px;border-radius:18px;border:1px solid var(--line);background:rgba(20,23,51,.7)}
 .stat b{display:block;font-size:28px;margin-top:6px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -141,7 +137,16 @@ pre{background:#080918;border:1px solid var(--line);border-radius:14px;padding:1
     <button class="btn" data-go="audio">♫ Upload Audio</button>
     <button class="btn ghost" data-go="anim">✪ Upload Animasi</button>
   </div>
+
   <div class="card" style="margin-top:18px">
+    <h2>Cek Asset ID</h2>
+    <p class="sub" style="margin:0 0 6px">Cek status asset milikmu (diproses, disetujui, atau kena moderasi).</p>
+    <input type="text" id="aid" inputmode="numeric" placeholder="contoh: 1234567890">
+    <button class="btn ghost" id="chkA">Cek status</button>
+    <div id="aRes"></div>
+  </div>
+
+  <div class="card">
     <h2>Riwayat Upload</h2>
     <div id="hist"></div>
   </div>
@@ -159,6 +164,14 @@ pre{background:#080918;border:1px solid var(--line);border-radius:14px;padding:1
     <p>atau klik untuk pilih file</p>
     <div class="tags"><span class="tag">MP3</span><span class="tag">WAV</span><span class="tag">OGG</span><span class="tag">FLAC</span><span class="tag">AAC</span></div>
     <input type="file" id="file" accept="audio/*,.mp3,.wav,.ogg,.flac,.aac,.m4a" multiple hidden>
+  </div>
+
+  <div class="card">
+    <h2>Tambah dari Link</h2>
+    <input type="text" id="lnk" placeholder="https://contoh.com/lagu.mp3" autocapitalize="off" autocomplete="off">
+    <button class="btn ghost" id="addLnk">⇩ Ambil dari link</button>
+    <div class="hint">Harus link langsung ke file audio milikmu (.mp3, .ogg, dll). Link YouTube, Spotify, dan SoundCloud tidak didukung. Kalau diblokir browser, otomatis lewat server (fallback).</div>
+    <div class="msg" id="mL"></div>
   </div>
 
   <div id="queue"></div>
@@ -246,8 +259,8 @@ pre{background:#080918;border:1px solid var(--line);border-radius:14px;padding:1
 
   <div class="card">
     <h2>Backend</h2>
-    <label style="margin-top:0">URL Worker</label>
-    <input type="text" id="be" placeholder="https://nama-worker.akunmu.workers.dev" autocapitalize="off">
+    <label style="margin-top:0">URL Worker (kosongkan = pakai server ini)</label>
+    <input type="text" id="be" placeholder="kosongkan jika web dibuka dari pages.dev" autocapitalize="off">
     <button class="btn ghost" id="saveB">Simpan URL</button>
     <button class="btn ghost" id="test">Tes koneksi backend</button>
     <pre id="out" style="display:none"></pre>
@@ -298,24 +311,22 @@ $$('[data-p]').forEach(b=>b.onclick=()=>go(b.dataset.p));
 $$('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
 
 /* ---------- backend ---------- */
-const base=()=>LS.get('be').trim().replace(/\/+$/,'');
+const base=()=>(LS.get('be').trim().replace(/\/+$/,'')||location.origin);
 function normUrl(u){
   u=u.trim().replace(/\/+$/,'');
   if(u&&!/^https?:\/\//i.test(u))u='https://'+u;
   return u;
 }
 async function api(path,opt={},timeout=180000){
-  const b=base();
-  if(!b)throw new Error('URL backend belum diisi di Settings.');
   const h=Object.assign({},opt.headers||{});
   const k=LS.get('key');
   if(k&&!h['x-api-key'])h['x-api-key']=k;
   const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),timeout);
   let r;
-  try{r=await fetch(b+path,Object.assign({},opt,{headers:h,signal:ctl.signal}))}
+  try{r=await fetch(base()+path,Object.assign({},opt,{headers:h,signal:ctl.signal}))}
   catch(e){
     clearTimeout(t);
-    throw new Error(e.name==='AbortError'?'Backend tidak merespons (timeout).':'Tidak bisa terhubung ke backend. Cek URL Worker di Settings.');
+    throw new Error(e.name==='AbortError'?'Backend tidak merespons (timeout).':'Tidak bisa terhubung ke backend. Cek koneksi internet atau URL di Settings.');
   }
   clearTimeout(t);
   const txt=await r.text();let j=null;
@@ -333,11 +344,11 @@ async function ping(){
   }
 }
 function badges(online){
-  const c=LS.get('cid'),k=!!LS.get('key'),b=base();
+  const c=LS.get('cid'),k=!!LS.get('key');
   const set=(id,t,ok)=>{const e=$(id);e.textContent=t;e.className='badge '+(ok?'ok':'no')};
   set('#bCreator',c?('Creator: '+LS.get('ctype','User')+' '+c):'Creator: belum diisi',!!c);
   set('#bKey',k?'API key: tersimpan':'API key: belum ada',k);
-  set('#bBe',b?('Backend: '+(online===false?'offline':'diset')):'Backend: belum diisi',!!b&&online!==false);
+  set('#bBe','Backend: '+(online===true?'siap':online===false?'offline':'diset'),online!==false);
 }
 
 /* ---------- settings ---------- */
@@ -398,6 +409,30 @@ function renderHist(){
   });
 }
 
+/* ---------- cek asset ID ---------- */
+$('#chkA').onclick=async()=>{
+  const id=$('#aid').value.trim().replace(/\D/g,'');
+  const box=$('#aRes');box.innerHTML='';
+  const line=(t,c)=>{const d=document.createElement('div');d.className='msg '+(c||'');d.textContent=t;box.appendChild(d);return d};
+  if(!id)return line('Isi Asset ID (angka).','err');
+  if(!LS.get('key'))return line('API key belum disimpan (Settings).','err');
+  line('Mengecek...','ok');
+  try{
+    const j=await api('/asset?id='+encodeURIComponent(id),{},30000);
+    const a=j.asset||{};box.innerHTML='';
+    const mod=(a.moderationResult&&a.moderationResult.moderationState)||'-';
+    line('Nama: '+(a.displayName||'-'),'ok');
+    line('Tipe: '+(a.assetType||'-')+' · Status: '+(a.state||'-'),'ok');
+    line('Moderasi: '+mod,String(mod).toLowerCase()==='approved'?'ok':'');
+    const d=document.createElement('div');
+    copyBtn(d,id,'Salin ID');copyBtn(d,'rbxassetid://'+id,'rbxassetid');
+    const sv=document.createElement('button');sv.className='copy';sv.textContent='Simpan ke riwayat';
+    sv.onclick=()=>{pushHist({name:a.displayName||('Asset '+id),type:a.assetType||'Asset',id:id,at:new Date().toLocaleString()});sv.textContent='✓ Tersimpan'};
+    d.appendChild(sv);box.appendChild(d);
+    log('Cek asset '+id+': '+(a.state||'?')+' / '+mod);
+  }catch(e){box.innerHTML='';line('✗ '+e.message,'err');log('Cek asset gagal: '+e.message)}
+};
+
 /* ---------- polling operasi Roblox ---------- */
 async function waitOp(opId){
   let fails=0;
@@ -415,7 +450,6 @@ async function waitOp(opId){
   throw new Error('Timeout menunggu Roblox. Cek di Creator Hub (asset bisa masih diproses).');
 }
 function needSettings(){
-  if(!base())return 'URL backend belum diisi (Settings).';
   if(!LS.get('key'))return 'API key belum disimpan (Settings).';
   if(!LS.get('cid'))return 'Creator ID belum disimpan (Settings).';
   return '';
@@ -489,6 +523,63 @@ function setSt(it,t,c,p){
   const s=d.querySelector('.st');s.className='st '+(c||'');s.textContent=t;
   if(p!=null)d.querySelector('.bar i').style.width=p+'%';
 }
+
+/* ---------- tambah dari link (+ fallback server) ---------- */
+const AUD_EXT={'audio/mpeg':'mp3','audio/mp3':'mp3','audio/ogg':'ogg','application/ogg':'ogg','audio/wav':'wav','audio/x-wav':'wav','audio/wave':'wav','audio/flac':'flac','audio/x-flac':'flac','audio/aac':'aac','audio/mp4':'m4a','audio/x-m4a':'m4a'};
+const NOPE=/(^|\.)(youtube\.com|youtu\.be|spotify\.com|soundcloud\.com|music\.apple\.com|tiktok\.com)$/i;
+const MAXLINK=20*1048576;
+function lastSeg(p){let s=p.split('/').pop()||'';try{s=decodeURIComponent(s)}catch{}return s}
+async function getLink(u,onSt){
+  // 1) langsung dari browser
+  try{
+    onSt('Mengambil langsung dari browser...');
+    const r=await fetch(u);
+    if(r.ok){
+      const b=await r.blob();
+      if(b.size)return{blob:b,name:null,via:'langsung'};
+    }
+  }catch(e){}
+  // 2) fallback lewat backend
+  onSt('Diblokir browser, mencoba lewat server (fallback)...');
+  let r;
+  try{r=await fetch(base()+'/fetch?url='+encodeURIComponent(u))}
+  catch{throw new Error('Tidak bisa terhubung ke backend untuk mengambil link.')}
+  if(!r.ok){
+    let m='HTTP '+r.status;
+    try{const j=await r.json();m=j.error||m}catch{}
+    throw new Error(m);
+  }
+  const b=await r.blob();
+  if(!b.size)throw new Error('File dari link kosong.');
+  let nm=null;try{nm=decodeURIComponent(r.headers.get('x-filename')||'')}catch{}
+  return{blob:b,name:nm||null,via:'fallback server'};
+}
+$('#addLnk').onclick=async()=>{
+  const el=$('#mL'),btn=$('#addLnk');
+  let u=$('#lnk').value.trim();
+  if(!u)return msg(el,'Tempel link dulu.',false);
+  if(!/^https?:\/\//i.test(u))u='https://'+u;
+  let url;try{url=new URL(u)}catch{return msg(el,'Link tidak valid.',false)}
+  if(NOPE.test(url.hostname))return msg(el,'Link YouTube/Spotify/SoundCloud tidak didukung. Pakai link langsung ke file audio milikmu.',false);
+  btn.disabled=true;
+  try{
+    const {blob,name,via}=await getLink(url.toString(),t=>msg(el,t,true));
+    if(blob.size>MAXLINK*2)throw new Error('File terlalu besar ('+(blob.size/1048576).toFixed(1)+' MB).');
+    const ct=(blob.type||'').split(';')[0].toLowerCase();
+    if(ct.startsWith('text/')||ct==='application/json')throw new Error('Link bukan file audio langsung (isinya halaman web).');
+    const raw=name||lastSeg(url.pathname)||'audio-link';
+    let m=raw.match(/\.(mp3|wav|ogg|flac|aac|m4a)$/i);
+    let ext=m?m[1].toLowerCase():(AUD_EXT[ct]||'');
+    if(!ext)throw new Error('Format audio tidak dikenali. Pakai link langsung ke file .mp3/.ogg/.wav/.flac/.aac/.m4a.');
+    const baseName=safeName(raw.replace(/\.[^.]+$/,'')||'audio-link');
+    const file=new File([blob],baseName+'.'+ext,{type:ct||''});
+    addFiles([file]);
+    $('#lnk').value='';
+    msg(el,'✓ Ditambahkan ke antrean ('+via+', '+(blob.size/1048576).toFixed(2)+' MB).',true);
+    log('Link audio ditambahkan via '+via+': '+baseName+'.'+ext);
+  }catch(e){msg(el,'✗ '+e.message,false);log('Link gagal: '+e.message)}
+  btn.disabled=false;
+};
 
 /* ---------- proses audio ---------- */
 async function decode(file){
@@ -648,7 +739,7 @@ $('#goA').onclick=async()=>{
 
 /* ---------- init ---------- */
 loadSettings();render();renderHist();
-if(base())ping().catch(()=>{});else $('#conn').textContent='BELUM DISET';
+ping().catch(()=>{});
 </script>
 </body>
-      </html>
+</html>
