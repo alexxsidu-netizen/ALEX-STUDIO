@@ -1,9 +1,9 @@
-const VERSION = "3.3.0-pages";
+const VERSION = "3.4.0-pages";
 const API = "https://apis.roblox.com/assets/v1";
 const MAX_BYTES = 20 * 1024 * 1024;
 const CORS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "x-api-key, content-type",
+  "Access-Control-Allow-Headers": "x-api-key, content-type, x-report-token",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Expose-Headers": "x-filename, content-type",
 };
@@ -198,6 +198,25 @@ async function handle(req, env) {
     if (!r.ok) return json({ error: d.message || "Gagal cek operasi (" + r.status + ")" }, r.status);
     if (d.done && d.error) return json({ done: true, error: d.error.message || "Upload gagal" });
     return json({ done: !!d.done, assetId: d.response && d.response.assetId });
+  }
+
+  /* ---------- Cloud PC (AnyDesk) ---------- */
+  if (url.pathname === "/cloudpc/report" && req.method === "POST") {
+    if (!env.CLOUDPC) return json({ error: "KV CLOUDPC belum di-bind" }, 500);
+    const tok = req.headers.get("x-report-token") || "";
+    if (!env.CLOUDPC_TOKEN || tok !== env.CLOUDPC_TOKEN)
+      return json({ error: "Token salah" }, 401);
+    const b = await req.json().catch(() => ({}));
+    const id = String(b.id || "").replace(/\s/g, "");
+    if (!/^\d{6,12}$/.test(id)) return json({ error: "ID tidak valid" }, 400);
+    await env.CLOUDPC.put("anydesk", JSON.stringify({ id, at: Date.now() }), { expirationTtl: 21600 });
+    return json({ ok: true });
+  }
+
+  if (url.pathname === "/cloudpc" && req.method === "GET") {
+    if (!env.CLOUDPC) return json({ error: "KV CLOUDPC belum di-bind" }, 500);
+    const v = await env.CLOUDPC.get("anydesk");
+    return json(v ? { ok: true, ...JSON.parse(v) } : { ok: true, id: null });
   }
 
   // selain API di atas: tampilkan file web (index.html)
