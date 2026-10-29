@@ -1,4 +1,4 @@
-const VERSION = "4.2.0-pages";
+const VERSION = "4.3.0-pages";
 const API = "https://apis.roblox.com/assets/v1";
 const MAX_BYTES = 20 * 1024 * 1024;
 const GH_REPO = "alexxsidu-netizen/ALEX-STUDIO";
@@ -7,7 +7,11 @@ const GH_WF = "cloudpc.yml";
 const GUEST_LIMIT = 5;
 const USER_LIMIT = 10;
 const CHAT_LIMIT = 15;
-const CHAT_MODEL = "@cf/meta/llama-3.1-8b-instruct";
+// model utama + cadangan; kalau satu dihentikan Cloudflare, otomatis coba berikutnya
+const CHAT_MODELS = [
+  "@cf/meta/llama-3.1-8b-instruct-fast",
+  "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+];
 const DAY_MS = 86400000;
 const RESET_SHIFT = 10 * 3600000; // 17:00 WIB = 10:00 UTC
 const SESSION_TTL = 30 * 86400;
@@ -15,11 +19,26 @@ const SESSION_TTL = 30 * 86400;
 const WA_NUMBER = "6283841104725";
 const WA_DISPLAY = "083841104725";
 
+// sampul/latar belakang global (disimpan di KV, batas KV 25 MB per nilai)
+const BG_DATA = "bg:data";
+const BG_META = "bg:meta";
+const BG_MAX = { image: 10 * 1024 * 1024, video: 20 * 1024 * 1024 };
+const BG_TYPES = {
+  "image/jpeg": "image",
+  "image/png": "image",
+  "image/webp": "image",
+  "image/gif": "image",
+  "video/mp4": "video",
+  "video/webm": "video",
+  "video/quicktime": "video",
+};
+const BG_EXT = { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp", gif: "image/gif", mp4: "video/mp4", webm: "video/webm", mov: "video/quicktime" };
+
 const CORS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "x-api-key, content-type, x-report-token, authorization",
+  "Access-Control-Allow-Headers": "x-api-key, content-type, x-report-token, authorization, range",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Expose-Headers": "x-filename, content-type",
+  "Access-Control-Expose-Headers": "x-filename, content-type, content-range, accept-ranges",
 };
 const json = (d, s = 200) =>
   new Response(JSON.stringify(d), {
@@ -275,17 +294,115 @@ async function chatRoute(req, env) {
       "Jangan membantu mengunduh audio dari YouTube atau mengunggah musik berhak cipta tanpa izin pemiliknya.",
   };
 
-  let out;
-  try {
-    out = await env.AI.run(CHAT_MODEL, { messages: [sys, ...msgs], max_tokens: 600 });
-  } catch (e) {
-    return json({ error: "Chat AI gagal: " + ((e && e.message) || e) }, 502);
+  let out, lastErr;
+  for (const model of CHAT_MODELS) {
+    try {
+      out = await env.AI.run(model, { messages: [sys, ...msgs], max_tokens: 600 });
+      break;
+    } catch (e) {
+      lastErr = e;
+    }
   }
+  if (!out) return json({ error: "Chat AI gagal: " + ((lastErr && lastErr.message) || lastErr) }, 502);
+
   const reply = clean(out && (out.response || (out.result && out.result.response)));
   if (!reply) return json({ error: "Chat AI tidak memberi jawaban. Coba lagi." }, 502);
 
   await kvPut(env, k, { n: used + 1 }, 172800);
   return json({ ok: true, reply, limit, left: limit === null ? null : Math.max(0, limit - used - 1) });
+}
+
+/* ---------- sampul / latar belakang global ---------- */
+async function bgInfo(env) {
+  const m = await kvGet(env, BG_META);
+  return m ? { ok: true, has: true, ...m } : { ok: true, has: false };
+}
+
+// publik: semua pengunjung bisa melihat. Mendukung Range supaya video lancar di HP.
+async function bgServe(req, env) {
+  const { value, metadata } = await env.CLOUDPC.getWithMetadata(BG_DATA, "arrayBuffer");
+  if (!value) return json({ error: "Belum ada latar" }, 404);
+  const type = (metadata && metadata.type) || "application/octet-stream";
+  const total = value.byteLength;
+  const h = {
+    "content-type": type,
+    "accept-ranges": "bytes",
+    "cache-control": "public, max-age=86400",
+    "x-content-type-options": "nosniff",
+    ...CORS,
+  };
+  const m = String(req.headers.get("range") || "").match(/^bytes=(\d*)-(\d*)$/);
+  if (m && (m[1] || m[2])) {
+    let s, e;
+    if (m[1] === "") {
+      s = Math.max(0, total - parseInt(m[2], 10));
+      e = total - 1;
+    } else {
+      s = parseInt(m[1], 10);
+      e = m[2] ? Math.min(parseInt(m[2], 10), total - 1) : total - 1;
+    }
+    if (s >= total || s > e)
+      return new Response(null, { status: 416, headers: { ...h, "content-range": "bytes */" + total } });
+    return new Response(value.slice(s, e + 1), {
+      status: 206,
+      headers: { ...h, "content-range": "bytes " + s + "-" + e + "/" + total, "content-length": String(e - s + 1) },
+    });
+  }
+  return new Response(value, { headers: { ...h, "content-length": String(total) } });
+}
+
+const ownerOnlyBg = () => json({ error: "Hanya owner yang bisa mengubah latar belakang." }, 403);
+
+async function bgSet(req, env) {
+  if (!(await isOwner(req, env))) return ownerOnlyBg();
+  const fd = await req.formData().catch(() => null);
+  const file = fd && fd.get("file");
+  if (!file || typeof file === "string") return json({ error: "File tidak ada di request" }, 400);
+
+  let type = String(file.type || "").split(";")[0].toLowerCase();
+  if (!BG_TYPES[type]) type = BG_EXT[extOf(file.name)] || "";
+  const kind = BG_TYPES[type];
+  if (!kind) return json({ error: "Format tidak didukung. Pakai JPG, PNG, WEBP, GIF, MP4, WEBM, atau MOV." }, 400);
+
+  const bytes = await file.arrayBuffer();
+  if (!bytes.byteLength) return json({ error: "File terbaca 0 byte" }, 400);
+  if (bytes.byteLength > BG_MAX[kind])
+    return json({ error: "Terlalu besar. Maksimal " + BG_MAX[kind] / 1048576 + " MB untuk " + (kind === "video" ? "video" : "foto") + "." }, 413);
+
+  const old = await kvGet(env, BG_META);
+  const meta = {
+    kind,
+    type,
+    name: String(file.name || "latar").slice(0, 100),
+    size: bytes.byteLength,
+    at: Date.now(),
+    dim: old && old.dim != null ? old.dim : 55,
+    blur: old && old.blur != null ? old.blur : 0,
+  };
+  await env.CLOUDPC.put(BG_DATA, bytes, { metadata: { type, name: meta.name } });
+  await kvPut(env, BG_META, meta);
+  return json({ ok: true, bg: { has: true, ...meta } });
+}
+
+async function bgLook(req, env) {
+  if (!(await isOwner(req, env))) return ownerOnlyBg();
+  const old = await kvGet(env, BG_META);
+  if (!old) return json({ error: "Pasang latar dulu." }, 400);
+  const b = await req.json().catch(() => ({}));
+  const dim = Math.min(90, Math.max(0, Math.round(+b.dim)));
+  const blur = Math.min(20, Math.max(0, Math.round(+b.blur)));
+  if (!isFinite(dim) || !isFinite(blur)) return json({ error: "Nilai tidak valid" }, 400);
+  old.dim = dim;
+  old.blur = blur;
+  await kvPut(env, BG_META, old);
+  return json({ ok: true, bg: { has: true, ...old } });
+}
+
+async function bgDelete(req, env) {
+  if (!(await isOwner(req, env))) return ownerOnlyBg();
+  await env.CLOUDPC.delete(BG_DATA);
+  await env.CLOUDPC.delete(BG_META);
+  return json({ ok: true, bg: { has: false } });
 }
 
 /* ---------- upload asset ---------- */
@@ -503,6 +620,17 @@ async function handle(req, env) {
   if (url.pathname.startsWith("/auth/")) return authRoute(url.pathname, req, env);
 
   if (url.pathname === "/chat") return chatRoute(req, env);
+
+  /* ---------- sampul / latar belakang global ---------- */
+  if (url.pathname.startsWith("/bg")) {
+    if (!env.CLOUDPC) return json({ error: "KV CLOUDPC belum di-bind" }, 500);
+    if (url.pathname === "/bg" && req.method === "GET") return bgServe(req, env);
+    if (url.pathname === "/bg/info" && req.method === "GET") return json(await bgInfo(env));
+    if (url.pathname === "/bg/set" && req.method === "POST") return bgSet(req, env);
+    if (url.pathname === "/bg/look" && req.method === "POST") return bgLook(req, env);
+    if (url.pathname === "/bg/delete" && req.method === "POST") return bgDelete(req, env);
+    return json({ error: "Endpoint tidak ditemukan" }, 404);
+  }
 
   if (url.pathname === "/validate") {
     if (!key) return json({ ok: false, error: "API key kosong" }, 400);
