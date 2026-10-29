@@ -18,6 +18,11 @@ body{margin:0;color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Rob
   background:radial-gradient(700px 420px at 85% -5%,rgba(139,92,246,.28),transparent 60%),
              radial-gradient(600px 400px at -10% 25%,rgba(34,211,238,.14),transparent 60%),var(--bg);
   background-attachment:fixed}
+/* latar belakang foto/video */
+#bgWrap{position:fixed;inset:0;z-index:-1;display:none;overflow:hidden;background:#000}
+#bgWrap.on{display:block}
+#bgMedia{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scale(1.06)}
+#bgDim{position:absolute;inset:0;background:#070812;opacity:.55}
 .top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:12px 16px;
   padding-top:calc(12px + env(safe-area-inset-top,0px));
   background:rgba(7,8,18,.78);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
@@ -169,6 +174,8 @@ code{font:12px ui-monospace,monospace;background:rgba(139,92,246,.18);border-rad
 </style>
 </head>
 <body>
+
+<div id="bgWrap"><div id="bgDim"></div></div>
 
 <aside class="side">
   <div class="brand" style="font-size:20px;padding:6px 8px 10px">ALEX <b>STUDIO</b></div>
@@ -520,11 +527,12 @@ code{font:12px ui-monospace,monospace;background:rgba(139,92,246,.18);border-rad
   <p class="sub">Workspace untuk creator Roblox: upload audio, animasi, dan model lebih cepat, tanpa ribet.</p>
   <div class="card">
     <h2>Fitur</h2>
-    <div class="feat"><b>⇧ Upload Audio</b><span>Upload banyak file, atur speed dan pitch, dan potong bagian lagu.</span></div>
+    <div class="feat"><b>⇧ Upload Audio</b><span>Upload banyak file, atur speed dan pitch, potong bagian lagu, dan unduh hasil olahannya.</span></div>
     <div class="feat"><b>✪ Upload Animasi dan ▣ Upload Model</b><span>Publish file RBXM langsung ke Roblox (butuh kode akses).</span></div>
     <div class="feat"><b>⌕ Cek Status</b><span>Pantau moderasi banyak asset ID sekaligus, dengan preview audio.</span></div>
     <div class="feat"><b>♫ Library</b><span>Riwayat upload tersimpan di browser ini, bisa dicari dan disalin.</span></div>
     <div class="feat"><b>✦ Chat AI</b><span>Asisten untuk pertanyaan Roblox dan Luau.</span></div>
+    <div class="feat"><b>🖼 Latar Belakang</b><span>Sampul foto atau video yang sama untuk semua pengunjung, diatur oleh owner.</span></div>
     <div class="feat"><b>★ Premium</b><span>Upload unlimited dengan paket VIP.</span></div>
   </div>
   <div class="card">
@@ -560,6 +568,23 @@ code{font:12px ui-monospace,monospace;background:rgba(139,92,246,.18);border-rad
     <button class="btn" id="saveK">Cek &amp; Simpan API Key</button>
     <button class="btn ghost" id="delK">Hapus API key</button>
     <div class="msg" id="mK"></div>
+  </div>
+
+  <div class="card" id="bgCard" style="display:none">
+    <h2>Latar Belakang (Owner)</h2>
+    <p class="sub" style="margin:0 0 6px">Sampul ini permanen dan dilihat semua pengunjung. Hanya owner yang bisa mengganti. Foto maksimal 10 MB, video maksimal 20 MB.</p>
+    <input type="file" id="bgFile" accept="image/*,video/*" hidden>
+    <div class="row">
+      <button class="btn" id="bgPick">🖼 Pilih foto / video</button>
+      <button class="btn ghost" id="bgDel">Hapus latar</button>
+    </div>
+    <label>Gelapkan latar</label>
+    <div class="pitch"><input type="range" id="bgDimR" min="0" max="90" step="5" value="55"><div class="pv" id="bgDimV">55%</div></div>
+    <label>Blur latar</label>
+    <div class="pitch"><input type="range" id="bgBlurR" min="0" max="20" step="1" value="0"><div class="pv" id="bgBlurV">0 px</div></div>
+    <button class="btn ghost" id="bgSaveLook">Simpan gelap &amp; blur</button>
+    <div class="hint" id="bgInfo">Belum ada latar.</div>
+    <div class="msg" id="mB"></div>
   </div>
 
   <div class="card">
@@ -718,7 +743,7 @@ function renderAcct(){
   $('#limTxt').textContent=unl?'Upload unlimited':'Sisa upload hari ini: '+me.left+' dari '+me.limit;
   $('#limRst').textContent=unl?'':resetText(me.resetAt);
   let h='';
-  if(me.role==='owner')h='Owner aktif. Semua fitur terbuka, termasuk Cloud PC.';
+  if(me.role==='owner')h='Owner aktif. Semua fitur terbuka, termasuk Cloud PC dan pengaturan latar belakang.';
   else if(me.role==='vip')h='VIP aktif. Upload unlimited.';
   else if(me.role==='vip7')h='VIP 7 hari aktif sampai '+new Date(me.vipUntil).toLocaleString()+'.';
   else h=(me.unlocked?'Akses animasi dan model aktif. ':'Kode akses animasi dan model didapat lewat WhatsApp '+(me.wa||'')+'. ')+'Pakai kode VIP untuk upload unlimited.';
@@ -733,6 +758,7 @@ async function refreshMe(){
   }
   renderAcct();
   $('#pcCard').style.display=isOwner()?'block':'none';
+  $('#bgCard').style.display=isOwner()?'block':'none';
   if(!isOwner())pcStopPoll();
   return me;
 }
@@ -808,6 +834,84 @@ $('#test').onclick=async()=>{
   try{o.textContent=JSON.stringify(await ping(),null,2)}
   catch(e){o.textContent=e.message;o.style.color='var(--err)'}
 };
+
+/* ---------- latar belakang global (owner yang mengatur) ---------- */
+let bgMeta=null,look={dim:55,blur:0};
+function applyBgLook(){
+  $('#bgDim').style.opacity=look.dim/100;
+  const m=$('#bgMedia');if(m)m.style.filter=look.blur?'blur('+look.blur+'px)':'';
+  $('#bgDimR').value=look.dim;$('#bgDimV').textContent=look.dim+'%';
+  $('#bgBlurR').value=look.blur;$('#bgBlurV').textContent=look.blur+' px';
+}
+function applyBg(meta){
+  bgMeta=meta&&meta.has?meta:null;
+  const w=$('#bgWrap');
+  const old=$('#bgMedia');if(old)old.remove();
+  if(!bgMeta){
+    w.classList.remove('on');
+    $('#bgInfo').textContent='Belum ada latar.';
+    look={dim:55,blur:0};applyBgLook();return;
+  }
+  look={dim:bgMeta.dim!=null?+bgMeta.dim:55,blur:bgMeta.blur!=null?+bgMeta.blur:0};
+  const src=base()+'/bg?v='+bgMeta.at;
+  let el;
+  if(bgMeta.kind==='video'){
+    el=document.createElement('video');
+    el.muted=true;el.loop=true;el.autoplay=true;el.playsInline=true;
+    el.setAttribute('muted','');el.setAttribute('playsinline','');
+    el.src=src;
+    el.play().catch(()=>{});
+  }else{
+    el=document.createElement('img');el.src=src;el.alt='';
+  }
+  el.id='bgMedia';
+  w.insertBefore(el,$('#bgDim'));
+  w.classList.add('on');
+  $('#bgInfo').textContent='Latar aktif: '+(bgMeta.kind==='video'?'video':'foto')+' · '+(bgMeta.name||'tanpa nama')+' · '+fmtSize(bgMeta.size);
+  applyBgLook();
+}
+async function loadBg(){
+  try{applyBg(await api('/bg/info',{},15000))}catch(e){log('Latar gagal dimuat: '+e.message)}
+}
+$('#bgPick').onclick=()=>$('#bgFile').click();
+$('#bgFile').onchange=async()=>{
+  const f=$('#bgFile').files[0];$('#bgFile').value='';
+  if(!f)return;
+  const m=$('#mB'),t=f.type||'';
+  const kind=t.startsWith('video/')?'video':t.startsWith('image/')?'image':'';
+  if(!kind)return msg(m,'File harus berupa foto atau video.',false);
+  const max=kind==='video'?20:10;
+  if(f.size>max*1048576)return msg(m,'Terlalu besar ('+(f.size/1048576).toFixed(1)+' MB). Maksimal '+max+' MB.',false);
+  msg(m,'Mengupload latar ke server...',true);
+  try{
+    const fd=new FormData();fd.append('file',f,f.name);
+    const j=await api('/bg/set',{method:'POST',body:fd},120000);
+    applyBg(j.bg);
+    msg(m,'✓ Latar terpasang untuk semua pengunjung.',true);
+    log('Latar dipasang: '+f.name);
+  }catch(e){msg(m,'✗ '+e.message,false);log('Latar gagal: '+e.message)}
+};
+$('#bgDel').onclick=async()=>{
+  if(!confirm('Hapus latar untuk semua pengunjung?'))return;
+  try{
+    const j=await api('/bg/delete',{method:'POST'},20000);
+    applyBg(j.bg);
+    msg($('#mB'),'Latar dihapus.',true);
+  }catch(e){msg($('#mB'),'✗ '+e.message,false)}
+};
+$('#bgDimR').oninput=e=>{look.dim=+e.target.value;applyBgLook()};
+$('#bgBlurR').oninput=e=>{look.blur=+e.target.value;applyBgLook()};
+$('#bgSaveLook').onclick=async()=>{
+  try{
+    const j=await api('/bg/look',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(look)},20000);
+    applyBg(j.bg);
+    msg($('#mB'),'✓ Pengaturan gelap dan blur disimpan untuk semua pengunjung.',true);
+  }catch(e){msg($('#mB'),'✗ '+e.message,false)}
+};
+document.addEventListener('visibilitychange',()=>{
+  const v=$('#bgMedia');
+  if(v&&v.tagName==='VIDEO'){if(document.hidden)v.pause();else v.play().catch(()=>{})}
+});
 
 /* ---------- riwayat & library ---------- */
 const rid=()=>Math.random().toString(36).slice(2,10);
@@ -1174,7 +1278,7 @@ function renderPremium(){
   });
 }
 function renderAbout(){
-  $('#abVer').textContent='Versi web: 5.0 · Backend: '+(beVer||'tidak terhubung');
+  $('#abVer').textContent='Versi web: 5.2 · Backend: '+(beVer||'tidak terhubung');
 }
 
 /* ---------- polling operasi Roblox ---------- */
@@ -1285,6 +1389,26 @@ function render(){
     const rb=document.createElement('button');rb.className='copy';rb.textContent='Reset potongan';
     rb.onclick=()=>{it.t0=0;it.t1=null;fill();showTrim()};
     trb.appendChild(pb);trb.appendChild(rb);
+
+    /* unduh hasil olahan (sudah dipotong, speed, dan pitch) */
+    const dl=document.createElement('button');dl.className='copy';dl.textContent='⬇ Unduh hasil';
+    dl.onclick=async()=>{
+      dl.disabled=true;
+      try{
+        const {blob,ext}=await prepare(it);
+        if(!blob.size)throw new Error('Hasil audio kosong.');
+        const a=document.createElement('a');
+        a.href=URL.createObjectURL(blob);
+        a.download=safeName((it.name||'audio').trim()||'audio')+'.'+ext;
+        document.body.appendChild(a);a.click();a.remove();
+        setTimeout(()=>URL.revokeObjectURL(a.href),10000);
+        setSt(it,'✓ Hasil diunduh ('+(blob.size/1048576).toFixed(2)+' MB)','ok',100);
+        log('Unduh hasil: '+it.name);
+      }catch(e){setSt(it,'✗ '+e.message,'err',100);log('Unduh gagal: '+e.message)}
+      dl.disabled=false;
+    };
+    trb.appendChild(dl);
+
     au.onloadedmetadata=()=>{
       if(isFinite(au.duration)){it.dur=au.duration;fill();showTrim()}
       updInfo();
@@ -1592,7 +1716,7 @@ $('#goM').onclick=async()=>{
 };
 
 /* ---------- init ---------- */
-loadSettings();render();renderHist();renderChat();
+loadSettings();loadBg();render();renderHist();renderChat();
 ping().catch(()=>{});
 refreshMe().then(()=>{if(isOwner())loadPC(true)});
 </script>
