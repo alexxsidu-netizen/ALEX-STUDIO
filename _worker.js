@@ -1,4 +1,4 @@
-const VERSION = "4.1.0-pages";
+const VERSION = "4.2.0-pages";
 const API = "https://apis.roblox.com/assets/v1";
 const MAX_BYTES = 20 * 1024 * 1024;
 const GH_REPO = "alexxsidu-netizen/ALEX-STUDIO";
@@ -6,6 +6,8 @@ const GH_WF = "cloudpc.yml";
 
 const GUEST_LIMIT = 5;
 const USER_LIMIT = 10;
+const CHAT_LIMIT = 15;
+const CHAT_MODEL = "@cf/meta/llama-3.1-8b-instruct";
 const DAY_MS = 86400000;
 const RESET_SHIFT = 10 * 3600000; // 17:00 WIB = 10:00 UTC
 const SESSION_TTL = 30 * 86400;
@@ -239,6 +241,53 @@ async function authRoute(path, req, env) {
   return json({ error: "Endpoint tidak ditemukan" }, 404);
 }
 
+/* ---------- Chat AI (Cloudflare Workers AI) ---------- */
+async function chatRoute(req, env) {
+  if (!env.CLOUDPC) return json({ error: "KV CLOUDPC belum di-bind" }, 500);
+  if (req.method !== "POST") return json({ error: "Method tidak didukung" }, 405);
+  const auth = await getAuth(req, env);
+  if (!auth) return json({ error: "Login dulu untuk memakai Chat AI" }, 401);
+  if (!env.AI)
+    return json({ error: "Workers AI belum dipasang. Di Cloudflare: Settings, Bindings, Add, Workers AI, nama variabel AI, lalu Retry deployment." }, 500);
+
+  const role = roleOf(auth.user);
+  const limit = role === "user" ? CHAT_LIMIT : null;
+  const k = "chat:u:" + auth.lower + ":" + dayId();
+  const used = ((await kvGet(env, k)) || { n: 0 }).n;
+  if (limit !== null && used >= limit)
+    return json({ error: "Batas Chat AI hari ini habis (" + used + "/" + limit + "). Reset jam 17:00 WIB. VIP unlimited.", code: "LIMIT" }, 429);
+
+  const b = await req.json().catch(() => ({}));
+  const list = Array.isArray(b.messages) ? b.messages.slice(-10) : [];
+  const msgs = list
+    .map((m) => ({
+      role: m && m.role === "assistant" ? "assistant" : "user",
+      content: clean(m && m.content).slice(0, 1500),
+    }))
+    .filter((m) => m.content);
+  if (!msgs.length || msgs[msgs.length - 1].role !== "user") return json({ error: "Pesan kosong" }, 400);
+
+  const sys = {
+    role: "system",
+    content:
+      "Kamu asisten ALEX STUDIO, workspace untuk creator Roblox. Jawab dalam bahasa Indonesia, singkat dan jelas. " +
+      "Kamu membantu soal upload audio, animasi, dan model ke Roblox, Roblox Studio, Luau scripting, serta cara pakai ALEX STUDIO. " +
+      "Jangan membantu mengunduh audio dari YouTube atau mengunggah musik berhak cipta tanpa izin pemiliknya.",
+  };
+
+  let out;
+  try {
+    out = await env.AI.run(CHAT_MODEL, { messages: [sys, ...msgs], max_tokens: 600 });
+  } catch (e) {
+    return json({ error: "Chat AI gagal: " + ((e && e.message) || e) }, 502);
+  }
+  const reply = clean(out && (out.response || (out.result && out.result.response)));
+  if (!reply) return json({ error: "Chat AI tidak memberi jawaban. Coba lagi." }, 502);
+
+  await kvPut(env, k, { n: used + 1 }, 172800);
+  return json({ ok: true, reply, limit, left: limit === null ? null : Math.max(0, limit - used - 1) });
+}
+
 /* ---------- upload asset ---------- */
 async function createAsset(key, fd, assetType, allowedExt) {
   const file = fd.get("file");
@@ -452,6 +501,8 @@ async function handle(req, env) {
   if (url.pathname === "/health") return json({ ok: true, version: VERSION });
 
   if (url.pathname.startsWith("/auth/")) return authRoute(url.pathname, req, env);
+
+  if (url.pathname === "/chat") return chatRoute(req, env);
 
   if (url.pathname === "/validate") {
     if (!key) return json({ ok: false, error: "API key kosong" }, 400);
