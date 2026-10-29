@@ -1,4 +1,4 @@
-const VERSION = "4.0.1-pages";
+const VERSION = "4.1.0-pages";
 const API = "https://apis.roblox.com/assets/v1";
 const MAX_BYTES = 20 * 1024 * 1024;
 const GH_REPO = "alexxsidu-netizen/ALEX-STUDIO";
@@ -9,6 +9,9 @@ const USER_LIMIT = 10;
 const DAY_MS = 86400000;
 const RESET_SHIFT = 10 * 3600000; // 17:00 WIB = 10:00 UTC
 const SESSION_TTL = 30 * 86400;
+
+const WA_NUMBER = "6283841104725";
+const WA_DISPLAY = "083841104725";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -61,6 +64,8 @@ function eq(a, b) {
   return r === 0;
 }
 
+const clean = (v) => String(v == null ? "" : v).trim();
+
 const ipOf = (req) => req.headers.get("cf-connecting-ip") || "0";
 const rlBlocked = async (env, k, max) => ((await kvGet(env, k)) || { n: 0 }).n >= max;
 const rlAdd = async (env, k, ttl) => {
@@ -81,6 +86,17 @@ function roleOf(u) {
   return "user";
 }
 
+const canPremium = (u) =>
+  !!u && !!(u.owner || u.vip || (u.vipUntil && u.vipUntil > Date.now()) || u.unlocked);
+
+function accessMsg(q, what) {
+  return (
+    "Upload " + what + " butuh kode akses. Chat WhatsApp " + WA_DISPLAY +
+    " untuk mendapatkan kodenya, lalu " +
+    (q.auth ? "masukkan di kolom Pakai kode di Home." : "login dan masukkan di kolom Pakai kode di Home.")
+  );
+}
+
 async function getAuth(req, env) {
   if (!env.CLOUDPC) return null;
   const m = (req.headers.get("authorization") || "").match(/^Bearer ([a-f0-9]{64})$/i);
@@ -99,15 +115,15 @@ async function newSession(env, lower) {
   return token;
 }
 
-async function quotaFor(env, auth, ip) {
+async function quota(env, req) {
+  const auth = await getAuth(req, env);
   const role = auth ? roleOf(auth.user) : "guest";
   const limit = role === "guest" ? GUEST_LIMIT : role === "user" ? USER_LIMIT : null;
   const day = dayId();
-  const k = auth ? "lim:u:" + auth.lower + ":" + day : "lim:ip:" + ip + ":" + day;
+  const k = auth ? "lim:u:" + auth.lower + ":" + day : "lim:ip:" + ipOf(req) + ":" + day;
   const o = (await kvGet(env, k)) || { n: 0 };
   return { auth, role, limit, used: o.n, k, resetAt: nextReset() };
 }
-const quota = async (env, req) => quotaFor(env, await getAuth(req, env), ipOf(req));
 const consume = (env, q) => kvPut(env, q.k, { n: q.used + 1 }, 172800);
 
 function meOf(q) {
@@ -122,6 +138,8 @@ function meOf(q) {
     left: q.limit === null ? null : Math.max(0, q.limit - q.used),
     resetAt: q.resetAt,
     vipUntil: u && q.role === "vip7" ? u.vipUntil : null,
+    unlocked: canPremium(u),
+    wa: WA_DISPLAY,
   };
 }
 
@@ -157,11 +175,12 @@ async function authRoute(path, req, env) {
     const lower = name.toLowerCase();
     if (await kvGet(env, "user:" + lower)) return json({ error: "Username sudah dipakai" }, 409);
     const salt = randHex(16);
-    const user = { name, salt, hash: await hashPw(pw, salt), created: Date.now(), owner: false, vip: false, vipUntil: 0, redeemed: [] };
+    const user = { name, salt, hash: await hashPw(pw, salt), created: Date.now(), owner: false, vip: false, vipUntil: 0, unlocked: false, redeemed: [] };
     await kvPut(env, "user:" + lower, user);
     await rlAdd(env, "rl:reg:" + ip, 3600);
     const token = await newSession(env, lower);
-    return json({ ok: true, token, me: meOf(await quotaFor(env, { lower, user }, ip)) });
+    const q = await quota(env, new Request(req.url, { headers: { authorization: "Bearer " + token, "cf-connecting-ip": ip } }));
+    return json({ ok: true, token, me: meOf(q) });
   }
 
   if (path === "/auth/login") {
@@ -175,34 +194,46 @@ async function authRoute(path, req, env) {
       return json({ error: "Username atau password salah" }, 401);
     }
     const token = await newSession(env, lower);
-    return json({ ok: true, token, me: meOf(await quotaFor(env, { lower, user }, ip)) });
+    const q = await quota(env, new Request(req.url, { headers: { authorization: "Bearer " + token, "cf-connecting-ip": ip } }));
+    return json({ ok: true, token, me: meOf(q) });
   }
 
   if (path === "/auth/redeem") {
     const auth = await getAuth(req, env);
     if (!auth) return json({ error: "Login dulu untuk memakai kode" }, 401);
     if (await rlBlocked(env, "rl:redeem:" + ip, 10)) return json({ error: "Terlalu banyak percobaan kode. Coba lagi 10 menit lagi." }, 429);
-    const code = String(b.code || "").trim();
+    const code = clean(b.code);
+    if (!code) return json({ error: "Isi kodenya dulu" }, 400);
+    const same = (secret) => {
+      const s = clean(secret);
+      return !!s && eq(code, s);
+    };
     const u = auth.user;
     let label = "";
-    if (eq(code, env.OWNER_CODE)) {
+    if (same(env.OWNER_CODE)) {
       u.owner = true;
       label = "Owner aktif. Semua fitur unlimited.";
-    } else if (eq(code, env.VIP_CODE)) {
+    } else if (same(env.VIP_CODE)) {
       u.vip = true;
       label = "VIP aktif. Upload unlimited.";
-    } else if (eq(code, env.VIP_WEEK_CODE)) {
+    } else if (same(env.VIP_WEEK_CODE)) {
       u.redeemed = u.redeemed || [];
       if (u.redeemed.includes(code)) return json({ error: "Kode ini sudah pernah dipakai di akunmu" }, 409);
       u.redeemed.push(code);
       u.vipUntil = Math.max(Date.now(), u.vipUntil || 0) + 7 * DAY_MS;
       label = "VIP 7 hari aktif. Upload unlimited.";
+    } else if (same(env.ACCESS_CODE)) {
+      u.unlocked = true;
+      label = "Akses upload aktif. Upload animasi dan model sudah terbuka.";
     } else {
       await rlAdd(env, "rl:redeem:" + ip, 600);
-      return json({ error: "Kode tidak valid" }, 400);
+      // diagnosa sementara: hapus 2 baris di bawah kalau semua kode sudah jalan
+      const unset = ["OWNER_CODE", "VIP_CODE", "VIP_WEEK_CODE", "ACCESS_CODE"].filter((n) => !clean(env[n]));
+      return json({ error: "Kode tidak valid" + (unset.length ? " (di server belum diisi: " + unset.join(", ") + ")" : "") }, 400);
     }
     await kvPut(env, "user:" + auth.lower, u);
-    return json({ ok: true, message: label, me: meOf(await quotaFor(env, { lower: auth.lower, user: u }, ip)) });
+    const q = await quota(env, req);
+    return json({ ok: true, message: label, me: meOf(q) });
   }
 
   return json({ error: "Endpoint tidak ditemukan" }, 404);
@@ -254,10 +285,13 @@ async function createAsset(key, fd, assetType, allowedExt) {
   return json({ ok: true, operationId: opId });
 }
 
-async function gatedUpload(req, env, key, assetType, exts) {
+// gate = nama fitur yang butuh kode akses (mis. "animasi"), atau null kalau bebas
+async function gatedUpload(req, env, key, assetType, exts, gate) {
   if (!key) return json({ error: "API key kosong" }, 400);
   if (!env.CLOUDPC) return json({ error: "KV CLOUDPC belum di-bind" }, 500);
   const q = await quota(env, req);
+  if (gate && !canPremium(q.auth && q.auth.user))
+    return json({ error: accessMsg(q, gate), code: "NEED_CODE", wa: WA_DISPLAY }, 403);
   if (q.limit !== null && q.used >= q.limit) return json({ error: limitMsg(q), code: "LIMIT", me: meOf(q) }, 429);
   const res = await createAsset(key, await req.formData(), assetType, exts);
   if (res.ok) await consume(env, q);
@@ -351,6 +385,29 @@ async function assetInfo(key, id) {
   return json({ ok: true, asset: d });
 }
 
+/* ---------- preview audio dari asset ID ---------- */
+async function assetAudio(key, id) {
+  if (!key) return json({ error: "API key kosong" }, 400);
+  if (!/^\d{1,20}$/.test(id || "")) return json({ error: "Asset ID harus berupa angka" }, 400);
+
+  const r = await fetch("https://apis.roblox.com/asset-delivery-api/v1/assetId/" + id, {
+    headers: { "x-api-key": key },
+  });
+  const d = await r.json().catch(() => ({}));
+
+  if (!r.ok) {
+    let extra = "";
+    if (r.status === 401) extra = " (API key tidak valid)";
+    if (r.status === 403) extra = " (key belum punya izin Asset Delivery, atau audio ini bukan milikmu / tidak publik)";
+    if (r.status === 404) extra = " (asset tidak ditemukan)";
+    return json({ error: (d.message || "Roblox membalas " + r.status) + extra }, r.status);
+  }
+
+  const loc = d.location || (d.locations && d.locations[0] && d.locations[0].location);
+  if (!loc) return json({ error: "Roblox tidak memberi link audio untuk asset ini" }, 502);
+  return json({ ok: true, url: loc });
+}
+
 /* ---------- Cloud PC: helper GitHub ---------- */
 async function isOwner(req, env) {
   const a = await getAuth(req, env);
@@ -412,11 +469,17 @@ async function handle(req, env) {
   if (url.pathname === "/asset" && req.method === "GET")
     return assetInfo(key, url.searchParams.get("id"));
 
+  if (url.pathname === "/asset-audio" && req.method === "GET")
+    return assetAudio(key, url.searchParams.get("id"));
+
   if (url.pathname === "/upload" && req.method === "POST")
-    return gatedUpload(req, env, key, "Audio", ["mp3", "ogg"]);
+    return gatedUpload(req, env, key, "Audio", ["mp3", "ogg"], null);
 
   if (url.pathname === "/upload-animation" && req.method === "POST")
-    return gatedUpload(req, env, key, "Animation", ["rbxm"]);
+    return gatedUpload(req, env, key, "Animation", ["rbxm"], "animasi");
+
+  if (url.pathname === "/upload-model" && req.method === "POST")
+    return gatedUpload(req, env, key, "Model", ["rbxm"], "model");
 
   if (url.pathname === "/operation") {
     const id = url.searchParams.get("id");
