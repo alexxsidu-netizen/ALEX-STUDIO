@@ -33,7 +33,7 @@ body{margin:0;color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Rob
 .nav i{font-style:normal;width:34px;height:34px;border-radius:10px;background:var(--panel2);display:grid;place-items:center}
 .nav.on{color:var(--tx);background:linear-gradient(90deg,rgba(139,92,246,.22),transparent);border-color:#3b3470}
 .nav.on i{background:var(--grad);color:#fff}
-.bnav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:grid;grid-template-columns:repeat(4,1fr);
+.bnav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:grid;grid-template-columns:repeat(5,1fr);
   padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));background:rgba(10,11,26,.92);backdrop-filter:blur(16px);border-top:1px solid var(--line)}
 .bn{background:none;border:0;color:var(--mu);display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 0;font-size:11px;font-weight:700;cursor:pointer;border-radius:12px}
 .bn i{font-style:normal;font-size:18px;width:44px;height:28px;border-radius:14px;display:grid;place-items:center}
@@ -48,7 +48,7 @@ h2{font-size:18px;margin:0 0 14px}
 .hero h1{margin-top:0}
 .chipinfo{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
 .badge{font:600 12px ui-monospace,monospace;padding:7px 11px;border-radius:99px;border:1px solid var(--line);background:rgba(7,8,18,.5);color:var(--mu)}
-.badge.ok{color:var(--ok);border-color:rgba(52,211,153,.4)}.badge.no{color:var(--warn);border-color:rgba(251,191,36,.4)}.badge.bad{color:var(--err);border-color:rgba(251,113,133,.4)}
+.badge.ok{color:var(--ok);border-color:rgba(52,211,153,.4)}.badge.no{color:var(--warn);border-color:rgba(251,191,36,.4)}
 .drop{border:2px dashed #3a3f6b;border-radius:22px;padding:32px 16px;text-align:center;cursor:pointer;transition:.2s;margin-bottom:18px;background:rgba(139,92,246,.05)}
 .drop.hot{border-color:var(--a2);background:rgba(34,211,238,.1);transform:scale(1.01)}
 .drop .ic{width:68px;height:68px;margin:0 auto 14px;border-radius:20px;background:var(--grad);display:grid;place-items:center;font-size:28px;color:#fff;box-shadow:0 8px 24px rgba(139,92,246,.4)}
@@ -62,7 +62,8 @@ input:focus,select:focus{border-color:var(--a);box-shadow:0 0 0 3px rgba(139,92,
 .btn:active{transform:scale(.98)}
 .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--tx);box-shadow:none}
 .btn.danger{background:transparent;border:1px solid rgba(251,113,133,.5);color:var(--err);box-shadow:none}
-.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+a.btn{text-decoration:none;text-align:center}
 .row{display:flex;gap:10px;flex-wrap:wrap}.row .btn{flex:1;min-width:150px}
 .chips{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 .chip{padding:13px 0;border-radius:14px;border:1px solid var(--line);background:var(--panel2);color:var(--tx);font-weight:700;cursor:pointer}
@@ -71,6 +72,7 @@ input:focus,select:focus{border-color:var(--a);box-shadow:0 0 0 3px rgba(139,92,
 input[type=range]{flex:1;accent-color:var(--a);height:28px}
 .pv{font:700 18px ui-monospace,monospace;color:var(--a2);min-width:64px;text-align:right}
 .hint{color:var(--mu);font-size:14px;line-height:1.6;margin-top:12px}
+.lock{color:var(--mu);font-size:14px;line-height:1.6;margin:-8px 0 16px}.lock a{color:var(--a2)}
 .tabs{display:flex;gap:10px;overflow:auto;padding-bottom:12px;border-bottom:1px solid var(--line);margin-bottom:18px}
 .tab{padding:13px 20px;border-radius:14px;border:1px solid var(--a);background:rgba(139,92,246,.22);color:var(--tx);font-weight:700;white-space:nowrap}
 .q{border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:12px;background:rgba(8,9,24,.7)}
@@ -91,38 +93,28 @@ pre{background:#080918;border:1px solid var(--line);border-radius:14px;padding:1
 .hi{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
 .hi:last-child{border:0}.hi .t{flex:1;min-width:140px;font-weight:700;word-break:break-word}
 .hi small{display:block;color:var(--mu);font:12px ui-monospace,monospace;margin-top:3px;font-weight:400}
-.pcid{font:800 34px ui-monospace,monospace;letter-spacing:3px;text-align:center;padding:18px 8px;border-radius:16px;border:1px solid var(--line);background:#080918;margin:10px 0 4px;background-image:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;word-break:break-all}
+.pcbadge{display:inline-block;font:700 12px ui-monospace,monospace;letter-spacing:1.5px;padding:6px 12px;border-radius:99px;border:1px solid var(--line);color:var(--mu);margin-bottom:10px}
+.pcbadge.on{color:var(--ok);border-color:rgba(52,211,153,.5)}
+.pcbadge.wait{color:var(--warn);border-color:rgba(251,191,36,.5)}
+.pcbadge.off{color:var(--err);border-color:rgba(251,113,133,.5)}
+.pcid{font:800 32px ui-monospace,monospace;letter-spacing:3px;text-align:center;padding:18px 8px;border-radius:16px;border:1px solid var(--line);background:#080918;margin:6px 0 4px;background-image:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;word-break:break-all}
 .pcid.none{font-size:16px;letter-spacing:0;color:var(--mu);-webkit-text-fill-color:var(--mu)}
-.pcmeta{text-align:center;font:12px ui-monospace,monospace;color:var(--mu);word-break:break-word}
-.pccopy{text-align:center}
-.accTop{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px}
-.accName{font-size:20px;font-weight:800;word-break:break-word}
-.meter{height:10px;background:var(--line);border-radius:99px;overflow:hidden;margin:14px 0 8px}
-.meter i{display:block;height:100%;width:0;background:var(--grad);transition:.4s}
-.meter i.warn{background:linear-gradient(90deg,#fbbf24,#f59e0b)}
-.meter i.bad{background:linear-gradient(90deg,#fb7185,#e11d48)}
-.accTxt{font-weight:700}
-.accReset{color:var(--mu);font:12px ui-monospace,monospace;margin-top:4px}
-.rd{display:flex;gap:10px;margin-top:16px;align-items:stretch}
-.rd input{flex:1;min-width:0}
-.rd .btn{margin-top:0;width:auto;padding:0 20px;white-space:nowrap}
-.ov{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;padding:18px;
-  padding-top:calc(18px + env(safe-area-inset-top,0px));padding-bottom:calc(18px + env(safe-area-inset-bottom,0px));
-  background:rgba(4,5,12,.78);backdrop-filter:blur(10px)}
-.ov.on{display:flex;animation:fade .2s}
-.mod{position:relative;width:100%;max-width:420px;max-height:100%;overflow:auto;padding:26px 22px 22px;border-radius:26px;border:1px solid #3b3470;
-  background:linear-gradient(160deg,rgba(40,34,92,.96),rgba(14,16,32,.98));box-shadow:0 30px 80px rgba(0,0,0,.6)}
-.mx{position:absolute;top:14px;right:14px;width:36px;height:36px;border-radius:12px;border:1px solid var(--line);background:rgba(7,8,18,.5);color:var(--mu);font-size:16px;cursor:pointer}
-.mlogo{width:56px;height:56px;border-radius:17px;background:var(--grad);display:grid;place-items:center;font-weight:900;font-size:24px;color:#fff;box-shadow:0 10px 28px rgba(139,92,246,.5);margin-bottom:14px}
-.mod h2{font-size:24px;margin:0 0 6px;letter-spacing:-.3px}
-.mod .sub{margin:0 0 14px;font-size:14px}
-.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 16px}
-.plan{border:1px solid var(--line);border-radius:14px;padding:10px 4px;text-align:center;background:rgba(7,8,18,.45)}
-.plan b{display:block;font-size:20px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
-.plan span{font-size:11px;color:var(--mu);font-weight:600}
-.seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:14px;background:#080918;border:1px solid var(--line)}
-.seg button{padding:12px 0;border:0;border-radius:11px;background:none;color:var(--mu);font-weight:800;font-size:14px;cursor:pointer}
-.seg button.on{background:var(--grad);color:#fff;box-shadow:0 6px 16px rgba(99,102,241,.4)}
+.pcmeta{text-align:center;font:12px ui-monospace,monospace;color:var(--mu);line-height:1.5}
+.pcpw{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#080918;margin-top:12px}
+.pcpw span{font:700 14px ui-monospace,monospace;flex:1;min-width:120px;word-break:break-all}
+.pcpw small{color:var(--mu);font:12px ui-monospace,monospace;width:100%}
+/* akun & limit */
+.uname{font-size:30px;font-weight:800;margin:0 4px 0 0;word-break:break-all}
+.role{font:700 12px ui-monospace,monospace;letter-spacing:1.5px;padding:8px 14px;border-radius:99px;border:1px solid rgba(52,211,153,.5);color:var(--ok)}
+.role.tamu{color:var(--mu);border-color:var(--line)}
+.role.vip{color:var(--warn);border-color:rgba(251,191,36,.5)}
+.role.owner{color:var(--a2);border-color:rgba(34,211,238,.5)}
+.lim{height:10px;background:var(--line);border-radius:99px;overflow:hidden;margin:16px 0 14px}
+.lim i{display:block;height:100%;width:0;background:var(--grad);transition:.4s}
+.lt{font-size:20px;font-weight:800;margin:0 0 6px}
+.codebox{display:flex;gap:10px;margin-top:16px}
+.codebox input{flex:1;min-width:0}
+.codebox .btn{width:auto;margin:0;padding:0 22px;flex:0 0 auto}
 .page{display:none;animation:fade .25s}.page.on{display:block}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media(min-width:900px){
@@ -139,6 +131,7 @@ pre{background:#080918;border:1px solid var(--line);border-radius:14px;padding:1
   <button class="nav on" data-p="home"><i>◈</i>Home</button>
   <button class="nav" data-p="audio"><i>♫</i>Upload Audio</button>
   <button class="nav" data-p="anim"><i>✪</i>Upload Animasi</button>
+  <button class="nav" data-p="model"><i>▣</i>Upload Model</button>
   <div class="sec">AKUN</div>
   <button class="nav" data-p="settings"><i>⚙</i>Settings</button>
 </aside>
@@ -155,9 +148,8 @@ pre{background:#080918;border:1px solid var(--line);border-radius:14px;padding:1
   <div class="hero">
     <div class="eyebrow">Dashboard</div>
     <h1>Halo, Creator.</h1>
-    <p class="sub" style="margin:0">Publish audio dan animasi langsung ke Roblox dari browser, atas nama akunmu sendiri.</p>
+    <p class="sub" style="margin:0">Publish audio, animasi, dan model langsung ke Roblox dari browser, atas nama akunmu sendiri.</p>
     <div class="chipinfo">
-      <span class="badge" id="bRole" style="cursor:pointer">Akun: memuat...</span>
       <span class="badge" id="bCreator">Creator: -</span>
       <span class="badge" id="bKey">API key: -</span>
       <span class="badge" id="bBe">Backend: -</span>
@@ -170,47 +162,71 @@ pre{background:#080918;border:1px solid var(--line);border-radius:14px;padding:1
   <div class="row">
     <button class="btn" data-go="audio">♫ Upload Audio</button>
     <button class="btn ghost" data-go="anim">✪ Upload Animasi</button>
+    <button class="btn ghost" data-go="model">▣ Upload Model</button>
   </div>
 
-  <div class="card" id="accCard" style="margin-top:18px">
+  <!-- AKUN & LIMIT -->
+  <div class="card" style="margin-top:18px" id="acct">
     <h2>Akun &amp; Limit</h2>
-    <div class="accTop"><span class="accName" id="accName">Memuat...</span><span class="badge" id="accRole">-</span></div>
-    <div class="meter"><i id="accBar"></i></div>
-    <div class="accTxt" id="accTxt"></div>
-    <div class="accReset" id="accReset"></div>
-    <div class="hint" id="accHint" style="margin-top:8px"></div>
-    <div class="row" id="accIn">
-      <button class="btn" id="accLogin">Masuk</button>
-      <button class="btn ghost" id="accReg">Daftar</button>
+
+    <div id="acOut">
+      <div class="lt" id="gTxt">Memuat...</div>
+      <div class="pcmeta" style="text-align:left" id="gRst"></div>
+      <div class="hint">Login atau daftar untuk mendapat 10 upload per hari, dan untuk memakai kode.</div>
+      <label>Username</label>
+      <input type="text" id="lu" autocapitalize="off" autocorrect="off" autocomplete="username" spellcheck="false" placeholder="3-20 karakter: huruf, angka, _">
+      <label>Password</label>
+      <input type="password" id="lp" autocomplete="current-password" placeholder="Minimal 6 karakter">
+      <div class="row">
+        <button class="btn" id="bLogin">Masuk</button>
+        <button class="btn ghost" id="bReg">Daftar</button>
+      </div>
     </div>
-    <div class="rd">
-      <input type="text" id="rdCode" placeholder="Kode VIP / owner" autocapitalize="off" autocomplete="off" autocorrect="off">
-      <button class="btn ghost" id="rdGo">Pakai kode</button>
+
+    <div id="acIn" style="display:none">
+      <div style="display:flex;align-items:center;flex-wrap:wrap;gap:12px">
+        <div class="uname" id="uName"></div>
+        <span class="role" id="uRole"></span>
+      </div>
+      <div class="lim"><i id="limBar"></i></div>
+      <div class="lt" id="limTxt"></div>
+      <div class="pcmeta" style="text-align:left" id="limRst"></div>
+      <div class="hint" id="limHint"></div>
+      <div class="codebox">
+        <input type="text" id="rcode" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" placeholder="Masukkan kode">
+        <button class="btn ghost" id="bRedeem">Pakai kode</button>
+      </div>
+      <button class="btn ghost" id="bOut">Keluar</button>
     </div>
-    <div class="msg" id="rdMsg"></div>
-    <button class="btn ghost" id="accOut" style="display:none">Keluar</button>
+
+    <div class="msg" id="mA"></div>
   </div>
 
   <div class="card">
     <h2>Cek Asset ID</h2>
-    <p class="sub" style="margin:0 0 6px">Cek status asset milikmu (diproses, disetujui, atau kena moderasi).</p>
+    <p class="sub" style="margin:0 0 6px">Cek status asset milikmu (diproses, disetujui, atau kena moderasi). Untuk audio, ada tombol preview.</p>
     <input type="text" id="aid" inputmode="numeric" placeholder="contoh: 1234567890">
     <button class="btn ghost" id="chkA">Cek status</button>
     <div id="aRes"></div>
   </div>
 
   <div class="card" id="pcCard" style="display:none">
-    <h2>Cloud PC (AnyDesk) · Owner</h2>
-    <span class="badge" id="pcState">STATUS: -</span>
-    <div class="pcid none" id="pcId">Belum ada ID</div>
+    <h2>Cloud PC (AnyDesk)</h2>
+    <span class="pcbadge" id="pcBadge">CEK...</span>
+    <div class="pcid none" id="pcId">Memuat...</div>
     <div class="pcmeta" id="pcMeta"></div>
-    <div class="pccopy" id="pcCopy"></div>
+    <div class="pcpw" id="pcPw" style="display:none"></div>
     <div class="row">
-      <button class="btn" id="pcOn">▶ Nyalakan</button>
+      <button class="btn" id="pcOn">⏻ Nyalakan</button>
       <button class="btn danger" id="pcOff">■ Matikan</button>
     </div>
     <button class="btn ghost" id="pcRef">↻ Refresh</button>
-    <div class="msg" id="pcMsg"></div>
+  </div>
+
+  <div class="card">
+    <h2>Layanan WhatsApp</h2>
+    <p class="sub" style="margin:0 0 6px">Upload animasi dan model butuh kode akses. Chat dulu ke WhatsApp, nanti kodenya dikirim. Setelah itu login dan masukkan kode di kolom "Pakai kode".</p>
+    <a class="btn" href="https://wa.me/6283841104725?text=Halo%2C%20saya%20mau%20minta%20kode%20akses%20upload%20ALEX%20STUDIO.%0AUsername%3A%20" target="_blank" rel="noopener">💬 Chat WhatsApp 083841104725</a>
   </div>
 
   <div class="card">
@@ -267,6 +283,7 @@ pre{background:#080918;border:1px solid var(--line);border-radius:14px;padding:1
   <div class="eyebrow">3D / Animation</div>
   <h1>Upload Animasi</h1>
   <p class="sub">Publish file animasi (RBXM hasil Export dari Animation Editor) langsung ke Roblox.</p>
+  <div class="lock">🔒 Butuh kode akses. <a href="https://wa.me/6283841104725" target="_blank" rel="noopener">Chat WhatsApp 083841104725</a> untuk dapat kodenya.</div>
 
   <div class="drop" id="dropA">
     <div class="ic">✪</div>
@@ -297,6 +314,42 @@ pre{background:#080918;border:1px solid var(--line);border-radius:14px;padding:1
   </div>
 </section>
 
+<!-- MODEL -->
+<section class="page" id="p-model">
+  <div class="eyebrow">3D / Model</div>
+  <h1>Upload Model</h1>
+  <p class="sub">Publish file model (RBXM hasil Save to File dari Roblox Studio) langsung ke Roblox dan dapatkan Asset ID model.</p>
+  <div class="lock">🔒 Butuh kode akses. <a href="https://wa.me/6283841104725" target="_blank" rel="noopener">Chat WhatsApp 083841104725</a> untuk dapat kodenya.</div>
+
+  <div class="drop" id="dropM">
+    <div class="ic">▣</div>
+    <h3>Drop file RBXM di sini</h3>
+    <p>atau klik untuk pilih file model</p>
+    <div class="tags"><span class="tag">RBXM</span></div>
+    <input type="file" id="fileM" accept=".rbxm" hidden>
+  </div>
+
+  <div class="q" id="qM" style="display:none">
+    <div class="h"><div class="n" id="nM"></div><button class="x" id="xM">✕</button></div>
+    <div class="bar"><i id="bM"></i></div>
+    <div class="st" id="sM"></div>
+  </div>
+
+  <div class="card">
+    <h2>Detail Asset Model</h2>
+    <label style="margin-top:0">Nama Model (opsional)</label>
+    <input type="text" id="mnm" placeholder="Kosongkan untuk otomatis memakai nama file">
+    <label>Deskripsi (opsional)</label>
+    <input type="text" id="mnd" placeholder="Model uploaded via ALEX STUDIO">
+    <div class="hint">Di Studio: klik kanan model di Explorer, pilih Save to File, simpan sebagai .rbxm. Jangan pakai .rbxmx.</div>
+  </div>
+
+  <div class="row">
+    <button class="btn" id="goM">⇧ Upload Model ke Roblox</button>
+    <button class="btn ghost" id="clearM">Hapus Semua</button>
+  </div>
+</section>
+
 <!-- SETTINGS -->
 <section class="page" id="p-settings">
   <div class="eyebrow">Akun</div>
@@ -324,10 +377,10 @@ pre{background:#080918;border:1px solid var(--line);border-radius:14px;padding:1
     <div class="msg" id="mK"></div>
   </div>
 
-  <div class="card" id="beCard" style="display:none">
-    <h2>Backend (Owner)</h2>
-    <label style="margin-top:0">URL Worker (kosongkan = default)</label>
-    <input type="text" id="be" placeholder="https://alex-studio-5j7.pages.dev" autocapitalize="off">
+  <div class="card">
+    <h2>Backend</h2>
+    <label style="margin-top:0">URL Worker (kosongkan = pakai server ini)</label>
+    <input type="text" id="be" placeholder="kosongkan jika web dibuka dari pages.dev" autocapitalize="off">
     <button class="btn ghost" id="saveB">Simpan URL</button>
     <button class="btn ghost" id="test">Tes koneksi backend</button>
     <pre id="out" style="display:none"></pre>
@@ -345,36 +398,9 @@ pre{background:#080918;border:1px solid var(--line);border-radius:14px;padding:1
   <button class="bn on" data-p="home"><i>◈</i>Home</button>
   <button class="bn" data-p="audio"><i>♫</i>Audio</button>
   <button class="bn" data-p="anim"><i>✪</i>Animasi</button>
+  <button class="bn" data-p="model"><i>▣</i>Model</button>
   <button class="bn" data-p="settings"><i>⚙</i>Settings</button>
 </nav>
-
-<!-- LOGIN / DAFTAR -->
-<div class="ov" id="ov">
-  <div class="mod">
-    <button class="mx" id="ovX">✕</button>
-    <div class="mlogo">A</div>
-    <h2 id="ovT">Masuk ke ALEX STUDIO</h2>
-    <p class="sub" id="ovS">Login untuk menambah limit upload harian.</p>
-    <div class="plans">
-      <div class="plan"><b>5</b><span>Tamu / hari</span></div>
-      <div class="plan"><b>10</b><span>Akun / hari</span></div>
-      <div class="plan"><b>∞</b><span>VIP</span></div>
-    </div>
-    <div class="seg"><button id="tabIn" class="on">Masuk</button><button id="tabUp">Daftar</button></div>
-    <label>Username</label>
-    <input type="text" id="au" placeholder="huruf, angka, atau _" autocapitalize="off" autocomplete="username" autocorrect="off">
-    <label>Password</label>
-    <input type="password" id="ap" placeholder="minimal 6 karakter" autocomplete="current-password">
-    <div id="ap2w" style="display:none">
-      <label>Ulangi password</label>
-      <input type="password" id="ap2" placeholder="ketik ulang password" autocomplete="new-password">
-    </div>
-    <div class="msg" id="aMsg"></div>
-    <button class="btn" id="aGo">Masuk</button>
-    <button class="btn ghost" id="aGuest">Lanjut sebagai tamu (5 upload/hari)</button>
-    <div class="hint" style="font-size:12px;text-align:center">Limit direset otomatis setiap hari jam 17:00 WIB.</div>
-  </div>
-</div>
 
 <script>
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
@@ -383,7 +409,6 @@ const LS={
   set:(k,v)=>{try{localStorage.setItem('as_'+k,v)}catch{}},
   del:k=>{try{localStorage.removeItem('as_'+k)}catch{}}
 };
-const DEFAULT_BE='https://alex-studio-5j7.pages.dev';
 const stats={up:0,ok:0};
 const bump=ok=>{stats.up++;$('#sUp').textContent=stats.up;if(ok){stats.ok++;$('#sOk').textContent=stats.ok}};
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -400,18 +425,14 @@ $('#copyLog').onclick=()=>{try{navigator.clipboard.writeText(logs.join('\n'))}ca
 function go(p){
   $$('.page').forEach(e=>e.classList.toggle('on',e.id==='p-'+p));
   $$('[data-p]').forEach(e=>e.classList.toggle('on',e.dataset.p===p));
-  if(p==='home'){
-    badges();
-    const was=wasOwner;
-    loadMe().then(()=>{if(was&&wasOwner)loadPC()});
-  }
+  if(p==='home'){badges();refreshMe().then(()=>{if(isOwner())loadPC(true)})}
   scrollTo(0,0);
 }
 $$('[data-p]').forEach(b=>b.onclick=()=>go(b.dataset.p));
 $$('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
 
 /* ---------- backend ---------- */
-const base=()=>(LS.get('be').trim().replace(/\/+$/,'')||DEFAULT_BE);
+const base=()=>(LS.get('be').trim().replace(/\/+$/,'')||location.origin);
 function normUrl(u){
   u=u.trim().replace(/\/+$/,'');
   if(u&&!/^https?:\/\//i.test(u))u='https://'+u;
@@ -421,14 +442,14 @@ async function api(path,opt={},timeout=180000){
   const h=Object.assign({},opt.headers||{});
   const k=LS.get('key');
   if(k&&!h['x-api-key'])h['x-api-key']=k;
-  const tk=LS.get('tok');
-  if(tk&&!h['authorization'])h['authorization']='Bearer '+tk;
+  const t0=LS.get('tok');
+  if(t0&&!h.authorization)h.authorization='Bearer '+t0;
   const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),timeout);
   let r;
   try{r=await fetch(base()+path,Object.assign({},opt,{headers:h,signal:ctl.signal}))}
   catch(e){
     clearTimeout(t);
-    throw new Error(e.name==='AbortError'?'Backend tidak merespons (timeout).':'Tidak bisa terhubung ke backend. Cek koneksi internet.');
+    throw new Error(e.name==='AbortError'?'Backend tidak merespons (timeout).':'Tidak bisa terhubung ke backend. Cek koneksi internet atau URL di Settings.');
   }
   clearTimeout(t);
   const txt=await r.text();let j=null;
@@ -453,126 +474,85 @@ function badges(online){
   set('#bBe','Backend: '+(online===true?'siap':online===false?'offline':'diset'),online!==false);
 }
 
-/* ---------- akun, limit, login ---------- */
-let me=null,wasOwner=false,authMode='in';
-const ROLE={guest:'TAMU',user:'AKUN',vip:'VIP',vip7:'VIP 7 HARI',owner:'OWNER'};
-function resetIn(ms){
-  const s=Math.max(0,Math.floor((ms-Date.now())/1000));
-  return Math.floor(s/3600)+' jam '+Math.floor((s%3600)/60)+' menit';
+/* ---------- akun & limit ---------- */
+let me=null;
+const isOwner=()=>!!(me&&me.role==='owner');
+const ROLE={guest:['TAMU','tamu'],user:['AKUN',''],vip:['VIP','vip'],vip7:['VIP 7 HARI','vip'],owner:['OWNER','owner']};
+function resetText(t){
+  const m=Math.max(0,Math.floor((t-Date.now())/60000));
+  return 'Reset jam 17:00 WIB · '+Math.floor(m/60)+' jam '+(m%60)+' menit lagi';
 }
-function renderAccount(){
-  const m=me,rb=$('#bRole');
-  if(!m){
-    rb.textContent='Akun: gagal dimuat';rb.className='badge bad';
-    $('#accName').textContent='Tidak bisa memuat akun';$('#accTxt').textContent='Cek koneksi lalu buka Home lagi.';
+function renderAcct(){
+  if(!me)return;
+  const lo=!!me.loggedIn;
+  $('#acOut').style.display=lo?'none':'block';
+  $('#acIn').style.display=lo?'block':'none';
+  const unl=me.limit===null;
+  if(!lo){
+    $('#gTxt').textContent='Tamu: sisa upload hari ini '+me.left+' dari '+me.limit;
+    $('#gRst').textContent=resetText(me.resetAt);
     return;
   }
-  rb.textContent=ROLE[m.role]+(m.limit===null?' · unlimited':' · sisa '+m.left+'/'+m.limit);
-  rb.className='badge '+(m.role==='guest'?'no':'ok');
-  $('#accName').textContent=m.loggedIn?m.name:'Tamu (belum login)';
-  const ro=$('#accRole');ro.textContent=ROLE[m.role];ro.className='badge '+(m.role==='guest'?'no':'ok');
-  const bar=$('#accBar');
-  if(m.limit===null){
-    bar.style.width='100%';bar.className='';
-    $('#accTxt').textContent='Upload unlimited'+(m.role==='vip7'&&m.vipUntil?' · berlaku sampai '+new Date(m.vipUntil).toLocaleString():'');
-    $('#accReset').textContent='';
-  }else{
-    const pct=Math.min(100,m.used/m.limit*100);
-    bar.style.width=pct+'%';bar.className=pct>=100?'bad':pct>=70?'warn':'';
-    $('#accTxt').textContent='Sisa upload hari ini: '+m.left+' dari '+m.limit;
-    $('#accReset').textContent='Reset jam 17:00 WIB · '+resetIn(m.resetAt)+' lagi';
-  }
-  $('#accHint').textContent=m.role==='guest'?'Login untuk dapat 10 upload per hari.':m.role==='user'?'Pakai kode VIP untuk upload unlimited.':'';
-  $('#accIn').style.display=m.loggedIn?'none':'';
-  $('#accOut').style.display=m.loggedIn?'':'none';
+  const rl=ROLE[me.role]||ROLE.user;
+  $('#uName').textContent=me.name||'';
+  const rb=$('#uRole');rb.textContent=rl[0];rb.className='role '+rl[1];
+  $('#limBar').style.width=unl?'100%':Math.min(100,Math.round(me.used/me.limit*100))+'%';
+  $('#limTxt').textContent=unl?'Upload unlimited':'Sisa upload hari ini: '+me.left+' dari '+me.limit;
+  $('#limRst').textContent=unl?'':resetText(me.resetAt);
+  let h='';
+  if(me.role==='owner')h='Owner aktif. Semua fitur terbuka, termasuk Cloud PC.';
+  else if(me.role==='vip')h='VIP aktif. Upload unlimited.';
+  else if(me.role==='vip7')h='VIP 7 hari aktif sampai '+new Date(me.vipUntil).toLocaleString()+'.';
+  else h=(me.unlocked?'Akses animasi dan model aktif. ':'Kode akses animasi dan model didapat lewat WhatsApp '+(me.wa||'')+'. ')+'Pakai kode VIP untuk upload unlimited.';
+  $('#limHint').textContent=h;
 }
-function syncOwnerUi(){
-  const own=!!(me&&me.role==='owner');
-  $('#pcCard').style.display=own?'':'none';
-  $('#beCard').style.display=own?'':'none';
-  if(own&&!wasOwner)loadPC();
-  if(!own)pollTok++;
-  wasOwner=own;
-}
-async function loadMe(){
+async function refreshMe(){
   try{
-    const j=await api('/auth/me',{},15000);
-    me=j;
-    if(!j.loggedIn&&LS.get('tok'))LS.del('tok');
-  }catch(e){log('Akun gagal dimuat: '+e.message)}
-  renderAccount();syncOwnerUi();
+    me=await api('/auth/me',{},15000);
+    if(!me.loggedIn&&LS.get('tok'))LS.del('tok');
+  }catch(e){
+    if(!me)me={loggedIn:false,role:'guest',limit:5,used:0,left:5,resetAt:Date.now()+3600000,unlocked:false};
+  }
+  renderAcct();
+  $('#pcCard').style.display=isOwner()?'block':'none';
+  if(!isOwner())pcStopPoll();
   return me;
 }
-function limitMsgClient(){
-  const m=me;
-  if(m&&m.limit!==null&&m.used>=m.limit)
-    return 'Batas upload harian habis ('+m.used+'/'+m.limit+'). Reset jam 17:00 WIB.'+(m.loggedIn?' Pakai kode VIP untuk unlimited.':' Login untuk dapat 10 upload per hari, atau pakai kode VIP.');
-  return '';
-}
-function bumpQuota(){
-  if(me&&me.limit!==null){me.used++;me.left=Math.max(0,me.limit-me.used)}
-  renderAccount();loadMe();
-}
-function setAuthMode(m){
-  authMode=m;
-  $('#tabIn').classList.toggle('on',m==='in');$('#tabUp').classList.toggle('on',m==='up');
-  $('#ap2w').style.display=m==='up'?'':'none';
-  $('#aGo').textContent=m==='in'?'Masuk':'Buat Akun';
-  $('#ovT').textContent=m==='in'?'Masuk ke ALEX STUDIO':'Buat akun baru';
-  $('#ovS').textContent=m==='in'?'Login untuk menambah limit upload harian.':'Gratis. Dapat 10 upload per hari.';
-  $('#ap').autocomplete=m==='in'?'current-password':'new-password';
-  $('#aMsg').textContent='';
-}
-function openAuth(m){setAuthMode(m||'in');$('#ov').classList.add('on');setTimeout(()=>$('#au').focus(),60)}
-function closeAuth(){$('#ov').classList.remove('on');LS.set('seen','1')}
-$('#tabIn').onclick=()=>setAuthMode('in');
-$('#tabUp').onclick=()=>setAuthMode('up');
-$('#ovX').onclick=closeAuth;$('#aGuest').onclick=closeAuth;
-$('#ov').onclick=e=>{if(e.target===$('#ov'))closeAuth()};
-['#ap','#ap2'].forEach(s=>$(s).addEventListener('keydown',e=>{if(e.key==='Enter')$('#aGo').click()}));
-$('#aGo').onclick=async()=>{
-  const el=$('#aMsg'),btn=$('#aGo');
-  const u=$('#au').value.trim(),p=$('#ap').value;
-  if(!u||!p)return msg(el,'Isi username dan password.',false);
-  if(authMode==='up'&&p!==$('#ap2').value)return msg(el,'Password dan ulangi password tidak sama.',false);
-  btn.disabled=true;msg(el,authMode==='in'?'Memeriksa...':'Membuat akun...',true);
+setInterval(()=>{if(me)renderAcct()},60000);
+
+async function doAuth(kind){
+  const u=$('#lu').value.trim(),p=$('#lp').value;
+  if(!u||!p)return msg($('#mA'),'Isi username dan password.',false);
+  msg($('#mA'),'Memproses...',true);
   try{
-    const j=await api(authMode==='in'?'/auth/login':'/auth/register',
-      {method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({username:u,password:p})},30000);
-    LS.set('tok',j.token);me=j.me;
-    $('#au').value='';$('#ap').value='';$('#ap2').value='';
-    closeAuth();renderAccount();syncOwnerUi();
-    log((authMode==='in'?'Login: ':'Daftar: ')+j.me.name);
-  }catch(e){msg(el,'✗ '+e.message,false)}
-  btn.disabled=false;
-};
-$('#accLogin').onclick=()=>openAuth('in');
-$('#accReg').onclick=()=>openAuth('up');
-$('#bRole').onclick=()=>{
-  if(me&&me.loggedIn){go('home');$('#accCard').scrollIntoView({behavior:'smooth'})}
-  else openAuth('in');
-};
-$('#accOut').onclick=async()=>{
-  try{await api('/auth/logout',{method:'POST'},15000)}catch{}
-  LS.del('tok');log('Logout');
-  await loadMe();
-};
-$('#rdGo').onclick=async()=>{
-  const el=$('#rdMsg'),code=$('#rdCode').value.trim();
-  if(!me||!me.loggedIn){openAuth('in');return msg(el,'Login dulu untuk memakai kode.',false)}
-  if(!code)return msg(el,'Isi kodenya dulu.',false);
-  $('#rdGo').disabled=true;msg(el,'Memeriksa kode...',true);
+    const j=await api('/auth/'+kind,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({username:u,password:p})},20000);
+    LS.set('tok',j.token);$('#lp').value='';
+    await refreshMe();
+    msg($('#mA'),kind==='register'?'✓ Akun dibuat dan kamu sudah masuk.':'✓ Berhasil masuk.',true);
+    log('Auth '+kind+' OK: '+u);
+    if(isOwner())loadPC(true);
+  }catch(e){msg($('#mA'),'✗ '+e.message,false);log('Auth gagal: '+e.message)}
+}
+$('#bLogin').onclick=()=>doAuth('login');
+$('#bReg').onclick=()=>doAuth('register');
+$('#bRedeem').onclick=async()=>{
+  const c=$('#rcode').value.trim();
+  if(!c)return msg($('#mA'),'Isi kodenya dulu.',false);
+  msg($('#mA'),'Mengecek kode...',true);
   try{
-    const j=await api('/auth/redeem',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code})},20000);
-    me=j.me;$('#rdCode').value='';
-    msg(el,'✓ '+j.message,true);log('Kode dipakai: '+j.message);
-    renderAccount();syncOwnerUi();
-  }catch(e){msg(el,'✗ '+e.message,false)}
-  $('#rdGo').disabled=false;
+    const j=await api('/auth/redeem',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code:c})},20000);
+    $('#rcode').value='';
+    await refreshMe();
+    msg($('#mA'),'✓ '+j.message,true);log('Kode dipakai: '+j.message);
+    if(isOwner())loadPC(true);
+  }catch(e){msg($('#mA'),'✗ '+e.message,false);log('Kode gagal: '+e.message)}
 };
-setInterval(()=>{
-  if(me&&me.limit!==null&&Date.now()>=me.resetAt)loadMe();else if(me)renderAccount();
-},30000);
+$('#bOut').onclick=async()=>{
+  try{await api('/auth/logout',{method:'POST'},10000)}catch{}
+  LS.del('tok');pcStopPoll();
+  await refreshMe();
+  msg($('#mA'),'Kamu sudah keluar.',true);
+};
 
 /* ---------- settings ---------- */
 function loadSettings(){
@@ -595,6 +575,7 @@ $('#saveB').onclick=()=>{
 $('#saveK').onclick=async()=>{
   const k=$('#key').value.trim();
   if(!k)return msg($('#mK'),'Isi API key dulu.',false);
+  const u=normUrl($('#be').value);LS.set('be',u);
   msg($('#mK'),'Mengecek key...',true);
   try{
     await api('/validate',{method:'POST',headers:{'x-api-key':k}},20000);
@@ -617,6 +598,7 @@ function copyBtn(parent,text,label){
   const b=document.createElement('button');b.className='copy';b.textContent=label||'Salin';
   b.onclick=()=>{try{navigator.clipboard.writeText(text);b.textContent='✓ Tersalin'}catch{b.textContent='✗'}};
   parent.appendChild(b);
+  return b;
 }
 function renderHist(){
   const box=$('#hist');box.innerHTML='';
@@ -632,6 +614,7 @@ function renderHist(){
 }
 
 /* ---------- Cloud PC (AnyDesk), khusus owner ---------- */
+let pcTimer=null,pcWait=0,pcShowPw=false,pcBusy=false;
 function fmtPC(id){return String(id).replace(/\s/g,'').replace(/(\d{3})(?=\d)/g,'$1 ')}
 function ago(ms){
   const s=Math.max(0,Math.floor((Date.now()-ms)/1000));
@@ -639,70 +622,93 @@ function ago(ms){
   if(s<3600)return Math.floor(s/60)+' menit lalu';
   return Math.floor(s/3600)+' jam '+Math.floor((s%3600)/60)+' menit lalu';
 }
-function setPcState(t,cls){const e=$('#pcState');e.textContent='STATUS: '+t;e.className='badge '+(cls||'')}
-async function loadPC(){
-  const idEl=$('#pcId'),meta=$('#pcMeta'),cp=$('#pcCopy');
-  cp.innerHTML='';
-  meta.textContent='Memuat...';
-  try{
-    const j=await api('/cloudpc',{},15000);
-    if(j.state==='on')setPcState('MENYALA','ok');
-    else if(j.state==='off')setPcState('MATI','no');
-    else setPcState('TIDAK DIKETAHUI','no');
-    if(!j.id){
-      idEl.className='pcid none';idEl.textContent='Belum ada ID';
-      meta.textContent=j.state==='on'?'PC sedang menyala, menunggu ID dari workflow...':'Tekan Nyalakan untuk menjalankan Cloud PC.';
-      return j;
-    }
-    idEl.className='pcid';idEl.textContent=fmtPC(j.id);
-    meta.textContent='Diterima '+ago(j.at);
-    copyBtn(cp,String(j.id),'Salin ID');
-    if(j.password)copyBtn(cp,String(j.password),'Salin password');
-    log('Cloud PC ID dimuat');
-    return j;
-  }catch(e){
-    setPcState('ERROR','bad');
-    idEl.className='pcid none';idEl.textContent='Gagal memuat';
-    meta.textContent=e.message;
-    return null;
+const pcCall=(path,method)=>api(path,{method:method||'GET'},25000);
+function pcStopPoll(){if(pcTimer){clearInterval(pcTimer);pcTimer=null}}
+function pcPoll(){
+  pcStopPoll();let n=0;
+  pcTimer=setInterval(()=>{if(++n>72){pcStopPoll();return}loadPC(true)},5000);
+}
+function pcUi(badge,cls,idText,idHas,meta,on,off){
+  const b=$('#pcBadge');b.textContent=badge;b.className='pcbadge '+cls;
+  const i=$('#pcId');i.textContent=idText;i.className='pcid'+(idHas?'':' none');
+  $('#pcMeta').textContent=meta||'';
+  $('#pcOn').disabled=pcBusy||!on;$('#pcOff').disabled=pcBusy||!off;
+}
+function pcRenderPw(pw){
+  const box=$('#pcPw');box.innerHTML='';
+  if(!pw){box.style.display='none';return}
+  box.style.display='flex';
+  const sm=document.createElement('small');sm.textContent='Password AnyDesk';box.appendChild(sm);
+  const sp=document.createElement('span');sp.textContent=pcShowPw?pw:'••••••••••••';box.appendChild(sp);
+  const eye=document.createElement('button');eye.className='copy';eye.textContent=pcShowPw?'Sembunyi':'Lihat';
+  eye.onclick=()=>{pcShowPw=!pcShowPw;pcRenderPw(pw)};box.appendChild(eye);
+  copyBtn(box,pw,'Salin');
+}
+function pcRenderId(id){
+  const old=$('#pcIdBtns');if(old)old.remove();
+  if(!id)return;
+  const d=document.createElement('div');d.id='pcIdBtns';d.style.textAlign='center';
+  copyBtn(d,String(id),'Salin ID');
+  $('#pcMeta').after(d);
+}
+async function loadPC(quiet){
+  if(!isOwner())return;
+  pcRenderId(null);
+  if(!quiet)$('#pcMeta').textContent='Memuat...';
+  let j;
+  try{j=await pcCall('/cloudpc')}
+  catch(e){
+    pcRenderPw(null);
+    pcUi('ERROR','off','Gagal memuat',false,e.message,false,false);
+    return;
+  }
+  const waiting=j.state==='off'&&Date.now()<pcWait;
+  if(j.id&&j.state!=='off'){
+    pcStopPoll();
+    pcUi('MENYALA','on',fmtPC(j.id),true,'ID diterima '+ago(j.at)+'. Buka AnyDesk lalu masukkan ID dan password.',false,true);
+    pcRenderId(j.id);pcRenderPw(j.password);
+  }else if(j.state==='on'||waiting){
+    pcRenderPw(null);
+    pcUi('MENYIAPKAN','wait',waiting&&j.state!=='on'?'Memulai workflow...':'Menunggu ID...',false,'PC sedang disiapkan, biasanya 1 sampai 2 menit. Halaman ini memeriksa otomatis.',false,j.state==='on');
+    if(!pcTimer)pcPoll();
+  }else if(j.state==='off'){
+    pcStopPoll();pcRenderPw(null);
+    pcUi('MATI','off','PC mati',false,'Tekan Nyalakan untuk menghidupkan Cloud PC.',true,false);
+  }else{
+    pcRenderPw(null);
+    pcUi('TIDAK DIKETAHUI','wait',j.id?fmtPC(j.id):'Status tidak diketahui',!!j.id,'Backend belum bisa membaca status dari GitHub. Cek secret GH_PAT di Cloudflare.',true,true);
+    if(j.id){pcRenderId(j.id);pcRenderPw(j.password)}
   }
 }
-let pollTok=0;
-async function pollPC(){
-  const my=++pollTok;
-  for(let i=0;i<24&&my===pollTok;i++){
-    await sleep(10000);
-    if(my!==pollTok)return;
-    const j=await loadPC();
-    if(j&&j.id)return;
-  }
-}
-$('#pcRef').onclick=()=>{pollTok++;loadPC()};
+$('#pcRef').onclick=()=>loadPC(false);
 $('#pcOn').onclick=async()=>{
-  const m=$('#pcMsg'),b=$('#pcOn');
-  b.disabled=true;msg(m,'Mengirim perintah nyala...',true);
+  pcBusy=true;$('#pcOn').disabled=true;$('#pcOff').disabled=true;
+  $('#pcMeta').textContent='Menyalakan...';
   try{
-    const j=await api('/cloudpc/start',{method:'POST'},30000);
-    msg(m,j.already?'PC sudah menyala.':'Perintah dikirim. Tunggu 1–2 menit, ID muncul otomatis.',true);
-    log('Cloud PC: start');
-    await loadPC();pollPC();
-  }catch(e){msg(m,'✗ '+e.message,false);log('Start gagal: '+e.message)}
-  b.disabled=false;
+    await pcCall('/cloudpc/start','POST');
+    pcWait=Date.now()+45000;log('Cloud PC: perintah nyala dikirim');
+  }catch(e){
+    pcBusy=false;log('Cloud PC gagal nyala: '+e.message);
+    pcUi('ERROR','off','Gagal menyalakan',false,e.message,true,false);return;
+  }
+  pcBusy=false;await loadPC(true);pcPoll();
 };
 $('#pcOff').onclick=async()=>{
-  const m=$('#pcMsg'),b=$('#pcOff');
-  if(!confirm('Matikan Cloud PC sekarang?'))return;
-  b.disabled=true;msg(m,'Mematikan...',true);pollTok++;
+  if(!confirm('Matikan Cloud PC sekarang? Koneksi AnyDesk akan terputus.'))return;
+  pcBusy=true;$('#pcOn').disabled=true;$('#pcOff').disabled=true;
+  $('#pcMeta').textContent='Mematikan...';
   try{
-    const j=await api('/cloudpc/stop',{method:'POST'},30000);
-    msg(m,'PC dimatikan ('+(j.cancelled||0)+' proses dibatalkan).',true);
-    log('Cloud PC: stop');
-    await loadPC();
-  }catch(e){msg(m,'✗ '+e.message,false);log('Stop gagal: '+e.message)}
-  b.disabled=false;
+    await pcCall('/cloudpc/stop','POST');
+    pcWait=0;log('Cloud PC: perintah mati dikirim');
+  }catch(e){
+    pcBusy=false;log('Cloud PC gagal mati: '+e.message);
+    pcUi('ERROR','off','Gagal mematikan',false,e.message,false,true);return;
+  }
+  pcBusy=false;pcStopPoll();
+  await sleep(2500);await loadPC(true);
 };
 
-/* ---------- cek asset ID ---------- */
+/* ---------- cek asset ID + preview audio ---------- */
 $('#chkA').onclick=async()=>{
   const id=$('#aid').value.trim().replace(/\D/g,'');
   const box=$('#aRes');box.innerHTML='';
@@ -721,7 +727,34 @@ $('#chkA').onclick=async()=>{
     copyBtn(d,id,'Salin ID');copyBtn(d,'rbxassetid://'+id,'rbxassetid');
     const sv=document.createElement('button');sv.className='copy';sv.textContent='Simpan ke riwayat';
     sv.onclick=()=>{pushHist({name:a.displayName||('Asset '+id),type:a.assetType||'Asset',id:id,at:new Date().toLocaleString()});sv.textContent='✓ Tersimpan'};
-    d.appendChild(sv);box.appendChild(d);
+    d.appendChild(sv);
+
+    if(String(a.assetType||'').toLowerCase()==='audio'){
+      const pv=document.createElement('button');pv.className='copy';pv.textContent='▶ Putar preview';
+      const pbox=document.createElement('div');pbox.style.marginTop='10px';
+      pv.onclick=async()=>{
+        pv.disabled=true;pv.textContent='Memuat audio...';pbox.innerHTML='';
+        try{
+          const r=await api('/asset-audio?id='+encodeURIComponent(id),{},30000);
+          const au=document.createElement('audio');
+          au.controls=true;au.style.width='100%';au.src=r.url;
+          au.onerror=()=>{pbox.innerHTML='';const m=document.createElement('div');m.className='msg err';m.textContent='✗ Browser gagal memutar audio ini (link kedaluwarsa atau diblokir).';pbox.appendChild(m)};
+          pbox.appendChild(au);
+          au.play().catch(()=>{});
+          pv.textContent='▶ Muat ulang preview';
+          log('Preview audio '+id+' dimuat');
+        }catch(e){
+          pv.textContent='▶ Putar preview';
+          pbox.innerHTML='';
+          const m=document.createElement('div');m.className='msg err';m.textContent='✗ '+e.message;pbox.appendChild(m);
+          log('Preview gagal: '+e.message);
+        }
+        pv.disabled=false;
+      };
+      d.appendChild(pv);d.appendChild(pbox);
+    }
+
+    box.appendChild(d);
     log('Cek asset '+id+': '+(a.state||'?')+' / '+mod);
   }catch(e){box.innerHTML='';line('✗ '+e.message,'err');log('Cek asset gagal: '+e.message)}
 };
@@ -823,7 +856,6 @@ const NOPE=/(^|\.)(youtube\.com|youtu\.be|spotify\.com|soundcloud\.com|music\.ap
 const MAXLINK=20*1048576;
 function lastSeg(p){let s=p.split('/').pop()||'';try{s=decodeURIComponent(s)}catch{}return s}
 async function getLink(u,onSt){
-  // 1) langsung dari browser
   try{
     onSt('Mengambil langsung dari browser...');
     const r=await fetch(u);
@@ -832,7 +864,6 @@ async function getLink(u,onSt){
       if(b.size)return{blob:b,name:null,via:'langsung'};
     }
   }catch(e){}
-  // 2) fallback lewat backend
   onSt('Diblokir browser, mencoba lewat server (fallback)...');
   let r;
   try{r=await fetch(base()+'/fetch?url='+encodeURIComponent(u))}
@@ -948,7 +979,6 @@ async function prepare(it){
 /* ---------- upload audio ---------- */
 async function uploadOne(it){
   const need=needSettings();if(need)throw new Error(need);
-  const lim=limitMsgClient();if(lim)throw new Error(lim);
   const {blob,ext}=await prepare(it);
   if(!blob.size)throw new Error('Hasil audio kosong (0 byte).');
   if(blob.size>20*1048576)throw new Error('Ukuran hasil '+(blob.size/1048576).toFixed(1)+' MB, melebihi batas audio Roblox (sekitar 20 MB).');
@@ -962,7 +992,6 @@ async function uploadOne(it){
   setSt(it,'Mengupload ke Roblox ('+(blob.size/1048576).toFixed(2)+' MB)...','',60);
   log('Upload audio: '+nm+' ('+blob.size+' byte, .'+ext+')');
   const j=await api('/upload',{method:'POST',body:fd});
-  bumpQuota();
   setSt(it,'Menunggu proses/moderasi Roblox...','',78);
   const id=await waitOp(j.operationId);
   return{id,nm};
@@ -970,8 +999,6 @@ async function uploadOne(it){
 $('#go').onclick=async()=>{
   if(!items.length)return alert('Antrean kosong. Pilih file audio dulu.');
   const need=needSettings();if(need)return alert(need);
-  const lim=limitMsgClient();
-  if(lim){alert(lim);if(!(me&&me.loggedIn))openAuth('in');return}
   const btn=$('#go');btn.disabled=true;
   for(const it of [...items]){
     try{
@@ -980,7 +1007,8 @@ $('#go').onclick=async()=>{
       const s=$('#q'+it.id+' .st');copyBtn(s,id,'Salin ID');copyBtn(s,'rbxassetid://'+id,'rbxassetid');
       pushHist({name:nm,type:'Audio',id:String(id),at:new Date().toLocaleString()});
       log('Audio berhasil: '+id);
-    }catch(e){bump(false);setSt(it,'✗ '+e.message,'err',100);log('Audio gagal: '+e.message);loadMe()}
+    }catch(e){bump(false);setSt(it,'✗ '+e.message,'err',100);log('Audio gagal: '+e.message)}
+    refreshMe();
   }
   btn.disabled=false;
 };
@@ -1009,8 +1037,6 @@ $('#goA').onclick=async()=>{
   if(!animFile)return alert('Pilih file RBXM dulu.');
   $('#qA').style.display='block';
   const need=needSettings();if(need)return setA('✗ '+need,'err',100);
-  const lim=limitMsgClient();
-  if(lim){setA('✗ '+lim,'err',100);if(!(me&&me.loggedIn))openAuth('in');return}
   const btn=$('#goA');btn.disabled=true;
   try{
     const bytes=await animFile.arrayBuffer();
@@ -1025,7 +1051,6 @@ $('#goA').onclick=async()=>{
     setA('Mengupload ke Roblox ('+(bytes.byteLength/1024).toFixed(1)+' KB)...','',40);
     log('Upload animasi: '+nm+' ('+bytes.byteLength+' byte)');
     const j=await api('/upload-animation',{method:'POST',body:fd});
-    bumpQuota();
     setA('Menunggu proses Roblox...','',70);
     const id=await waitOp(j.operationId);
     bump(true);
@@ -1033,16 +1058,66 @@ $('#goA').onclick=async()=>{
     const s=$('#sA');copyBtn(s,id,'Salin ID');copyBtn(s,'rbxassetid://'+id,'rbxassetid');
     pushHist({name:nm,type:'Animasi',id:String(id),at:new Date().toLocaleString()});
     log('Animasi berhasil: '+id);
-  }catch(e){bump(false);setA('✗ '+e.message,'err',100);log('Animasi gagal: '+e.message);loadMe()}
+  }catch(e){bump(false);setA('✗ '+e.message,'err',100);log('Animasi gagal: '+e.message)}
   btn.disabled=false;
+  refreshMe();
+};
+
+/* ---------- upload model ---------- */
+let modelFile=null;
+const dropM=$('#dropM'),fileM=$('#fileM');
+function setM(t,c,p){const s=$('#sM');s.className='st '+(c||'');s.textContent=t;if(p!=null)$('#bM').style.width=p+'%'}
+function pickM(f){
+  if(!f)return;
+  if(!/\.rbxm$/i.test(f.name)){alert('File harus berformat .rbxm (bukan .rbxmx).');return}
+  if(!f.size){alert('File kosong (0 byte).');return}
+  modelFile=f;$('#qM').style.display='block';
+  $('#nM').textContent=f.name+' · '+(f.size/1024).toFixed(1)+' KB';
+  setM('Siap diupload.','',0);
+}
+function resetM(){modelFile=null;$('#qM').style.display='none';$('#mnm').value='';$('#mnd').value=''}
+dropM.onclick=()=>fileM.click();
+fileM.onchange=()=>{pickM(fileM.files[0]);fileM.value=''};
+['dragover','dragenter'].forEach(ev=>dropM.addEventListener(ev,e=>{e.preventDefault();dropM.classList.add('hot')}));
+['dragleave','drop'].forEach(ev=>dropM.addEventListener(ev,e=>{e.preventDefault();dropM.classList.remove('hot')}));
+dropM.addEventListener('drop',e=>pickM(e.dataTransfer.files[0]));
+$('#xM').onclick=resetM;$('#clearM').onclick=resetM;
+
+$('#goM').onclick=async()=>{
+  if(!modelFile)return alert('Pilih file RBXM dulu.');
+  $('#qM').style.display='block';
+  const need=needSettings();if(need)return setM('✗ '+need,'err',100);
+  const btn=$('#goM');btn.disabled=true;
+  try{
+    const bytes=await modelFile.arrayBuffer();
+    if(!bytes.byteLength)throw new Error('File terbaca 0 byte. Pilih ulang file-nya.');
+    if(bytes.byteLength>20*1048576)throw new Error('Ukuran file melebihi batas (sekitar 20 MB).');
+    const nm=($('#mnm').value.trim()||modelFile.name.replace(/\.[^.]+$/,'')).slice(0,50);
+    const fd=new FormData();
+    fd.append('file',new Blob([bytes],{type:'model/x-rbxm'}),safeName(nm)+'.rbxm');
+    fd.append('name',nm);
+    fd.append('description',$('#mnd').value.trim()||'Model uploaded via ALEX STUDIO');
+    fd.append('creatorType',LS.get('ctype','User'));
+    fd.append('creatorId',LS.get('cid'));
+    setM('Mengupload ke Roblox ('+(bytes.byteLength/1024).toFixed(1)+' KB)...','',40);
+    log('Upload model: '+nm+' ('+bytes.byteLength+' byte)');
+    const j=await api('/upload-model',{method:'POST',body:fd});
+    setM('Menunggu proses Roblox...','',70);
+    const id=await waitOp(j.operationId);
+    bump(true);
+    setM('✓ Berhasil! Model ID: '+id,'ok',100);
+    const s=$('#sM');copyBtn(s,id,'Salin ID');copyBtn(s,'rbxassetid://'+id,'rbxassetid');
+    pushHist({name:nm,type:'Model',id:String(id),at:new Date().toLocaleString()});
+    log('Model berhasil: '+id);
+  }catch(e){bump(false);setM('✗ '+e.message,'err',100);log('Model gagal: '+e.message)}
+  btn.disabled=false;
+  refreshMe();
 };
 
 /* ---------- init ---------- */
 loadSettings();render();renderHist();
 ping().catch(()=>{});
-loadMe().then(m=>{
-  if(m&&!m.loggedIn&&!LS.get('seen'))openAuth('in');
-});
+refreshMe().then(()=>{if(isOwner())loadPC(true)});
 </script>
 </body>
-  </html>
+</html>
