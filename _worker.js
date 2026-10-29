@@ -1,11 +1,18 @@
-const VERSION = "3.5.0-pages";
+const VERSION = "4.0.1-pages";
 const API = "https://apis.roblox.com/assets/v1";
 const MAX_BYTES = 20 * 1024 * 1024;
 const GH_REPO = "alexxsidu-netizen/ALEX-STUDIO";
 const GH_WF = "cloudpc.yml";
+
+const GUEST_LIMIT = 5;
+const USER_LIMIT = 10;
+const DAY_MS = 86400000;
+const RESET_SHIFT = 10 * 3600000; // 17:00 WIB = 10:00 UTC
+const SESSION_TTL = 30 * 86400;
+
 const CORS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "x-api-key, content-type, x-report-token, x-pc-key",
+  "Access-Control-Allow-Headers": "x-api-key, content-type, x-report-token, authorization",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Expose-Headers": "x-filename, content-type",
 };
@@ -22,6 +29,184 @@ const creatorOf = (fd) =>
   fd.get("creatorType") === "Group"
     ? { groupId: String(fd.get("creatorId")) }
     : { userId: String(fd.get("creatorId")) };
+
+/* ---------- KV, hash, util ---------- */
+const kvGet = async (env, k) => {
+  const v = await env.CLOUDPC.get(k);
+  return v ? JSON.parse(v) : null;
+};
+const kvPut = (env, k, o, ttl) =>
+  env.CLOUDPC.put(k, JSON.stringify(o), ttl ? { expirationTtl: Math.max(60, ttl) } : undefined);
+
+const hex = (buf) => [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+const unhex = (s) => new Uint8Array((s.match(/../g) || []).map((h) => parseInt(h, 16)));
+const randHex = (n) => hex(crypto.getRandomValues(new Uint8Array(n)));
+
+async function hashPw(pw, saltHex) {
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", salt: unhex(saltHex), iterations: 100000, hash: "SHA-256" },
+    key,
+    256
+  );
+  return hex(bits);
+}
+
+function eq(a, b) {
+  a = String(a || "");
+  b = String(b || "");
+  if (!a || !b || a.length !== b.length) return false;
+  let r = 0;
+  for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return r === 0;
+}
+
+const ipOf = (req) => req.headers.get("cf-connecting-ip") || "0";
+const rlBlocked = async (env, k, max) => ((await kvGet(env, k)) || { n: 0 }).n >= max;
+const rlAdd = async (env, k, ttl) => {
+  const o = (await kvGet(env, k)) || { n: 0 };
+  o.n++;
+  await kvPut(env, k, o, ttl);
+};
+
+/* ---------- akun, sesi, role, limit ---------- */
+const dayId = (t = Date.now()) => Math.floor((t - RESET_SHIFT) / DAY_MS);
+const nextReset = () => (dayId() + 1) * DAY_MS + RESET_SHIFT;
+
+function roleOf(u) {
+  if (!u) return "guest";
+  if (u.owner) return "owner";
+  if (u.vip) return "vip";
+  if (u.vipUntil && u.vipUntil > Date.now()) return "vip7";
+  return "user";
+}
+
+async function getAuth(req, env) {
+  if (!env.CLOUDPC) return null;
+  const m = (req.headers.get("authorization") || "").match(/^Bearer ([a-f0-9]{64})$/i);
+  if (!m) return null;
+  const token = m[1].toLowerCase();
+  const s = await kvGet(env, "sess:" + token);
+  if (!s) return null;
+  const user = await kvGet(env, "user:" + s.u);
+  if (!user) return null;
+  return { token, lower: s.u, user };
+}
+
+async function newSession(env, lower) {
+  const token = randHex(32);
+  await kvPut(env, "sess:" + token, { u: lower }, SESSION_TTL);
+  return token;
+}
+
+async function quotaFor(env, auth, ip) {
+  const role = auth ? roleOf(auth.user) : "guest";
+  const limit = role === "guest" ? GUEST_LIMIT : role === "user" ? USER_LIMIT : null;
+  const day = dayId();
+  const k = auth ? "lim:u:" + auth.lower + ":" + day : "lim:ip:" + ip + ":" + day;
+  const o = (await kvGet(env, k)) || { n: 0 };
+  return { auth, role, limit, used: o.n, k, resetAt: nextReset() };
+}
+const quota = async (env, req) => quotaFor(env, await getAuth(req, env), ipOf(req));
+const consume = (env, q) => kvPut(env, q.k, { n: q.used + 1 }, 172800);
+
+function meOf(q) {
+  const u = q.auth && q.auth.user;
+  return {
+    ok: true,
+    loggedIn: !!u,
+    name: u ? u.name : null,
+    role: q.role,
+    limit: q.limit,
+    used: q.used,
+    left: q.limit === null ? null : Math.max(0, q.limit - q.used),
+    resetAt: q.resetAt,
+    vipUntil: u && q.role === "vip7" ? u.vipUntil : null,
+  };
+}
+
+function limitMsg(q) {
+  const base = "Batas upload harian habis (" + q.used + "/" + q.limit + "). Reset otomatis jam 17:00 WIB.";
+  return q.role === "guest"
+    ? base + " Login untuk dapat 10 upload per hari, atau pakai kode VIP untuk unlimited."
+    : base + " Pakai kode VIP untuk unlimited.";
+}
+
+async function authRoute(path, req, env) {
+  if (!env.CLOUDPC) return json({ error: "KV CLOUDPC belum di-bind" }, 500);
+  const ip = ipOf(req);
+
+  if (path === "/auth/me" && req.method === "GET") return json(meOf(await quota(env, req)));
+
+  if (path === "/auth/logout" && req.method === "POST") {
+    const a = await getAuth(req, env);
+    if (a) await env.CLOUDPC.delete("sess:" + a.token);
+    return json({ ok: true });
+  }
+
+  if (req.method !== "POST") return json({ error: "Method tidak didukung" }, 405);
+  const b = await req.json().catch(() => ({}));
+
+  if (path === "/auth/register") {
+    const name = String(b.username || "").trim();
+    const pw = String(b.password || "");
+    if (!/^[A-Za-z0-9_]{3,20}$/.test(name))
+      return json({ error: "Username 3-20 karakter: huruf, angka, atau garis bawah" }, 400);
+    if (pw.length < 6 || pw.length > 100) return json({ error: "Password minimal 6 karakter" }, 400);
+    if (await rlBlocked(env, "rl:reg:" + ip, 5)) return json({ error: "Terlalu banyak pendaftaran dari jaringan ini. Coba lagi nanti." }, 429);
+    const lower = name.toLowerCase();
+    if (await kvGet(env, "user:" + lower)) return json({ error: "Username sudah dipakai" }, 409);
+    const salt = randHex(16);
+    const user = { name, salt, hash: await hashPw(pw, salt), created: Date.now(), owner: false, vip: false, vipUntil: 0, redeemed: [] };
+    await kvPut(env, "user:" + lower, user);
+    await rlAdd(env, "rl:reg:" + ip, 3600);
+    const token = await newSession(env, lower);
+    return json({ ok: true, token, me: meOf(await quotaFor(env, { lower, user }, ip)) });
+  }
+
+  if (path === "/auth/login") {
+    const lower = String(b.username || "").trim().toLowerCase();
+    const pw = String(b.password || "");
+    if (await rlBlocked(env, "rl:login:" + ip, 8)) return json({ error: "Terlalu banyak percobaan login. Coba lagi 10 menit lagi." }, 429);
+    const user = lower ? await kvGet(env, "user:" + lower) : null;
+    const ok = user && eq(await hashPw(pw, user.salt), user.hash);
+    if (!ok) {
+      await rlAdd(env, "rl:login:" + ip, 600);
+      return json({ error: "Username atau password salah" }, 401);
+    }
+    const token = await newSession(env, lower);
+    return json({ ok: true, token, me: meOf(await quotaFor(env, { lower, user }, ip)) });
+  }
+
+  if (path === "/auth/redeem") {
+    const auth = await getAuth(req, env);
+    if (!auth) return json({ error: "Login dulu untuk memakai kode" }, 401);
+    if (await rlBlocked(env, "rl:redeem:" + ip, 10)) return json({ error: "Terlalu banyak percobaan kode. Coba lagi 10 menit lagi." }, 429);
+    const code = String(b.code || "").trim();
+    const u = auth.user;
+    let label = "";
+    if (eq(code, env.OWNER_CODE)) {
+      u.owner = true;
+      label = "Owner aktif. Semua fitur unlimited.";
+    } else if (eq(code, env.VIP_CODE)) {
+      u.vip = true;
+      label = "VIP aktif. Upload unlimited.";
+    } else if (eq(code, env.VIP_WEEK_CODE)) {
+      u.redeemed = u.redeemed || [];
+      if (u.redeemed.includes(code)) return json({ error: "Kode ini sudah pernah dipakai di akunmu" }, 409);
+      u.redeemed.push(code);
+      u.vipUntil = Math.max(Date.now(), u.vipUntil || 0) + 7 * DAY_MS;
+      label = "VIP 7 hari aktif. Upload unlimited.";
+    } else {
+      await rlAdd(env, "rl:redeem:" + ip, 600);
+      return json({ error: "Kode tidak valid" }, 400);
+    }
+    await kvPut(env, "user:" + auth.lower, u);
+    return json({ ok: true, message: label, me: meOf(await quotaFor(env, { lower: auth.lower, user: u }, ip)) });
+  }
+
+  return json({ error: "Endpoint tidak ditemukan" }, 404);
+}
 
 /* ---------- upload asset ---------- */
 async function createAsset(key, fd, assetType, allowedExt) {
@@ -67,6 +252,16 @@ async function createAsset(key, fd, assetType, allowedExt) {
   const opId = String(d.path || "").split("/").pop();
   if (!opId) return json({ error: "Roblox tidak mengembalikan operation id" }, 502);
   return json({ ok: true, operationId: opId });
+}
+
+async function gatedUpload(req, env, key, assetType, exts) {
+  if (!key) return json({ error: "API key kosong" }, 400);
+  if (!env.CLOUDPC) return json({ error: "KV CLOUDPC belum di-bind" }, 500);
+  const q = await quota(env, req);
+  if (q.limit !== null && q.used >= q.limit) return json({ error: limitMsg(q), code: "LIMIT", me: meOf(q) }, 429);
+  const res = await createAsset(key, await req.formData(), assetType, exts);
+  if (res.ok) await consume(env, q);
+  return res;
 }
 
 /* ---------- ambil audio dari link (fallback) ---------- */
@@ -157,8 +352,11 @@ async function assetInfo(key, id) {
 }
 
 /* ---------- Cloud PC: helper GitHub ---------- */
-const pcAuth = (req, env) =>
-  !!env.CLOUDPC_TOKEN && (req.headers.get("x-pc-key") || "") === env.CLOUDPC_TOKEN;
+async function isOwner(req, env) {
+  const a = await getAuth(req, env);
+  return !!(a && roleOf(a.user) === "owner");
+}
+const ownerOnly = () => json({ error: "Cloud PC hanya untuk owner. Login lalu masukkan kode owner." }, 403);
 
 const gh = (env, path, init = {}) =>
   fetch("https://api.github.com/repos/" + GH_REPO + path, {
@@ -196,6 +394,8 @@ async function handle(req, env) {
 
   if (url.pathname === "/health") return json({ ok: true, version: VERSION });
 
+  if (url.pathname.startsWith("/auth/")) return authRoute(url.pathname, req, env);
+
   if (url.pathname === "/validate") {
     if (!key) return json({ ok: false, error: "API key kosong" }, 400);
     const r = await fetch(API + "/operations/validate-check", {
@@ -212,15 +412,11 @@ async function handle(req, env) {
   if (url.pathname === "/asset" && req.method === "GET")
     return assetInfo(key, url.searchParams.get("id"));
 
-  if (url.pathname === "/upload" && req.method === "POST") {
-    if (!key) return json({ error: "API key kosong" }, 400);
-    return createAsset(key, await req.formData(), "Audio", ["mp3", "ogg"]);
-  }
+  if (url.pathname === "/upload" && req.method === "POST")
+    return gatedUpload(req, env, key, "Audio", ["mp3", "ogg"]);
 
-  if (url.pathname === "/upload-animation" && req.method === "POST") {
-    if (!key) return json({ error: "API key kosong" }, 400);
-    return createAsset(key, await req.formData(), "Animation", ["rbxm"]);
-  }
+  if (url.pathname === "/upload-animation" && req.method === "POST")
+    return gatedUpload(req, env, key, "Animation", ["rbxm"]);
 
   if (url.pathname === "/operation") {
     const id = url.searchParams.get("id");
@@ -234,7 +430,7 @@ async function handle(req, env) {
     return json({ done: !!d.done, assetId: d.response && d.response.assetId });
   }
 
-  /* ---------- Cloud PC (AnyDesk) ---------- */
+  /* ---------- Cloud PC (AnyDesk), khusus owner ---------- */
 
   // dipanggil oleh workflow setelah ID AnyDesk didapat
   if (url.pathname === "/cloudpc/report" && req.method === "POST") {
@@ -249,10 +445,9 @@ async function handle(req, env) {
     return json({ ok: true });
   }
 
-  // status + ID + password (butuh kunci akses)
   if (url.pathname === "/cloudpc" && req.method === "GET") {
     if (!env.CLOUDPC) return json({ error: "KV CLOUDPC belum di-bind" }, 500);
-    if (!pcAuth(req, env)) return json({ error: "Kunci akses salah atau belum diisi" }, 401);
+    if (!(await isOwner(req, env))) return ownerOnly();
     let state = "unknown";
     if (env.GH_PAT) {
       const s = await pcRuns(env);
@@ -270,10 +465,9 @@ async function handle(req, env) {
     });
   }
 
-  // nyalakan PC (jalankan workflow)
   if (url.pathname === "/cloudpc/start" && req.method === "POST") {
     if (!env.CLOUDPC) return json({ error: "KV CLOUDPC belum di-bind" }, 500);
-    if (!pcAuth(req, env)) return json({ error: "Kunci akses salah atau belum diisi" }, 401);
+    if (!(await isOwner(req, env))) return ownerOnly();
     if (!env.GH_PAT) return json({ error: "Secret GH_PAT belum diisi" }, 500);
     const cur = await pcRuns(env);
     if (cur.err) return json({ error: ghErr(cur.err, {}) }, 502);
@@ -291,10 +485,9 @@ async function handle(req, env) {
     return json({ ok: true });
   }
 
-  // matikan PC (batalkan workflow yang sedang jalan)
   if (url.pathname === "/cloudpc/stop" && req.method === "POST") {
     if (!env.CLOUDPC) return json({ error: "KV CLOUDPC belum di-bind" }, 500);
-    if (!pcAuth(req, env)) return json({ error: "Kunci akses salah atau belum diisi" }, 401);
+    if (!(await isOwner(req, env))) return ownerOnly();
     if (!env.GH_PAT) return json({ error: "Secret GH_PAT belum diisi" }, 500);
     const cur = await pcRuns(env);
     if (cur.err) return json({ error: ghErr(cur.err, {}) }, 502);
