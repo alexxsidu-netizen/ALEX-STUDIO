@@ -95,6 +95,34 @@ pre{background:#080918;border:1px solid var(--line);border-radius:14px;padding:1
 .pcid.none{font-size:16px;letter-spacing:0;color:var(--mu);-webkit-text-fill-color:var(--mu)}
 .pcmeta{text-align:center;font:12px ui-monospace,monospace;color:var(--mu);word-break:break-word}
 .pccopy{text-align:center}
+.accTop{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+.accName{font-size:20px;font-weight:800;word-break:break-word}
+.meter{height:10px;background:var(--line);border-radius:99px;overflow:hidden;margin:14px 0 8px}
+.meter i{display:block;height:100%;width:0;background:var(--grad);transition:.4s}
+.meter i.warn{background:linear-gradient(90deg,#fbbf24,#f59e0b)}
+.meter i.bad{background:linear-gradient(90deg,#fb7185,#e11d48)}
+.accTxt{font-weight:700}
+.accReset{color:var(--mu);font:12px ui-monospace,monospace;margin-top:4px}
+.rd{display:flex;gap:10px;margin-top:16px;align-items:stretch}
+.rd input{flex:1;min-width:0}
+.rd .btn{margin-top:0;width:auto;padding:0 20px;white-space:nowrap}
+.ov{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;padding:18px;
+  padding-top:calc(18px + env(safe-area-inset-top,0px));padding-bottom:calc(18px + env(safe-area-inset-bottom,0px));
+  background:rgba(4,5,12,.78);backdrop-filter:blur(10px)}
+.ov.on{display:flex;animation:fade .2s}
+.mod{position:relative;width:100%;max-width:420px;max-height:100%;overflow:auto;padding:26px 22px 22px;border-radius:26px;border:1px solid #3b3470;
+  background:linear-gradient(160deg,rgba(40,34,92,.96),rgba(14,16,32,.98));box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.mx{position:absolute;top:14px;right:14px;width:36px;height:36px;border-radius:12px;border:1px solid var(--line);background:rgba(7,8,18,.5);color:var(--mu);font-size:16px;cursor:pointer}
+.mlogo{width:56px;height:56px;border-radius:17px;background:var(--grad);display:grid;place-items:center;font-weight:900;font-size:24px;color:#fff;box-shadow:0 10px 28px rgba(139,92,246,.5);margin-bottom:14px}
+.mod h2{font-size:24px;margin:0 0 6px;letter-spacing:-.3px}
+.mod .sub{margin:0 0 14px;font-size:14px}
+.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 16px}
+.plan{border:1px solid var(--line);border-radius:14px;padding:10px 4px;text-align:center;background:rgba(7,8,18,.45)}
+.plan b{display:block;font-size:20px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.plan span{font-size:11px;color:var(--mu);font-weight:600}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:14px;background:#080918;border:1px solid var(--line)}
+.seg button{padding:12px 0;border:0;border-radius:11px;background:none;color:var(--mu);font-weight:800;font-size:14px;cursor:pointer}
+.seg button.on{background:var(--grad);color:#fff;box-shadow:0 6px 16px rgba(99,102,241,.4)}
 .page{display:none;animation:fade .25s}.page.on{display:block}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media(min-width:900px){
@@ -129,6 +157,7 @@ pre{background:#080918;border:1px solid var(--line);border-radius:14px;padding:1
     <h1>Halo, Creator.</h1>
     <p class="sub" style="margin:0">Publish audio dan animasi langsung ke Roblox dari browser, atas nama akunmu sendiri.</p>
     <div class="chipinfo">
+      <span class="badge" id="bRole" style="cursor:pointer">Akun: memuat...</span>
       <span class="badge" id="bCreator">Creator: -</span>
       <span class="badge" id="bKey">API key: -</span>
       <span class="badge" id="bBe">Backend: -</span>
@@ -143,7 +172,26 @@ pre{background:#080918;border:1px solid var(--line);border-radius:14px;padding:1
     <button class="btn ghost" data-go="anim">✪ Upload Animasi</button>
   </div>
 
-  <div class="card" style="margin-top:18px">
+  <div class="card" id="accCard" style="margin-top:18px">
+    <h2>Akun &amp; Limit</h2>
+    <div class="accTop"><span class="accName" id="accName">Memuat...</span><span class="badge" id="accRole">-</span></div>
+    <div class="meter"><i id="accBar"></i></div>
+    <div class="accTxt" id="accTxt"></div>
+    <div class="accReset" id="accReset"></div>
+    <div class="hint" id="accHint" style="margin-top:8px"></div>
+    <div class="row" id="accIn">
+      <button class="btn" id="accLogin">Masuk</button>
+      <button class="btn ghost" id="accReg">Daftar</button>
+    </div>
+    <div class="rd">
+      <input type="text" id="rdCode" placeholder="Kode VIP / owner" autocapitalize="off" autocomplete="off" autocorrect="off">
+      <button class="btn ghost" id="rdGo">Pakai kode</button>
+    </div>
+    <div class="msg" id="rdMsg"></div>
+    <button class="btn ghost" id="accOut" style="display:none">Keluar</button>
+  </div>
+
+  <div class="card">
     <h2>Cek Asset ID</h2>
     <p class="sub" style="margin:0 0 6px">Cek status asset milikmu (diproses, disetujui, atau kena moderasi).</p>
     <input type="text" id="aid" inputmode="numeric" placeholder="contoh: 1234567890">
@@ -151,8 +199,8 @@ pre{background:#080918;border:1px solid var(--line);border-radius:14px;padding:1
     <div id="aRes"></div>
   </div>
 
-  <div class="card">
-    <h2>Cloud PC (AnyDesk)</h2>
+  <div class="card" id="pcCard" style="display:none">
+    <h2>Cloud PC (AnyDesk) · Owner</h2>
     <span class="badge" id="pcState">STATUS: -</span>
     <div class="pcid none" id="pcId">Belum ada ID</div>
     <div class="pcmeta" id="pcMeta"></div>
@@ -276,21 +324,10 @@ pre{background:#080918;border:1px solid var(--line);border-radius:14px;padding:1
     <div class="msg" id="mK"></div>
   </div>
 
-  <div class="card">
-    <h2>Kunci Akses Cloud PC</h2>
-    <p class="sub">Isi dengan nilai yang sama persis dengan variabel <b>CLOUDPC_TOKEN</b> di Cloudflare. Disimpan di browser ini saja.</p>
-    <label style="margin-top:0">Kunci akses</label>
-    <input type="password" id="pckey" placeholder="Tempel kunci akses di sini" autocomplete="off">
-    <div class="hint" id="pckeyHint"></div>
-    <button class="btn" id="savePk">Simpan Kunci Akses</button>
-    <button class="btn ghost" id="delPk">Hapus kunci akses</button>
-    <div class="msg" id="mPk"></div>
-  </div>
-
-  <div class="card">
-    <h2>Backend</h2>
-    <label style="margin-top:0">URL Worker (kosongkan = pakai server ini)</label>
-    <input type="text" id="be" placeholder="kosongkan jika web dibuka dari pages.dev" autocapitalize="off">
+  <div class="card" id="beCard" style="display:none">
+    <h2>Backend (Owner)</h2>
+    <label style="margin-top:0">URL Worker (kosongkan = default)</label>
+    <input type="text" id="be" placeholder="https://alex-studio-5j7.pages.dev" autocapitalize="off">
     <button class="btn ghost" id="saveB">Simpan URL</button>
     <button class="btn ghost" id="test">Tes koneksi backend</button>
     <pre id="out" style="display:none"></pre>
@@ -311,6 +348,34 @@ pre{background:#080918;border:1px solid var(--line);border-radius:14px;padding:1
   <button class="bn" data-p="settings"><i>⚙</i>Settings</button>
 </nav>
 
+<!-- LOGIN / DAFTAR -->
+<div class="ov" id="ov">
+  <div class="mod">
+    <button class="mx" id="ovX">✕</button>
+    <div class="mlogo">A</div>
+    <h2 id="ovT">Masuk ke ALEX STUDIO</h2>
+    <p class="sub" id="ovS">Login untuk menambah limit upload harian.</p>
+    <div class="plans">
+      <div class="plan"><b>5</b><span>Tamu / hari</span></div>
+      <div class="plan"><b>10</b><span>Akun / hari</span></div>
+      <div class="plan"><b>∞</b><span>VIP</span></div>
+    </div>
+    <div class="seg"><button id="tabIn" class="on">Masuk</button><button id="tabUp">Daftar</button></div>
+    <label>Username</label>
+    <input type="text" id="au" placeholder="huruf, angka, atau _" autocapitalize="off" autocomplete="username" autocorrect="off">
+    <label>Password</label>
+    <input type="password" id="ap" placeholder="minimal 6 karakter" autocomplete="current-password">
+    <div id="ap2w" style="display:none">
+      <label>Ulangi password</label>
+      <input type="password" id="ap2" placeholder="ketik ulang password" autocomplete="new-password">
+    </div>
+    <div class="msg" id="aMsg"></div>
+    <button class="btn" id="aGo">Masuk</button>
+    <button class="btn ghost" id="aGuest">Lanjut sebagai tamu (5 upload/hari)</button>
+    <div class="hint" style="font-size:12px;text-align:center">Limit direset otomatis setiap hari jam 17:00 WIB.</div>
+  </div>
+</div>
+
 <script>
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const LS={
@@ -318,6 +383,7 @@ const LS={
   set:(k,v)=>{try{localStorage.setItem('as_'+k,v)}catch{}},
   del:k=>{try{localStorage.removeItem('as_'+k)}catch{}}
 };
+const DEFAULT_BE='https://alex-studio-5j7.pages.dev';
 const stats={up:0,ok:0};
 const bump=ok=>{stats.up++;$('#sUp').textContent=stats.up;if(ok){stats.ok++;$('#sOk').textContent=stats.ok}};
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -334,14 +400,18 @@ $('#copyLog').onclick=()=>{try{navigator.clipboard.writeText(logs.join('\n'))}ca
 function go(p){
   $$('.page').forEach(e=>e.classList.toggle('on',e.id==='p-'+p));
   $$('[data-p]').forEach(e=>e.classList.toggle('on',e.dataset.p===p));
-  if(p==='home'){badges();loadPC()}
+  if(p==='home'){
+    badges();
+    const was=wasOwner;
+    loadMe().then(()=>{if(was&&wasOwner)loadPC()});
+  }
   scrollTo(0,0);
 }
 $$('[data-p]').forEach(b=>b.onclick=()=>go(b.dataset.p));
 $$('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
 
 /* ---------- backend ---------- */
-const base=()=>(LS.get('be').trim().replace(/\/+$/,'')||location.origin);
+const base=()=>(LS.get('be').trim().replace(/\/+$/,'')||DEFAULT_BE);
 function normUrl(u){
   u=u.trim().replace(/\/+$/,'');
   if(u&&!/^https?:\/\//i.test(u))u='https://'+u;
@@ -351,16 +421,14 @@ async function api(path,opt={},timeout=180000){
   const h=Object.assign({},opt.headers||{});
   const k=LS.get('key');
   if(k&&!h['x-api-key'])h['x-api-key']=k;
-  if(path.indexOf('/cloudpc')===0){
-    const pk=LS.get('pckey');
-    if(pk&&!h['x-pc-key'])h['x-pc-key']=pk;
-  }
+  const tk=LS.get('tok');
+  if(tk&&!h['authorization'])h['authorization']='Bearer '+tk;
   const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),timeout);
   let r;
   try{r=await fetch(base()+path,Object.assign({},opt,{headers:h,signal:ctl.signal}))}
   catch(e){
     clearTimeout(t);
-    throw new Error(e.name==='AbortError'?'Backend tidak merespons (timeout).':'Tidak bisa terhubung ke backend. Cek koneksi internet atau URL di Settings.');
+    throw new Error(e.name==='AbortError'?'Backend tidak merespons (timeout).':'Tidak bisa terhubung ke backend. Cek koneksi internet.');
   }
   clearTimeout(t);
   const txt=await r.text();let j=null;
@@ -385,15 +453,133 @@ function badges(online){
   set('#bBe','Backend: '+(online===true?'siap':online===false?'offline':'diset'),online!==false);
 }
 
+/* ---------- akun, limit, login ---------- */
+let me=null,wasOwner=false,authMode='in';
+const ROLE={guest:'TAMU',user:'AKUN',vip:'VIP',vip7:'VIP 7 HARI',owner:'OWNER'};
+function resetIn(ms){
+  const s=Math.max(0,Math.floor((ms-Date.now())/1000));
+  return Math.floor(s/3600)+' jam '+Math.floor((s%3600)/60)+' menit';
+}
+function renderAccount(){
+  const m=me,rb=$('#bRole');
+  if(!m){
+    rb.textContent='Akun: gagal dimuat';rb.className='badge bad';
+    $('#accName').textContent='Tidak bisa memuat akun';$('#accTxt').textContent='Cek koneksi lalu buka Home lagi.';
+    return;
+  }
+  rb.textContent=ROLE[m.role]+(m.limit===null?' · unlimited':' · sisa '+m.left+'/'+m.limit);
+  rb.className='badge '+(m.role==='guest'?'no':'ok');
+  $('#accName').textContent=m.loggedIn?m.name:'Tamu (belum login)';
+  const ro=$('#accRole');ro.textContent=ROLE[m.role];ro.className='badge '+(m.role==='guest'?'no':'ok');
+  const bar=$('#accBar');
+  if(m.limit===null){
+    bar.style.width='100%';bar.className='';
+    $('#accTxt').textContent='Upload unlimited'+(m.role==='vip7'&&m.vipUntil?' · berlaku sampai '+new Date(m.vipUntil).toLocaleString():'');
+    $('#accReset').textContent='';
+  }else{
+    const pct=Math.min(100,m.used/m.limit*100);
+    bar.style.width=pct+'%';bar.className=pct>=100?'bad':pct>=70?'warn':'';
+    $('#accTxt').textContent='Sisa upload hari ini: '+m.left+' dari '+m.limit;
+    $('#accReset').textContent='Reset jam 17:00 WIB · '+resetIn(m.resetAt)+' lagi';
+  }
+  $('#accHint').textContent=m.role==='guest'?'Login untuk dapat 10 upload per hari.':m.role==='user'?'Pakai kode VIP untuk upload unlimited.':'';
+  $('#accIn').style.display=m.loggedIn?'none':'';
+  $('#accOut').style.display=m.loggedIn?'':'none';
+}
+function syncOwnerUi(){
+  const own=!!(me&&me.role==='owner');
+  $('#pcCard').style.display=own?'':'none';
+  $('#beCard').style.display=own?'':'none';
+  if(own&&!wasOwner)loadPC();
+  if(!own)pollTok++;
+  wasOwner=own;
+}
+async function loadMe(){
+  try{
+    const j=await api('/auth/me',{},15000);
+    me=j;
+    if(!j.loggedIn&&LS.get('tok'))LS.del('tok');
+  }catch(e){log('Akun gagal dimuat: '+e.message)}
+  renderAccount();syncOwnerUi();
+  return me;
+}
+function limitMsgClient(){
+  const m=me;
+  if(m&&m.limit!==null&&m.used>=m.limit)
+    return 'Batas upload harian habis ('+m.used+'/'+m.limit+'). Reset jam 17:00 WIB.'+(m.loggedIn?' Pakai kode VIP untuk unlimited.':' Login untuk dapat 10 upload per hari, atau pakai kode VIP.');
+  return '';
+}
+function bumpQuota(){
+  if(me&&me.limit!==null){me.used++;me.left=Math.max(0,me.limit-me.used)}
+  renderAccount();loadMe();
+}
+function setAuthMode(m){
+  authMode=m;
+  $('#tabIn').classList.toggle('on',m==='in');$('#tabUp').classList.toggle('on',m==='up');
+  $('#ap2w').style.display=m==='up'?'':'none';
+  $('#aGo').textContent=m==='in'?'Masuk':'Buat Akun';
+  $('#ovT').textContent=m==='in'?'Masuk ke ALEX STUDIO':'Buat akun baru';
+  $('#ovS').textContent=m==='in'?'Login untuk menambah limit upload harian.':'Gratis. Dapat 10 upload per hari.';
+  $('#ap').autocomplete=m==='in'?'current-password':'new-password';
+  $('#aMsg').textContent='';
+}
+function openAuth(m){setAuthMode(m||'in');$('#ov').classList.add('on');setTimeout(()=>$('#au').focus(),60)}
+function closeAuth(){$('#ov').classList.remove('on');LS.set('seen','1')}
+$('#tabIn').onclick=()=>setAuthMode('in');
+$('#tabUp').onclick=()=>setAuthMode('up');
+$('#ovX').onclick=closeAuth;$('#aGuest').onclick=closeAuth;
+$('#ov').onclick=e=>{if(e.target===$('#ov'))closeAuth()};
+['#ap','#ap2'].forEach(s=>$(s).addEventListener('keydown',e=>{if(e.key==='Enter')$('#aGo').click()}));
+$('#aGo').onclick=async()=>{
+  const el=$('#aMsg'),btn=$('#aGo');
+  const u=$('#au').value.trim(),p=$('#ap').value;
+  if(!u||!p)return msg(el,'Isi username dan password.',false);
+  if(authMode==='up'&&p!==$('#ap2').value)return msg(el,'Password dan ulangi password tidak sama.',false);
+  btn.disabled=true;msg(el,authMode==='in'?'Memeriksa...':'Membuat akun...',true);
+  try{
+    const j=await api(authMode==='in'?'/auth/login':'/auth/register',
+      {method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({username:u,password:p})},30000);
+    LS.set('tok',j.token);me=j.me;
+    $('#au').value='';$('#ap').value='';$('#ap2').value='';
+    closeAuth();renderAccount();syncOwnerUi();
+    log((authMode==='in'?'Login: ':'Daftar: ')+j.me.name);
+  }catch(e){msg(el,'✗ '+e.message,false)}
+  btn.disabled=false;
+};
+$('#accLogin').onclick=()=>openAuth('in');
+$('#accReg').onclick=()=>openAuth('up');
+$('#bRole').onclick=()=>{
+  if(me&&me.loggedIn){go('home');$('#accCard').scrollIntoView({behavior:'smooth'})}
+  else openAuth('in');
+};
+$('#accOut').onclick=async()=>{
+  try{await api('/auth/logout',{method:'POST'},15000)}catch{}
+  LS.del('tok');log('Logout');
+  await loadMe();
+};
+$('#rdGo').onclick=async()=>{
+  const el=$('#rdMsg'),code=$('#rdCode').value.trim();
+  if(!me||!me.loggedIn){openAuth('in');return msg(el,'Login dulu untuk memakai kode.',false)}
+  if(!code)return msg(el,'Isi kodenya dulu.',false);
+  $('#rdGo').disabled=true;msg(el,'Memeriksa kode...',true);
+  try{
+    const j=await api('/auth/redeem',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code})},20000);
+    me=j.me;$('#rdCode').value='';
+    msg(el,'✓ '+j.message,true);log('Kode dipakai: '+j.message);
+    renderAccount();syncOwnerUi();
+  }catch(e){msg(el,'✗ '+e.message,false)}
+  $('#rdGo').disabled=false;
+};
+setInterval(()=>{
+  if(me&&me.limit!==null&&Date.now()>=me.resetAt)loadMe();else if(me)renderAccount();
+},30000);
+
 /* ---------- settings ---------- */
 function loadSettings(){
   $('#ctype').value=LS.get('ctype','User');$('#cid').value=LS.get('cid');$('#be').value=LS.get('be');
   const has=!!LS.get('key');
   $('#key').placeholder=has?'••••••••• (tersimpan)':'Tempel API key di sini';
   $('#keyHint').textContent=has?'✓ API key tersimpan di browser ini. Isi lagi hanya jika ingin menggantinya.':'Belum ada API key tersimpan.';
-  const hp=!!LS.get('pckey');
-  $('#pckey').placeholder=hp?'••••••••• (tersimpan)':'Tempel kunci akses di sini';
-  $('#pckeyHint').textContent=hp?'✓ Kunci akses tersimpan di browser ini. Isi lagi hanya jika ingin menggantinya.':'Belum ada kunci akses tersimpan.';
   badges();
 }
 function msg(el,t,ok){el.textContent=t;el.className='msg '+(ok?'ok':'err')}
@@ -409,7 +595,6 @@ $('#saveB').onclick=()=>{
 $('#saveK').onclick=async()=>{
   const k=$('#key').value.trim();
   if(!k)return msg($('#mK'),'Isi API key dulu.',false);
-  const u=normUrl($('#be').value);LS.set('be',u);
   msg($('#mK'),'Mengecek key...',true);
   try{
     await api('/validate',{method:'POST',headers:{'x-api-key':k}},20000);
@@ -418,18 +603,6 @@ $('#saveK').onclick=async()=>{
   }catch(e){msg($('#mK'),'✗ '+e.message,false);log('Validasi key gagal: '+e.message)}
 };
 $('#delK').onclick=()=>{LS.del('key');loadSettings();msg($('#mK'),'API key dihapus.',true)};
-$('#savePk').onclick=async()=>{
-  const k=$('#pckey').value.trim();
-  if(!k)return msg($('#mPk'),'Isi kunci akses dulu.',false);
-  const u=normUrl($('#be').value);LS.set('be',u);
-  msg($('#mPk'),'Mengecek kunci...',true);
-  try{
-    await api('/cloudpc',{headers:{'x-pc-key':k}},20000);
-    LS.set('pckey',k);$('#pckey').value='';loadSettings();
-    msg($('#mPk'),'✓ Kunci akses benar dan disimpan.',true);log('Kunci akses Cloud PC tersimpan');
-  }catch(e){msg($('#mPk'),'✗ '+e.message,false);log('Kunci akses gagal: '+e.message)}
-};
-$('#delPk').onclick=()=>{LS.del('pckey');loadSettings();msg($('#mPk'),'Kunci akses dihapus.',true)};
 $('#test').onclick=async()=>{
   const o=$('#out');o.style.display='block';o.style.color='var(--ok)';o.textContent='...';
   const u=normUrl($('#be').value);LS.set('be',u);$('#be').value=u;
@@ -458,7 +631,7 @@ function renderHist(){
   });
 }
 
-/* ---------- Cloud PC (AnyDesk) ---------- */
+/* ---------- Cloud PC (AnyDesk), khusus owner ---------- */
 function fmtPC(id){return String(id).replace(/\s/g,'').replace(/(\d{3})(?=\d)/g,'$1 ')}
 function ago(ms){
   const s=Math.max(0,Math.floor((Date.now()-ms)/1000));
@@ -470,12 +643,6 @@ function setPcState(t,cls){const e=$('#pcState');e.textContent='STATUS: '+t;e.cl
 async function loadPC(){
   const idEl=$('#pcId'),meta=$('#pcMeta'),cp=$('#pcCopy');
   cp.innerHTML='';
-  if(!LS.get('pckey')){
-    setPcState('KUNCI BELUM DIISI','no');
-    idEl.className='pcid none';idEl.textContent='Kunci akses belum diisi';
-    meta.textContent='Buka Settings, isi Kunci Akses Cloud PC (nilai CLOUDPC_TOKEN).';
-    return null;
-  }
   meta.textContent='Memuat...';
   try{
     const j=await api('/cloudpc',{},15000);
@@ -513,7 +680,6 @@ async function pollPC(){
 $('#pcRef').onclick=()=>{pollTok++;loadPC()};
 $('#pcOn').onclick=async()=>{
   const m=$('#pcMsg'),b=$('#pcOn');
-  if(!LS.get('pckey'))return msg(m,'Isi Kunci Akses di Settings dulu.',false);
   b.disabled=true;msg(m,'Mengirim perintah nyala...',true);
   try{
     const j=await api('/cloudpc/start',{method:'POST'},30000);
@@ -525,7 +691,6 @@ $('#pcOn').onclick=async()=>{
 };
 $('#pcOff').onclick=async()=>{
   const m=$('#pcMsg'),b=$('#pcOff');
-  if(!LS.get('pckey'))return msg(m,'Isi Kunci Akses di Settings dulu.',false);
   if(!confirm('Matikan Cloud PC sekarang?'))return;
   b.disabled=true;msg(m,'Mematikan...',true);pollTok++;
   try{
@@ -783,6 +948,7 @@ async function prepare(it){
 /* ---------- upload audio ---------- */
 async function uploadOne(it){
   const need=needSettings();if(need)throw new Error(need);
+  const lim=limitMsgClient();if(lim)throw new Error(lim);
   const {blob,ext}=await prepare(it);
   if(!blob.size)throw new Error('Hasil audio kosong (0 byte).');
   if(blob.size>20*1048576)throw new Error('Ukuran hasil '+(blob.size/1048576).toFixed(1)+' MB, melebihi batas audio Roblox (sekitar 20 MB).');
@@ -796,6 +962,7 @@ async function uploadOne(it){
   setSt(it,'Mengupload ke Roblox ('+(blob.size/1048576).toFixed(2)+' MB)...','',60);
   log('Upload audio: '+nm+' ('+blob.size+' byte, .'+ext+')');
   const j=await api('/upload',{method:'POST',body:fd});
+  bumpQuota();
   setSt(it,'Menunggu proses/moderasi Roblox...','',78);
   const id=await waitOp(j.operationId);
   return{id,nm};
@@ -803,6 +970,8 @@ async function uploadOne(it){
 $('#go').onclick=async()=>{
   if(!items.length)return alert('Antrean kosong. Pilih file audio dulu.');
   const need=needSettings();if(need)return alert(need);
+  const lim=limitMsgClient();
+  if(lim){alert(lim);if(!(me&&me.loggedIn))openAuth('in');return}
   const btn=$('#go');btn.disabled=true;
   for(const it of [...items]){
     try{
@@ -811,7 +980,7 @@ $('#go').onclick=async()=>{
       const s=$('#q'+it.id+' .st');copyBtn(s,id,'Salin ID');copyBtn(s,'rbxassetid://'+id,'rbxassetid');
       pushHist({name:nm,type:'Audio',id:String(id),at:new Date().toLocaleString()});
       log('Audio berhasil: '+id);
-    }catch(e){bump(false);setSt(it,'✗ '+e.message,'err',100);log('Audio gagal: '+e.message)}
+    }catch(e){bump(false);setSt(it,'✗ '+e.message,'err',100);log('Audio gagal: '+e.message);loadMe()}
   }
   btn.disabled=false;
 };
@@ -840,6 +1009,8 @@ $('#goA').onclick=async()=>{
   if(!animFile)return alert('Pilih file RBXM dulu.');
   $('#qA').style.display='block';
   const need=needSettings();if(need)return setA('✗ '+need,'err',100);
+  const lim=limitMsgClient();
+  if(lim){setA('✗ '+lim,'err',100);if(!(me&&me.loggedIn))openAuth('in');return}
   const btn=$('#goA');btn.disabled=true;
   try{
     const bytes=await animFile.arrayBuffer();
@@ -854,6 +1025,7 @@ $('#goA').onclick=async()=>{
     setA('Mengupload ke Roblox ('+(bytes.byteLength/1024).toFixed(1)+' KB)...','',40);
     log('Upload animasi: '+nm+' ('+bytes.byteLength+' byte)');
     const j=await api('/upload-animation',{method:'POST',body:fd});
+    bumpQuota();
     setA('Menunggu proses Roblox...','',70);
     const id=await waitOp(j.operationId);
     bump(true);
@@ -861,14 +1033,16 @@ $('#goA').onclick=async()=>{
     const s=$('#sA');copyBtn(s,id,'Salin ID');copyBtn(s,'rbxassetid://'+id,'rbxassetid');
     pushHist({name:nm,type:'Animasi',id:String(id),at:new Date().toLocaleString()});
     log('Animasi berhasil: '+id);
-  }catch(e){bump(false);setA('✗ '+e.message,'err',100);log('Animasi gagal: '+e.message)}
+  }catch(e){bump(false);setA('✗ '+e.message,'err',100);log('Animasi gagal: '+e.message);loadMe()}
   btn.disabled=false;
 };
 
 /* ---------- init ---------- */
 loadSettings();render();renderHist();
 ping().catch(()=>{});
-loadPC();
+loadMe().then(m=>{
+  if(m&&!m.loggedIn&&!LS.get('seen'))openAuth('in');
+});
 </script>
 </body>
-</html>
+  </html>
