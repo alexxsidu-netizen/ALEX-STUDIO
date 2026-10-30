@@ -166,6 +166,27 @@ code{font:12px ui-monospace,monospace;background:rgba(139,92,246,.18);border-rad
 .feat span{color:var(--mu);font-size:14px;line-height:1.6}
 .page{display:none;animation:fade .25s}.page.on{display:block}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* jam */
+.clock{text-align:center;padding:20px 12px;border-radius:24px;border:1px solid #3b3470;margin-bottom:18px;background:linear-gradient(135deg,rgba(139,92,246,.2),rgba(34,211,238,.08)),var(--panel)}
+.clkT{font:800 clamp(38px,12vw,58px) ui-monospace,monospace;letter-spacing:4px;margin:8px 0 2px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.clkD{color:var(--mu);font-size:14px;margin-bottom:12px}
+.clkZ{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+
+/* promo */
+.pmx{white-space:pre-wrap;word-break:break-word;line-height:1.6;margin-top:8px;font-size:15px}
+
+/* edit foto HD */
+#hdCv{max-width:100%;height:auto;border-radius:14px;border:1px solid var(--line);background:#000;display:block;margin:0 auto}
+
+/* pemutar musik */
+.mp-t{font-weight:800;font-size:20px;text-align:center;word-break:break-word;margin:4px 0 14px}
+.mp-c{display:flex;gap:10px;justify-content:center;align-items:center;margin:14px 0}
+.mp-c button{width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--panel2);color:var(--tx);font-size:18px;cursor:pointer}
+.mp-c button.big{width:64px;height:64px;background:var(--grad);border:0;font-size:24px}
+.mp-c button.on{border-color:var(--a2);color:var(--a2)}
+.mp-s{display:flex;align-items:center;gap:10px;font:12px ui-monospace,monospace;color:var(--mu)}
+
 @media(min-width:900px){
   .side{display:block;position:fixed;inset:0 auto 0 0;width:270px;background:rgba(14,16,32,.9);border-right:1px solid var(--line);padding:18px 14px;overflow:auto;z-index:30}
   .bnav{display:none}.mb{display:none}.dr{display:none!important}
@@ -202,13 +223,23 @@ code{font:12px ui-monospace,monospace;background:rgba(139,92,246,.18);border-rad
   <div class="hero">
     <div class="eyebrow">Dashboard</div>
     <h1>Halo, Creator.</h1>
-    <p class="sub" style="margin:0">Publish audio, animasi, dan model langsung ke Roblox dari browser, atas nama akunmu sendiri.</p>
+    <p class="sub" style="margin:0">Publish audio, animasi, model, gambar, video, mesh, dan plugin langsung ke Roblox dari browser, atas nama akunmu sendiri.</p>
     <div class="chipinfo">
       <span class="badge" id="bCreator">Creator: -</span>
       <span class="badge" id="bKey">API key: -</span>
       <span class="badge" id="bBe">Backend: -</span>
     </div>
   </div>
+
+  <div class="clock">
+    <div class="eyebrow">Waktu Indonesia</div>
+    <div class="clkT" id="clkT">--:--:--</div>
+    <div class="clkD" id="clkD"></div>
+    <div class="clkZ"><span class="badge" id="clkW"></span><span class="badge" id="clkI"></span></div>
+  </div>
+
+  <div class="card" id="homePromo" style="display:none"></div>
+
   <div class="grid">
     <div class="stat"><span class="sub" style="margin:0">Upload sesi ini</span><b id="sUp">0</b></div>
     <div class="stat"><span class="sub" style="margin:0">Berhasil</span><b id="sOk">0</b></div>
@@ -219,9 +250,24 @@ code{font:12px ui-monospace,monospace;background:rgba(139,92,246,.18);border-rad
     <button class="btn ghost" data-go="model">▣ Upload Model</button>
   </div>
   <div class="row">
+    <button class="btn ghost" data-go="image">▤ Upload Gambar</button>
+    <button class="btn ghost" data-go="sticker">☺ Upload Stiker</button>
+    <button class="btn ghost" data-go="video">▶ Upload Video</button>
+  </div>
+  <div class="row">
+    <button class="btn ghost" data-go="mesh">◆ Upload Mesh</button>
+    <button class="btn ghost" data-go="meshpart">◇ Upload MeshPart</button>
+    <button class="btn ghost" data-go="plugin">⬡ Upload Plugin</button>
+  </div>
+  <div class="row">
     <button class="btn ghost" data-go="status">⌕ Cek Status</button>
     <button class="btn ghost" data-go="library">♫ Library</button>
     <button class="btn ghost" data-go="chat">✦ Chat AI</button>
+  </div>
+  <div class="row">
+    <button class="btn ghost" data-go="hd">✧ Edit Foto HD</button>
+    <button class="btn ghost" data-go="music">♪ Pemutar Musik</button>
+    <button class="btn ghost" data-go="promo">📢 Promosi &amp; Announce</button>
   </div>
 
   <!-- AKUN & LIMIT -->
@@ -276,7 +322,7 @@ code{font:12px ui-monospace,monospace;background:rgba(139,92,246,.18);border-rad
 
   <div class="card">
     <h2>Layanan WhatsApp</h2>
-    <p class="sub" style="margin:0 0 6px">Upload animasi dan model butuh kode akses. Chat dulu ke WhatsApp, nanti kodenya dikirim. Setelah itu login dan masukkan kode di kolom "Pakai kode".</p>
+    <p class="sub" style="margin:0 0 6px">Upload animasi, model, video, mesh, dan plugin butuh kode akses. Chat dulu ke WhatsApp, nanti kodenya dikirim. Setelah itu login dan masukkan kode di kolom "Pakai kode".</p>
     <a class="btn" href="https://wa.me/6283841104725?text=Halo%2C%20saya%20mau%20minta%20kode%20akses%20upload%20ALEX%20STUDIO.%0AUsername%3A%20" target="_blank" rel="noopener">💬 Chat WhatsApp 083841104725</a>
   </div>
 
@@ -402,6 +448,8 @@ code{font:12px ui-monospace,monospace;background:rgba(139,92,246,.18);border-rad
   </div>
 </section>
 
+<!-- (Gambar, Stiker, Video, Mesh, MeshPart, Plugin dibuat otomatis oleh script di bawah) -->
+
 <!-- CEK STATUS -->
 <section class="page" id="p-status">
   <div class="eyebrow">Moderasi</div>
@@ -430,7 +478,9 @@ code{font:12px ui-monospace,monospace;background:rgba(139,92,246,.18);border-rad
   <div class="row" style="gap:10px;flex-wrap:nowrap">
     <input type="text" id="libQ" placeholder="Cari nama atau ID..." autocapitalize="off" style="flex:1;min-width:0">
     <select id="libF" style="width:auto;flex:0 0 130px">
-      <option>Semua</option><option>Audio</option><option>Animasi</option><option>Model</option><option>Gagal</option>
+      <option>Semua</option><option>Audio</option><option>Animasi</option><option>Model</option>
+      <option>Gambar</option><option>Stiker</option><option>Video</option><option>Mesh</option><option>MeshPart</option><option>Plugin</option>
+      <option>Gagal</option>
     </select>
   </div>
   <div class="row" style="margin-bottom:6px">
@@ -463,6 +513,93 @@ code{font:12px ui-monospace,monospace;background:rgba(139,92,246,.18);border-rad
   </div>
 </section>
 
+<!-- EDIT FOTO HD -->
+<section class="page" id="p-hd">
+  <div class="eyebrow">Tools / Foto</div>
+  <h1>Edit Foto HD</h1>
+  <p class="sub">Perbesar foto 2× sampai 4× dan pertajam. Ini peningkatan ketajaman biasa (bukan AI), detail yang sudah hilang tidak bisa dikembalikan. Foto diproses di HP-mu, tidak diupload.</p>
+  <div class="card">
+    <input type="file" id="hdFile" accept="image/*" hidden>
+    <button class="btn" id="hdPick">🖼 Pilih foto</button>
+    <div style="margin-top:14px"><canvas id="hdCv" width="1" height="1"></canvas></div>
+    <div class="hint" id="hdInfo">Belum ada foto.</div>
+    <label>Perbesar</label>
+    <select id="hdScale"><option value="2">2×</option><option value="3">3×</option><option value="4">4×</option></select>
+    <label>Ketajaman</label>
+    <div class="pitch"><input type="range" id="hdSharp" min="0" max="100" value="40"><div class="pv" id="hdSharpV">40</div></div>
+    <label>Kecerahan</label>
+    <div class="pitch"><input type="range" id="hdBr" min="50" max="150" value="100"><div class="pv" id="hdBrV">100</div></div>
+    <label>Kontras</label>
+    <div class="pitch"><input type="range" id="hdCt" min="50" max="150" value="100"><div class="pv" id="hdCtV">100</div></div>
+    <label>Warna (saturasi)</label>
+    <div class="pitch"><input type="range" id="hdSat" min="50" max="200" value="100"><div class="pv" id="hdSatV">100</div></div>
+    <button class="btn" id="hdGo">✧ Jadikan HD</button>
+    <div class="row">
+      <button class="btn ghost" id="hdPng">⬇ Unduh PNG</button>
+      <button class="btn ghost" id="hdJpg">⬇ Unduh JPG</button>
+    </div>
+    <div class="msg" id="mHd"></div>
+  </div>
+</section>
+
+<!-- PEMUTAR MUSIK -->
+<section class="page" id="p-music">
+  <div class="eyebrow">Tools / Audio</div>
+  <h1>Pemutar Musik</h1>
+  <p class="sub">Putar dan unduh lagu milikmu: file dari HP atau audio yang kamu upload ke Roblox (lewat Asset ID).</p>
+  <div class="card">
+    <div class="mp-t" id="mpTitle">Belum ada lagu</div>
+    <audio id="mpAu" preload="metadata"></audio>
+    <div class="mp-s"><span id="mpCur">0:00</span><input type="range" id="mpSeek" min="0" max="1000" value="0" style="flex:1"><span id="mpTot">0:00</span></div>
+    <div class="mp-c">
+      <button id="mpShuf" title="Acak">⇄</button>
+      <button id="mpPrev">⏮</button>
+      <button class="big" id="mpPlay">▶</button>
+      <button id="mpNext">⏭</button>
+      <button id="mpLoop" title="Ulang satu lagu">↻</button>
+    </div>
+    <div class="mp-s"><span>🔊</span><input type="range" id="mpVol" min="0" max="100" value="100" style="flex:1"></div>
+    <button class="btn ghost" id="mpDl">⬇ Unduh lagu yang diputar</button>
+  </div>
+  <div class="card">
+    <h2>Tambah lagu</h2>
+    <input type="file" id="mpFile" accept="audio/*" multiple hidden>
+    <button class="btn" id="mpPick">＋ Tambah file dari HP</button>
+    <label>Atau dari Asset ID audio (boleh banyak)</label>
+    <input type="text" id="mpId" inputmode="numeric" placeholder="1234567890 9876543210">
+    <div class="row">
+      <button class="btn ghost" id="mpAddId">Tambah dari Asset ID</button>
+      <button class="btn ghost" id="mpLib">Tambah dari Library</button>
+    </div>
+    <div class="msg" id="mMp"></div>
+  </div>
+  <div class="card"><h2>Daftar putar</h2><div id="mpList"></div></div>
+</section>
+
+<!-- PROMOSI -->
+<section class="page" id="p-promo">
+  <div class="eyebrow">Info</div>
+  <h1>Promosi &amp; Announce</h1>
+  <p class="sub">Pengumuman resmi dari owner.</p>
+  <div id="prList"></div>
+  <div class="card" id="prEd" style="display:none">
+    <h2>Editor (Owner)</h2>
+    <label style="margin-top:0">Judul</label>
+    <input type="text" id="pmT" placeholder="Contoh: Diskon VIP 7 hari">
+    <label>Isi pengumuman</label>
+    <textarea id="pmX" placeholder="Tulis isi promosi atau announce..."></textarea>
+    <label>Link (opsional, harus https://)</label>
+    <input type="text" id="pmL" autocapitalize="off" placeholder="https://...">
+    <label>Teks tombol link (opsional)</label>
+    <input type="text" id="pmB" placeholder="Beli sekarang">
+    <label>Pin di atas</label>
+    <select id="pmP"><option value="0">Tidak</option><option value="1">Ya, pin</option></select>
+    <button class="btn" id="pmSave">Tambah announce</button>
+    <button class="btn ghost" id="pmCancel">Batal edit</button>
+    <div class="msg" id="mPm"></div>
+  </div>
+</section>
+
 <!-- PREMIUM -->
 <section class="page" id="p-premium">
   <div class="eyebrow">Paket</div>
@@ -475,23 +612,23 @@ code{font:12px ui-monospace,monospace;background:rgba(139,92,246,.18);border-rad
   <div class="plans" id="prPlans">
     <div class="plan" data-r="guest">
       <div class="pt">TAMU</div><h3>Tanpa login</h3>
-      <ul><li>5 upload audio per hari</li><li>Cek Status dan Library</li></ul>
+      <ul><li>5 upload per hari (audio, gambar, stiker)</li><li>Cek Status, Library, Edit Foto HD, Pemutar Musik</li></ul>
     </div>
     <div class="plan" data-r="user">
       <div class="pt">AKUN · GRATIS</div><h3>Daftar akun</h3>
       <ul><li>10 upload per hari</li><li>Chat AI 15 pesan per hari</li><li>Bisa memakai kode</li></ul>
     </div>
     <div class="plan" data-r="access">
-      <div class="pt">AKSES UPLOAD</div><h3>Animasi &amp; Model</h3>
-      <ul><li>Membuka Upload Animasi dan Upload Model</li><li>Kode dari WhatsApp</li></ul>
+      <div class="pt">AKSES UPLOAD</div><h3>Animasi, Model, Video, Mesh, Plugin</h3>
+      <ul><li>Membuka Upload Animasi, Model, Video, Mesh, MeshPart, dan Plugin</li><li>Kode dari WhatsApp</li></ul>
     </div>
     <div class="plan" data-r="vip7">
       <div class="pt">VIP 7 HARI</div><h3>Unlimited seminggu</h3>
-      <ul><li>Upload unlimited selama 7 hari</li><li>Animasi dan Model terbuka</li><li>Chat AI unlimited</li></ul>
+      <ul><li>Upload unlimited selama 7 hari</li><li>Semua upload terbuka</li><li>Chat AI unlimited</li></ul>
     </div>
     <div class="plan" data-r="vip">
       <div class="pt">VIP</div><h3>Unlimited</h3>
-      <ul><li>Upload unlimited tanpa batas waktu</li><li>Animasi dan Model terbuka</li><li>Chat AI unlimited</li></ul>
+      <ul><li>Upload unlimited tanpa batas waktu</li><li>Semua upload terbuka</li><li>Chat AI unlimited</li></ul>
     </div>
   </div>
   <div class="card" style="margin-top:18px">
@@ -514,9 +651,10 @@ code{font:12px ui-monospace,monospace;background:rgba(139,92,246,.18);border-rad
     <div class="step"><div class="sn">3</div><div><h3>Buat API Key</h3><p>Buka <a href="https://create.roblox.com/dashboard/credentials" target="_blank" rel="noopener">create.roblox.com/dashboard/credentials</a>, lalu Create API Key. Beri nama, di Access Permissions tambahkan API System <b>Assets</b> dengan izin <b>Read</b> dan <b>Write</b>, pilih akun pemilik, di Security isi <code>0.0.0.0/0</code>, simpan, lalu salin key-nya.</p></div></div>
     <div class="step"><div class="sn">4</div><div><h3>Isi Settings</h3><p>Buka Settings, isi Creator ID dan API key, lalu tekan Cek &amp; Simpan API Key. Tombol preview audio butuh izin Asset Delivery pada key; kalau gagal, upload tetap normal.</p></div></div>
     <div class="step"><div class="sn">5</div><div><h3>Upload Audio</h3><p>Pilih file (boleh banyak), potong bagian yang dipakai, atur speed dan pitch, lalu Upload &amp; Publish. Salin Asset ID hasilnya.</p></div></div>
-    <div class="step"><div class="sn">6</div><div><h3>Animasi dan Model</h3><p>Export dari Roblox Studio sebagai <code>.rbxm</code>, lalu upload di menu masing-masing. Dua fitur ini butuh kode akses dari WhatsApp.</p></div></div>
-    <div class="step"><div class="sn">7</div><div><h3>Cek Status</h3><p>Tempel Asset ID di menu Cek Status untuk melihat disetujui, direview, atau ditolak.</p></div></div>
-    <div class="step"><div class="sn">8</div><div><h3>Pakai di Roblox</h3><p>Gunakan format <code>rbxassetid://ID</code> pada Sound atau Animation di Roblox Studio. Audio biasanya hanya bisa dipakai di game milik creator yang sama, kecuali kamu memberi izin.</p></div></div>
+    <div class="step"><div class="sn">6</div><div><h3>Gambar, Stiker, Video, Mesh</h3><p>Pilih menu upload yang sesuai. Gambar dan Stiker hasilnya berupa Decal. Video, Mesh, MeshPart, dan Plugin butuh kode akses dari WhatsApp.</p></div></div>
+    <div class="step"><div class="sn">7</div><div><h3>Animasi dan Model</h3><p>Export dari Roblox Studio sebagai <code>.rbxm</code>, lalu upload di menu masing-masing. Dua fitur ini juga butuh kode akses.</p></div></div>
+    <div class="step"><div class="sn">8</div><div><h3>Cek Status</h3><p>Tempel Asset ID di menu Cek Status untuk melihat disetujui, direview, atau ditolak.</p></div></div>
+    <div class="step"><div class="sn">9</div><div><h3>Pakai di Roblox</h3><p>Gunakan format <code>rbxassetid://ID</code> pada Sound atau Animation di Roblox Studio. Audio biasanya hanya bisa dipakai di game milik creator yang sama, kecuali kamu memberi izin.</p></div></div>
   </div>
 </section>
 
@@ -524,13 +662,18 @@ code{font:12px ui-monospace,monospace;background:rgba(139,92,246,.18);border-rad
 <section class="page" id="p-about">
   <div class="eyebrow">Info / About</div>
   <h1>Tentang ALEX STUDIO</h1>
-  <p class="sub">Workspace untuk creator Roblox: upload audio, animasi, dan model lebih cepat, tanpa ribet.</p>
+  <p class="sub">Workspace untuk creator Roblox: upload audio, animasi, model, dan aset lain lebih cepat, tanpa ribet.</p>
   <div class="card">
     <h2>Fitur</h2>
     <div class="feat"><b>⇧ Upload Audio</b><span>Upload banyak file, atur speed dan pitch, potong bagian lagu, dan unduh hasil olahannya.</span></div>
-    <div class="feat"><b>✪ Upload Animasi dan ▣ Upload Model</b><span>Publish file RBXM langsung ke Roblox (butuh kode akses).</span></div>
+    <div class="feat"><b>✪ Animasi, ▣ Model, ⬡ Plugin</b><span>Publish file RBXM langsung ke Roblox (butuh kode akses).</span></div>
+    <div class="feat"><b>▤ Gambar, ☺ Stiker, ▶ Video</b><span>Publish gambar dan stiker sebagai Decal, serta video MP4 atau MOV.</span></div>
+    <div class="feat"><b>◆ Mesh dan ◇ MeshPart</b><span>Publish file FBX, GLB, atau GLTF (butuh kode akses).</span></div>
     <div class="feat"><b>⌕ Cek Status</b><span>Pantau moderasi banyak asset ID sekaligus, dengan preview audio.</span></div>
     <div class="feat"><b>♫ Library</b><span>Riwayat upload tersimpan di browser ini, bisa dicari dan disalin.</span></div>
+    <div class="feat"><b>✧ Edit Foto HD</b><span>Perbesar dan pertajam foto langsung di HP, lalu unduh sebagai PNG atau JPG.</span></div>
+    <div class="feat"><b>♪ Pemutar Musik</b><span>Putar dan unduh lagu dari file atau Asset ID audio.</span></div>
+    <div class="feat"><b>📢 Promosi &amp; Announce</b><span>Pengumuman resmi yang bisa dilihat semua pengunjung, hanya owner yang bisa mengubah.</span></div>
     <div class="feat"><b>✦ Chat AI</b><span>Asisten untuk pertanyaan Roblox dan Luau.</span></div>
     <div class="feat"><b>🖼 Latar Belakang</b><span>Sampul foto atau video yang sama untuk semua pengunjung, diatur oleh owner.</span></div>
     <div class="feat"><b>★ Premium</b><span>Upload unlimited dengan paket VIP.</span></div>
@@ -636,9 +779,12 @@ $('#copyLog').onclick=()=>{try{navigator.clipboard.writeText(logs.join('\n'))}ca
 const NAV=[
   ['WORKSPACE'],
   ['home','◈','Home'],['audio','⇧','Upload Audio'],['anim','✪','Upload Animasi'],['model','▣','Upload Model'],
+  ['image','▤','Upload Gambar'],['sticker','☺','Upload Stiker'],['video','▶','Upload Video'],['mesh','◆','Upload Mesh'],['meshpart','◇','Upload MeshPart'],['plugin','⬡','Upload Plugin'],
   ['status','⌕','Cek Status'],['library','♫','Library'],['chat','✦','Chat AI'],
+  ['TOOLS'],
+  ['hd','✧','Edit Foto HD'],['music','♪','Pemutar Musik'],
   ['INFO'],
-  ['premium','★','Premium'],['tutorial','?','Tutorial'],['about','i','About Web'],
+  ['promo','📢','Promosi & Announce'],['premium','★','Premium'],['tutorial','?','Tutorial'],['about','i','About Web'],
   ['AKUN'],
   ['settings','⚙','Settings']
 ];
@@ -665,11 +811,12 @@ function go(p){
   $$('.page').forEach(e=>e.classList.toggle('on',e.id==='p-'+p));
   $$('[data-p]').forEach(e=>e.classList.toggle('on',e.dataset.p===p));
   closeDrawer();
-  if(p==='home'){badges();renderHist();refreshMe().then(()=>{if(isOwner())loadPC(true)})}
+  if(p==='home'){badges();renderHist();loadPromo();refreshMe().then(()=>{if(isOwner())loadPC(true)})}
   if(p==='library')renderLibrary();
   if(p==='premium')refreshMe().then(renderPremium);
   if(p==='about')renderAbout();
   if(p==='chat')refreshMe().then(renderChatState);
+  if(p==='promo')refreshMe().then(loadPromo);
   scrollTo(0,0);
 }
 
@@ -717,6 +864,19 @@ function badges(online){
   set('#bBe','Backend: '+(online===true?'siap':online===false?'offline':'diset'),online!==false);
 }
 
+/* ---------- jam ---------- */
+function startClock(){
+  const z=(tz,o)=>new Intl.DateTimeFormat('id-ID',Object.assign({timeZone:tz},o)).format(new Date());
+  const hm={hour:'2-digit',minute:'2-digit',hour12:false};
+  const tick=()=>{
+    $('#clkT').textContent=z('Asia/Jakarta',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).replace(/\./g,':');
+    $('#clkD').textContent=z('Asia/Jakarta',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+' · WIB';
+    $('#clkW').textContent='WITA '+z('Asia/Makassar',hm).replace('.',':');
+    $('#clkI').textContent='WIT '+z('Asia/Jayapura',hm).replace('.',':');
+  };
+  tick();setInterval(tick,1000);
+}
+
 /* ---------- akun & limit ---------- */
 let me=null;
 const isOwner=()=>!!(me&&me.role==='owner');
@@ -743,10 +903,10 @@ function renderAcct(){
   $('#limTxt').textContent=unl?'Upload unlimited':'Sisa upload hari ini: '+me.left+' dari '+me.limit;
   $('#limRst').textContent=unl?'':resetText(me.resetAt);
   let h='';
-  if(me.role==='owner')h='Owner aktif. Semua fitur terbuka, termasuk Cloud PC dan pengaturan latar belakang.';
+  if(me.role==='owner')h='Owner aktif. Semua fitur terbuka, termasuk Cloud PC, latar belakang, dan editor promosi.';
   else if(me.role==='vip')h='VIP aktif. Upload unlimited.';
   else if(me.role==='vip7')h='VIP 7 hari aktif sampai '+new Date(me.vipUntil).toLocaleString()+'.';
-  else h=(me.unlocked?'Akses animasi dan model aktif. ':'Kode akses animasi dan model didapat lewat WhatsApp '+(me.wa||'')+'. ')+'Pakai kode VIP untuk upload unlimited.';
+  else h=(me.unlocked?'Akses animasi, model, video, mesh, dan plugin aktif. ':'Kode akses upload animasi, model, video, mesh, dan plugin didapat lewat WhatsApp '+(me.wa||'')+'. ')+'Pakai kode VIP untuk upload unlimited.';
   $('#limHint').textContent=h;
 }
 async function refreshMe(){
@@ -760,6 +920,7 @@ async function refreshMe(){
   $('#pcCard').style.display=isOwner()?'block':'none';
   $('#bgCard').style.display=isOwner()?'block':'none';
   if(!isOwner())pcStopPoll();
+  renderPromo();
   return me;
 }
 setInterval(()=>{if(me)renderAcct()},60000);
@@ -1278,7 +1439,7 @@ function renderPremium(){
   });
 }
 function renderAbout(){
-  $('#abVer').textContent='Versi web: 5.2 · Backend: '+(beVer||'tidak terhubung');
+  $('#abVer').textContent='Versi web: 6.0 · Backend: '+(beVer||'tidak terhubung');
 }
 
 /* ---------- polling operasi Roblox ---------- */
@@ -1715,10 +1876,32 @@ $('#goM').onclick=async()=>{
   refreshMe();
 };
 
-/* ---------- init ---------- */
-loadSettings();loadBg();render();renderHist();renderChat();
-ping().catch(()=>{});
-refreshMe().then(()=>{if(isOwner())loadPC(true)});
-</script>
-</body>
-  </html>
+/* ---------- upload Gambar, Stiker, Video, Mesh, MeshPart, Plugin ---------- */
+const UPS=[
+  ['image','▤','Gambar','/upload-image','.png,.jpg,.jpeg,.bmp,.tga','png|jpe?g|bmp|tga','Publish gambar ke Roblox sebagai Decal. Maksimal 8000×8000 piksel.',false],
+  ['sticker','☺','Stiker','/upload-sticker','.png,.jpg,.jpeg','png|jpe?g','Publish stiker (PNG transparan paling bagus) sebagai Decal.',false],
+  ['video','▶','Video','/upload-video','.mp4,.mov','mp4|mov','Publish video MP4 atau MOV. Batas durasi dan ukuran mengikuti aturan Roblox; file besar (di atas ±100 MB) bisa gagal lewat server ini.',true],
+  ['mesh','◆','Mesh','/upload-mesh','.fbx,.glb,.gltf','fbx|glb|gltf','Publish 3D mesh (FBX, GLB, GLTF). Hasilnya berupa Model berisi MeshPart.',true],
+  ['meshpart','◇','MeshPart','/upload-meshpart','.fbx,.glb,.gltf','fbx|glb|gltf','Publish MeshPart siap pakai (FBX, GLB, GLTF). Hasilnya berupa Model berisi MeshPart.',true],
+  ['plugin','⬡','Plugin','/upload-plugin','.rbxm','rbxm','Publish plugin Roblox Studio (file .rbxm hasil Save as Local Plugin / Save to File).',true]
+];
+UPS.forEach(([key,ic,label,path,accept,rx,hint,lock])=>{
+  const sec=document.createElement('section');sec.className='page';sec.id='p-'+key;
+  sec.innerHTML=
+    '<div class="eyebrow">Upload / '+label+'</div><h1>Upload '+label+'</h1><p class="sub">'+hint+'</p>'+
+    (lock?'<div class="lock">🔒 Butuh kode akses. <a href="https://wa.me/6283841104725" target="_blank" rel="noopener">Chat WhatsApp 083841104725</a> untuk dapat kodenya.</div>':'')+
+    '<div class="drop"><div class="ic">'+ic+'</div><h3>Pilih file '+label+'</h3><p>tap untuk memilih file</p><div class="tags"><span class="tag">'+accept.replace(/\./g,'').replace(/,/g,' · ').toUpperCase()+'</span></div><input type="file" accept="'+accept+'" hidden></div>'+
+    '<div class="q" style="display:none"><div class="h"><div class="n"></div><button class="x">✕</button></div><div class="pvm"></div><div class="bar"><i></i></div><div class="st"></div></div>'+
+    '<div class="card"><h2>Detail '+label+'</h2><label style="margin-top:0">Nama (opsional)</label><input type="text" class="nm" placeholder="Kosongkan untuk memakai nama file"><label>Deskripsi (opsional)</label><input type="text" class="ds" placeholder="'+label+' uploaded via ALEX STUDIO"></div>'+
+    '<button class="btn go">⇧ Upload '+label+' ke Roblox</button>';
+  $('main').appendChild(sec);
+
+  const q=s=>sec.querySelector(s);
+  const drop=q('.drop'),inp=q('input[type=file]'),box=q('.q'),st=q('.st'),bar=q('.bar i'),pvm=q('.pvm');
+  let file=null,url=null;
+  const setS=(t,c,p)=>{st.className='st '+(c||'');st.textContent=t;if(p!=null)bar.style.width=p+'%'};
+  const reset=()=>{if(url)URL.revokeObjectURL(url);url=null;file=null;box.style.display='none';pvm.innerHTML='';q('.nm').value='';q('.ds').value=''};
+  function pick(f){
+    if(!f)return;
+    if(!new RegExp('\\.('+rx+')$','i').test(f.name))return alert('Format tidak cocok. Pakai: '+accept);
+    if(!f.size)return ale
