@@ -1,4 +1,4 @@
-const VERSION = "4.3.0-pages";
+const VERSION = "5.0.0-pages";
 const API = "https://apis.roblox.com/assets/v1";
 const MAX_BYTES = 20 * 1024 * 1024;
 const GH_REPO = "alexxsidu-netizen/ALEX-STUDIO";
@@ -46,7 +46,26 @@ const json = (d, s = 200) =>
     headers: { "content-type": "application/json", ...CORS },
   });
 
-const MIME = { mp3: "audio/mpeg", ogg: "audio/ogg", rbxm: "model/x-rbxm" };
+const MIME = {
+  mp3: "audio/mpeg", ogg: "audio/ogg", rbxm: "model/x-rbxm",
+  png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg",
+  bmp: "image/bmp", tga: "image/tga",
+  mp4: "video/mp4", mov: "video/mov",
+  fbx: "model/fbx", glb: "model/gltf-binary", gltf: "model/gltf+json",
+};
+
+// path: [assetType Roblox, ekstensi yang boleh, nama gate (null = bebas, tanpa kode akses)]
+const UPLOADS = {
+  "/upload-image":    ["Decal", ["png", "jpg", "jpeg", "bmp", "tga"], null],
+  "/upload-sticker":  ["Decal", ["png", "jpg", "jpeg"], null],
+  "/upload-video":    ["Video", ["mp4", "mov"], "video"],
+  "/upload-mesh":     ["Model", ["fbx", "glb", "gltf"], "mesh"],
+  "/upload-meshpart": ["Model", ["fbx", "glb", "gltf"], "meshpart"],
+  "/upload-plugin":   ["Plugin", ["rbxm"], "plugin"],
+};
+
+const PROMO_KEY = "promo:list";
+
 const extOf = (n) => String(n || "").split(".").pop().toLowerCase();
 
 const creatorOf = (fd) =>
@@ -245,7 +264,7 @@ async function authRoute(path, req, env) {
       label = "VIP 7 hari aktif. Upload unlimited.";
     } else if (same(env.ACCESS_CODE)) {
       u.unlocked = true;
-      label = "Akses upload aktif. Upload animasi dan model sudah terbuka.";
+      label = "Akses upload aktif. Upload animasi, model, video, mesh, dan plugin sudah terbuka.";
     } else {
       await rlAdd(env, "rl:redeem:" + ip, 600);
       // diagnosa sementara: hapus 2 baris di bawah kalau semua kode sudah jalan
@@ -290,7 +309,7 @@ async function chatRoute(req, env) {
     role: "system",
     content:
       "Kamu asisten ALEX STUDIO, workspace untuk creator Roblox. Jawab dalam bahasa Indonesia, singkat dan jelas. " +
-      "Kamu membantu soal upload audio, animasi, dan model ke Roblox, Roblox Studio, Luau scripting, serta cara pakai ALEX STUDIO. " +
+      "Kamu membantu soal upload audio, animasi, model, gambar, video, mesh, dan plugin ke Roblox, Roblox Studio, Luau scripting, serta cara pakai ALEX STUDIO. " +
       "Jangan membantu mengunduh audio dari YouTube atau mengunggah musik berhak cipta tanpa izin pemiliknya.",
   };
 
@@ -310,6 +329,41 @@ async function chatRoute(req, env) {
 
   await kvPut(env, k, { n: used + 1 }, 172800);
   return json({ ok: true, reply, limit, left: limit === null ? null : Math.max(0, limit - used - 1) });
+}
+
+/* ---------- promosi & announce ---------- */
+async function promoRoute(path, req, env) {
+  if (!env.CLOUDPC) return json({ error: "KV CLOUDPC belum di-bind" }, 500);
+
+  // publik: semua pengunjung bisa melihat
+  if (path === "/promo" && req.method === "GET")
+    return json({ ok: true, items: (await kvGet(env, PROMO_KEY)) || [] });
+
+  // hanya owner yang bisa menambah, mengubah, pin, dan menghapus
+  if (path === "/promo/save" && req.method === "POST") {
+    if (!(await isOwner(req, env)))
+      return json({ error: "Hanya owner yang bisa mengubah promosi." }, 403);
+    const b = await req.json().catch(() => ({}));
+    const src = Array.isArray(b.items) ? b.items.slice(0, 20) : [];
+    const items = src
+      .map((x) => {
+        let link = clean(x && x.link).slice(0, 300);
+        if (link && !/^https:\/\//i.test(link)) link = "";
+        return {
+          id: clean(x && x.id).slice(0, 20) || randHex(4),
+          title: clean(x && x.title).slice(0, 80),
+          text: clean(x && x.text).slice(0, 1000),
+          link,
+          label: clean(x && x.label).slice(0, 30),
+          pin: !!(x && x.pin),
+          at: +(x && x.at) || Date.now(),
+        };
+      })
+      .filter((x) => x.title || x.text);
+    await kvPut(env, PROMO_KEY, items);
+    return json({ ok: true, items });
+  }
+  return json({ error: "Endpoint tidak ditemukan" }, 404);
 }
 
 /* ---------- sampul / latar belakang global ---------- */
@@ -431,7 +485,7 @@ async function createAsset(key, fd, assetType, allowedExt) {
 
   const out = new FormData();
   out.append("request", JSON.stringify(meta));
-  out.append("fileContent", new Blob([bytes], { type: MIME[ext] }), file.name);
+  out.append("fileContent", new Blob([bytes], { type: MIME[ext] || "application/octet-stream" }), file.name);
 
   const r = await fetch(API + "/assets", {
     method: "POST",
@@ -621,6 +675,8 @@ async function handle(req, env) {
 
   if (url.pathname === "/chat") return chatRoute(req, env);
 
+  if (url.pathname.startsWith("/promo")) return promoRoute(url.pathname, req, env);
+
   /* ---------- sampul / latar belakang global ---------- */
   if (url.pathname.startsWith("/bg")) {
     if (!env.CLOUDPC) return json({ error: "KV CLOUDPC belum di-bind" }, 500);
@@ -659,6 +715,12 @@ async function handle(req, env) {
 
   if (url.pathname === "/upload-model" && req.method === "POST")
     return gatedUpload(req, env, key, "Model", ["rbxm"], "model");
+
+  // gambar, stiker, video, mesh, meshpart, plugin
+  if (UPLOADS[url.pathname] && req.method === "POST") {
+    const [type, exts, gate] = UPLOADS[url.pathname];
+    return gatedUpload(req, env, key, type, exts, gate);
+  }
 
   if (url.pathname === "/operation") {
     const id = url.searchParams.get("id");
