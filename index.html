@@ -1904,4 +1904,323 @@ UPS.forEach(([key,ic,label,path,accept,rx,hint,lock])=>{
   function pick(f){
     if(!f)return;
     if(!new RegExp('\\.('+rx+')$','i').test(f.name))return alert('Format tidak cocok. Pakai: '+accept);
-    if(!f.size)return ale
+    if(!f.size)return alert('File kosong (0 byte).');
+    if(url)URL.revokeObjectURL(url);
+    file=f;url=URL.createObjectURL(f);
+    box.style.display='block';
+    q('.n').textContent=f.name+' · '+fmtSize(f.size);
+    pvm.innerHTML='';
+    const t=f.type||'';
+    if(t.startsWith('image/')){
+      const im=document.createElement('img');im.src=url;
+      im.style.cssText='max-width:100%;max-height:220px;border-radius:12px;margin-top:10px';
+      pvm.appendChild(im);
+    }else if(t.startsWith('video/')){
+      const v=document.createElement('video');v.src=url;v.controls=true;
+      v.style.cssText='width:100%;border-radius:12px;margin-top:10px';
+      pvm.appendChild(v);
+    }
+    setS('Siap diupload.','',0);
+  }
+  drop.onclick=()=>inp.click();
+  inp.onchange=()=>{pick(inp.files[0]);inp.value=''};
+  ['dragover','dragenter'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('hot')}));
+  ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('hot')}));
+  drop.addEventListener('drop',e=>pick(e.dataTransfer.files[0]));
+  q('.x').onclick=reset;
+  q('.go').onclick=async()=>{
+    if(!file)return alert('Pilih file dulu.');
+    box.style.display='block';
+    const need=needSettings();if(need)return setS('✗ '+need,'err',100);
+    const btn=q('.go');btn.disabled=true;
+    const fname=(q('.nm').value.trim()||file.name.replace(/\.[^.]+$/,'')).slice(0,50);
+    const ext=(file.name.split('.').pop()||'').toLowerCase();
+    try{
+      const bytes=await file.arrayBuffer();
+      if(!bytes.byteLength)throw new Error('File terbaca 0 byte. Pilih ulang file-nya.');
+      const fd=new FormData();
+      fd.append('file',new Blob([bytes],{type:file.type||'application/octet-stream'}),safeName(fname)+'.'+ext);
+      fd.append('name',fname);
+      fd.append('description',q('.ds').value.trim()||(label+' uploaded via ALEX STUDIO'));
+      fd.append('creatorType',LS.get('ctype','User'));
+      fd.append('creatorId',LS.get('cid'));
+      setS('Mengupload ke Roblox ('+fmtSize(bytes.byteLength)+')...','',40);
+      log('Upload '+label+': '+fname+' ('+bytes.byteLength+' byte)');
+      const j=await api(path,{method:'POST',body:fd});
+      setS('Menunggu proses Roblox...','',70);
+      const id=await waitOp(j.operationId);
+      bump(true);
+      setS('✓ Berhasil! Asset ID: '+id,'ok',100);
+      copyBtn(st,id,'Salin ID');copyBtn(st,'rbxassetid://'+id,'rbxassetid');
+      pushHist({name:fname,type:label,id:String(id),size:bytes.byteLength,at:new Date().toLocaleString()});
+      log(label+' berhasil: '+id);
+    }catch(e){
+      bump(false);setS('✗ '+e.message,'err',100);log(label+' gagal: '+e.message);
+      pushFail(fname,label,file.size,e.message);
+    }
+    btn.disabled=false;
+    refreshMe();
+  };
+});
+
+/* ---------- promosi & announce ---------- */
+let promoItems=[],promoEdit=null;
+const sortedPromo=()=>[...promoItems].sort((a,b)=>(b.pin?1:0)-(a.pin?1:0)||(b.at||0)-(a.at||0));
+async function loadPromo(){
+  try{const j=await api('/promo',{},15000);promoItems=j.items||[]}catch(e){log('Promo gagal dimuat: '+e.message)}
+  renderPromo();
+}
+async function savePromo(items){
+  const j=await api('/promo/save',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({items})},20000);
+  promoItems=j.items||[];renderPromo();
+}
+function promoCard(p,owner){
+  const d=document.createElement('div');d.className='card';
+  const h=document.createElement('h2');h.textContent=(p.pin?'📌 ':'')+(p.title||'Pengumuman');d.appendChild(h);
+  const x=document.createElement('div');x.className='pmx';x.textContent=p.text||'';d.appendChild(x);
+  if(p.link){
+    const a=document.createElement('a');a.className='btn';a.href=p.link;a.target='_blank';a.rel='noopener';
+    a.textContent=p.label||'Buka link';d.appendChild(a);
+  }
+  if(owner){
+    const r=document.createElement('div');r.style.marginTop='10px';
+    const mk=(t,fn)=>{const b=document.createElement('button');b.className='copy';b.textContent=t;b.onclick=fn;r.appendChild(b)};
+    mk('Edit',()=>{
+      promoEdit=p.id;$('#pmT').value=p.title||'';$('#pmX').value=p.text||'';$('#pmL').value=p.link||'';
+      $('#pmB').value=p.label||'';$('#pmP').value=p.pin?'1':'0';$('#pmSave').textContent='Simpan perubahan';
+      $('#prEd').scrollIntoView({behavior:'smooth'});
+    });
+    mk(p.pin?'Lepas pin':'Pin',async()=>{
+      try{await savePromo(promoItems.map(i=>i.id===p.id?Object.assign({},i,{pin:!i.pin}):i))}catch(e){msg($('#mPm'),'✗ '+e.message,false)}
+    });
+    mk('Hapus',async()=>{
+      if(!confirm('Hapus announce ini?'))return;
+      try{await savePromo(promoItems.filter(i=>i.id!==p.id))}catch(e){msg($('#mPm'),'✗ '+e.message,false)}
+    });
+    d.appendChild(r);
+  }
+  return d;
+}
+function renderPromo(){
+  const own=isOwner(),list=sortedPromo();
+  const box=$('#prList');box.innerHTML='';
+  $('#prEd').style.display=own?'block':'none';
+  if(!list.length){const h=document.createElement('div');h.className='hint';h.textContent='Belum ada pengumuman.';box.appendChild(h)}
+  list.forEach(p=>box.appendChild(promoCard(p,own)));
+  const hp=$('#homePromo');hp.innerHTML='';
+  if(list.length){
+    hp.style.display='block';
+    const p=list[0];
+    const e=document.createElement('div');e.className='eyebrow';e.textContent='Pengumuman';hp.appendChild(e);
+    const h=document.createElement('h2');h.style.marginTop='8px';h.textContent=(p.pin?'📌 ':'')+(p.title||'Pengumuman');hp.appendChild(h);
+    const x=document.createElement('div');x.className='pmx';x.textContent=(p.text||'').slice(0,200)+((p.text||'').length>200?'...':'');hp.appendChild(x);
+    const b=document.createElement('button');b.className='btn ghost';b.textContent='Lihat semua';b.dataset.go='promo';hp.appendChild(b);
+  }else hp.style.display='none';
+}
+function promoReset(){
+  promoEdit=null;['#pmT','#pmX','#pmL','#pmB'].forEach(s=>$(s).value='');
+  $('#pmP').value='0';$('#pmSave').textContent='Tambah announce';
+}
+$('#pmCancel').onclick=()=>{promoReset();$('#mPm').textContent=''};
+$('#pmSave').onclick=async()=>{
+  const title=$('#pmT').value.trim(),text=$('#pmX').value.trim();
+  if(!title&&!text)return msg($('#mPm'),'Isi judul atau isi pengumuman.',false);
+  const link=$('#pmL').value.trim();
+  if(link&&!/^https:\/\//i.test(link))return msg($('#mPm'),'Link harus diawali https://',false);
+  const item={title,text,link,label:$('#pmB').value.trim(),pin:$('#pmP').value==='1'};
+  let items;
+  if(promoEdit)items=promoItems.map(i=>i.id===promoEdit?Object.assign({},i,item):i);
+  else items=[Object.assign({id:'',at:Date.now()},item),...promoItems];
+  try{await savePromo(items);promoReset();msg($('#mPm'),'✓ Tersimpan.',true)}
+  catch(e){msg($('#mPm'),'✗ '+e.message,false)}
+};
+
+/* ---------- edit foto HD ---------- */
+let hdImg=null;
+[['hdSharp','hdSharpV'],['hdBr','hdBrV'],['hdCt','hdCtV'],['hdSat','hdSatV']].forEach(([a,b])=>{
+  $('#'+a).oninput=e=>{$('#'+b).textContent=e.target.value};
+});
+$('#hdPick').onclick=()=>$('#hdFile').click();
+$('#hdFile').onchange=()=>{
+  const f=$('#hdFile').files[0];$('#hdFile').value='';if(!f)return;
+  const im=new Image();
+  im.onload=()=>{
+    hdImg=im;
+    const cv=$('#hdCv');cv.width=im.naturalWidth;cv.height=im.naturalHeight;
+    cv.getContext('2d').drawImage(im,0,0);
+    $('#hdInfo').textContent='Foto asli: '+im.naturalWidth+' × '+im.naturalHeight+' px';
+    msg($('#mHd'),'Foto dimuat. Atur lalu tekan Jadikan HD.',true);
+  };
+  im.onerror=()=>msg($('#mHd'),'Foto tidak bisa dibaca.',false);
+  im.src=URL.createObjectURL(f);
+};
+function sharpen(ctx,w,h,a){
+  const src=ctx.getImageData(0,0,w,h),dst=ctx.createImageData(w,h);
+  const s=src.data,d=dst.data,k=a*1.2;
+  for(let y=0;y<h;y++){
+    for(let x=0;x<w;x++){
+      const i=(y*w+x)*4;
+      if(x===0||y===0||x===w-1||y===h-1){d[i]=s[i];d[i+1]=s[i+1];d[i+2]=s[i+2];d[i+3]=s[i+3];continue}
+      for(let c=0;c<3;c++){
+        const v=s[i+c]*(1+4*k)-k*(s[i-4+c]+s[i+4+c]+s[i-w*4+c]+s[i+w*4+c]);
+        d[i+c]=v<0?0:v>255?255:v;
+      }
+      d[i+3]=s[i+3];
+    }
+  }
+  ctx.putImageData(dst,0,0);
+}
+$('#hdGo').onclick=()=>{
+  if(!hdImg)return msg($('#mHd'),'Pilih foto dulu.',false);
+  const W0=hdImg.naturalWidth,H0=hdImg.naturalHeight;
+  let sc=+$('#hdScale').value;
+  while(sc>1&&W0*sc*H0*sc>16e6)sc--;
+  const cv=$('#hdCv');cv.width=Math.round(W0*sc);cv.height=Math.round(H0*sc);
+  const ctx=cv.getContext('2d');
+  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+  ctx.filter='brightness('+$('#hdBr').value+'%) contrast('+$('#hdCt').value+'%) saturate('+$('#hdSat').value+'%)';
+  ctx.drawImage(hdImg,0,0,cv.width,cv.height);
+  ctx.filter='none';
+  const amt=+$('#hdSharp').value/100;
+  try{if(amt>0)sharpen(ctx,cv.width,cv.height,amt)}catch(e){}
+  $('#hdInfo').textContent='Hasil: '+cv.width+' × '+cv.height+' px ('+sc+'×)';
+  msg($('#mHd'),'✓ Selesai.'+(sc<+$('#hdScale').value?' Skala diturunkan agar HP tidak kehabisan memori.':''),true);
+};
+function hdSave(type,ext){
+  if(!hdImg)return msg($('#mHd'),'Pilih foto dulu.',false);
+  $('#hdCv').toBlob(b=>{
+    if(!b)return msg($('#mHd'),'Gagal membuat file.',false);
+    const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='foto-hd.'+ext;
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href),10000);
+  },type,0.92);
+}
+$('#hdPng').onclick=()=>hdSave('image/png','png');
+$('#hdJpg').onclick=()=>hdSave('image/jpeg','jpg');
+
+/* ---------- pemutar musik ---------- */
+let mp=[],mpI=-1,mpShuffle=false,mpLoop=false;
+const mpAu=$('#mpAu');
+function mpRender(){
+  const box=$('#mpList');box.innerHTML='';
+  if(!mp.length){box.innerHTML='<div class="hint" style="margin:0">Daftar putar kosong.</div>';return}
+  mp.forEach((it,i)=>{
+    const d=document.createElement('div');d.className='hi';
+    const t=document.createElement('div');t.className='t';t.textContent=(i===mpI?'▶ ':'')+it.name;t.style.cursor='pointer';
+    t.onclick=()=>mpPlay(i);d.appendChild(t);
+    const x=document.createElement('button');x.className='copy';x.textContent='✕';
+    x.onclick=()=>{
+      mp.splice(i,1);
+      if(i===mpI){mpAu.pause();mpI=-1;$('#mpTitle').textContent='Belum ada lagu'}
+      else if(i<mpI)mpI--;
+      mpRender();
+    };
+    d.appendChild(x);box.appendChild(d);
+  });
+}
+async function mpResolve(it){
+  if(it.src)return it.src;
+  const r=await api('/asset-audio?id='+encodeURIComponent(it.id),{},30000);
+  it.src=r.url;return it.src;
+}
+async function mpPlay(i){
+  if(!mp.length)return;
+  mpI=(i+mp.length)%mp.length;
+  const it=mp[mpI];
+  $('#mpTitle').textContent=it.name;mpRender();
+  try{
+    msg($('#mMp'),'Memuat...',true);
+    mpAu.src=await mpResolve(it);
+    mpAu.loop=mpLoop;
+    await mpAu.play();
+    $('#mMp').textContent='';
+  }catch(e){msg($('#mMp'),'✗ '+(e.message||'Gagal memutar'),false)}
+}
+function mpNext(dir){
+  if(!mp.length)return;
+  if(mpShuffle&&mp.length>1){let n;do{n=Math.floor(Math.random()*mp.length)}while(n===mpI);mpPlay(n)}
+  else mpPlay((mpI<0?0:mpI+dir));
+}
+mpAu.onplay=()=>{$('#mpPlay').textContent='⏸'};
+mpAu.onpause=()=>{$('#mpPlay').textContent='▶'};
+mpAu.onended=()=>{if(!mpLoop)mpNext(1)};
+mpAu.ontimeupdate=()=>{
+  $('#mpCur').textContent=fmt(mpAu.currentTime||0);
+  if(mpAu.duration&&isFinite(mpAu.duration))$('#mpSeek').value=Math.round(mpAu.currentTime/mpAu.duration*1000);
+};
+mpAu.onloadedmetadata=()=>{$('#mpTot').textContent=isFinite(mpAu.duration)?fmt(mpAu.duration):'0:00'};
+$('#mpSeek').oninput=e=>{if(mpAu.duration&&isFinite(mpAu.duration))mpAu.currentTime=e.target.value/1000*mpAu.duration};
+$('#mpVol').oninput=e=>{mpAu.volume=e.target.value/100};
+$('#mpPlay').onclick=()=>{
+  if(mpI<0){mpPlay(0);return}
+  if(mpAu.paused)mpAu.play().catch(()=>{});else mpAu.pause();
+};
+$('#mpPrev').onclick=()=>mpNext(-1);
+$('#mpNext').onclick=()=>mpNext(1);
+$('#mpShuf').onclick=()=>{mpShuffle=!mpShuffle;$('#mpShuf').classList.toggle('on',mpShuffle)};
+$('#mpLoop').onclick=()=>{mpLoop=!mpLoop;mpAu.loop=mpLoop;$('#mpLoop').classList.toggle('on',mpLoop)};
+$('#mpPick').onclick=()=>$('#mpFile').click();
+$('#mpFile').onchange=()=>{
+  const fl=[...$('#mpFile').files];$('#mpFile').value='';
+  fl.forEach(f=>mp.push({name:f.name.replace(/\.[^.]+$/,''),src:URL.createObjectURL(f),file:f}));
+  mpRender();
+  if(mpI<0&&mp.length)mpPlay(0);
+};
+function mpAddIds(ids){
+  const have=new Set(mp.map(x=>x.id).filter(Boolean));
+  let n=0;
+  ids.forEach(id=>{if(!have.has(id)){mp.push({name:'Audio '+id,id,src:null});n++}});
+  mpRender();
+  if(mpI<0&&mp.length)mpPlay(0);
+  return n;
+}
+$('#mpAddId').onclick=()=>{
+  const ids=parseIds($('#mpId').value);
+  if(!ids.length)return msg($('#mMp'),'Isi minimal satu Asset ID.',false);
+  if(!LS.get('key'))return msg($('#mMp'),'API key belum disimpan (Settings).',false);
+  const n=mpAddIds(ids);$('#mpId').value='';
+  msg($('#mMp'),'✓ '+n+' lagu ditambahkan.',true);
+};
+$('#mpLib').onclick=()=>{
+  if(!LS.get('key'))return msg($('#mMp'),'API key belum disimpan (Settings).',false);
+  const h=hist().filter(e=>e.st!=='fail'&&e.type==='Audio'&&e.id);
+  if(!h.length)return msg($('#mMp'),'Library belum punya audio.',false);
+  const have=new Set(mp.map(x=>x.id).filter(Boolean));
+  let n=0;
+  h.forEach(e=>{if(!have.has(e.id)){mp.push({name:e.name,id:e.id,src:null});n++}});
+  mpRender();
+  if(mpI<0&&mp.length)mpPlay(0);
+  msg($('#mMp'),'✓ '+n+' lagu ditambahkan dari Library.',true);
+};
+$('#mpDl').onclick=async()=>{
+  if(mpI<0)return msg($('#mMp'),'Belum ada lagu yang diputar.',false);
+  const it=mp[mpI];
+  try{
+    const src=await mpResolve(it);
+    let blob;
+    if(it.file)blob=it.file;
+    else{const r=await fetch(src);if(!r.ok)throw new Error('x');blob=await r.blob()}
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+    a.download=safeName(it.name)+'.'+((it.file&&it.file.name.split('.').pop())||'mp3');
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href),10000);
+    msg($('#mMp'),'✓ Unduhan dimulai.',true);
+  }catch(e){
+    if(it.src){window.open(it.src,'_blank');msg($('#mMp'),'Diunduh langsung diblokir, link dibuka di tab baru.',true)}
+    else msg($('#mMp'),'✗ Gagal mengunduh.',false);
+  }
+};
+
+/* ---------- mulai ---------- */
+startClock();
+loadSettings();
+renderHist();
+renderChat();
+renderPromo();
+ping().catch(()=>{});
+refreshMe().then(()=>{if(isOwner())loadPC(true)});
+loadBg();
+loadPromo();
+</script>
+</body>
+</html>
