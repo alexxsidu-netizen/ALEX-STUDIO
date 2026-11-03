@@ -1,4 +1,4 @@
-const VERSION = "5.0.0-pages";
+const VERSION = "6.0.0-pages";
 const API = "https://apis.roblox.com/assets/v1";
 const MAX_BYTES = 20 * 1024 * 1024;
 const GH_REPO = "alexxsidu-netizen/ALEX-STUDIO";
@@ -7,10 +7,16 @@ const GH_WF = "cloudpc.yml";
 const GUEST_LIMIT = 5;
 const USER_LIMIT = 10;
 const CHAT_LIMIT = 15;
+const CODE_LIMIT = 10; // pemakaian Kode AI per hari untuk akun biasa
+const CODE_INPUT_MAX = 5000;
 // model utama + cadangan; kalau satu dihentikan Cloudflare, otomatis coba berikutnya
 const CHAT_MODELS = [
   "@cf/meta/llama-3.1-8b-instruct-fast",
   "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+];
+const CODE_MODELS = [
+  "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+  "@cf/meta/llama-3.1-8b-instruct-fast",
 ];
 const DAY_MS = 86400000;
 const RESET_SHIFT = 10 * 3600000; // 17:00 WIB = 10:00 UTC
@@ -65,6 +71,15 @@ const UPLOADS = {
 };
 
 const PROMO_KEY = "promo:list";
+const SHOP_KEY = "shop:items";
+const STATS_KEY = "stats";
+const ONLINE_WINDOW = 6 * 60000; // dianggap online jika ping terakhir < 6 menit
+
+// kode acak buatan owner
+const CODE_IDX = "cdx_idx";
+const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const CODE_TYPES = ["vip", "vip7", "access", "role"];
+const GRADES = { admin: "Admin", reseller: "Reseller" };
 
 const extOf = (n) => String(n || "").split(".").pop().toLowerCase();
 
@@ -114,6 +129,82 @@ const rlAdd = async (env, k, ttl) => {
   await kvPut(env, k, o, ttl);
 };
 
+/* ---------- statistik pengguna web ---------- */
+const wibDay = (t = Date.now()) => Math.floor((t + 7 * 3600000) / DAY_MS);
+
+async function statsGet(env) {
+  const s = (await kvGet(env, STATS_KEY)) || {};
+  return {
+    total: s.total || 0,
+    users: s.users || 0,
+    uploads: s.uploads || 0,
+    daily: s.daily || {},
+    online: s.online || {},
+  };
+}
+async function statsBump(env, field, n = 1) {
+  try {
+    const s = await statsGet(env);
+    s[field] += n;
+    await kvPut(env, STATS_KEY, s);
+  } catch (e) {}
+}
+
+async function statsRoute(path, req, env) {
+  if (!env.CLOUDPC) return json({ error: "KV CLOUDPC belum di-bind" }, 500);
+
+  if (path === "/stats" && req.method === "GET") {
+    const s = await statsGet(env);
+    const now = Date.now();
+    const online = Object.values(s.online).filter((t) => now - t < ONLINE_WINDOW).length;
+    return json({
+      ok: true,
+      online,
+      today: s.daily[wibDay()] || 0,
+      total: s.total,
+      users: s.users,
+      uploads: s.uploads,
+    });
+  }
+
+  if (path === "/stats/ping" && req.method === "POST") {
+    const b = await req.json().catch(() => ({}));
+    const vid = clean(b.vid);
+    if (!/^[a-z0-9]{8,24}$/.test(vid)) return json({ error: "vid tidak valid" }, 400);
+    const s = await statsGet(env);
+    const now = Date.now();
+    for (const k of Object.keys(s.online)) if (now - s.online[k] > ONLINE_WINDOW) delete s.online[k];
+    const keys = Object.keys(s.online);
+    if (keys.length > 1000) {
+      keys.sort((a, c) => s.online[a] - s.online[c]);
+      keys.slice(0, keys.length - 1000).forEach((k) => delete s.online[k]);
+    }
+    s.online[vid] = now;
+    if (b.fresh === true) s.total++;
+    const day = wibDay();
+    if (b.newDay === true) s.daily[day] = (s.daily[day] || 0) + 1;
+    for (const d of Object.keys(s.daily)) if (+d < day - 30) delete s.daily[d];
+    await kvPut(env, STATS_KEY, s);
+    return json({ ok: true });
+  }
+
+  // hitung ulang jumlah akun terdaftar (owner)
+  if (path === "/stats/recount" && req.method === "POST") {
+    if (!(await isOwner(req, env))) return json({ error: "Hanya owner." }, 403);
+    let n = 0, cursor;
+    do {
+      const r = await env.CLOUDPC.list({ prefix: "user:", cursor });
+      n += r.keys.length;
+      cursor = r.list_complete ? null : r.cursor;
+    } while (cursor);
+    const s = await statsGet(env);
+    s.users = n;
+    await kvPut(env, STATS_KEY, s);
+    return json({ ok: true, users: n });
+  }
+  return json({ error: "Endpoint tidak ditemukan" }, 404);
+}
+
 /* ---------- akun, sesi, role, limit ---------- */
 const dayId = (t = Date.now()) => Math.floor((t - RESET_SHIFT) / DAY_MS);
 const nextReset = () => (dayId() + 1) * DAY_MS + RESET_SHIFT;
@@ -128,6 +219,9 @@ function roleOf(u) {
 
 const canPremium = (u) =>
   !!u && !!(u.owner || u.vip || (u.vipUntil && u.vipUntil > Date.now()) || u.unlocked);
+
+// staf = owner atau role admin (boleh kelola Jualan)
+const isStaffUser = (u) => !!u && !!(u.owner || u.role === "admin");
 
 function accessMsg(q, what) {
   return (
@@ -164,7 +258,10 @@ async function quota(env, req) {
   const o = (await kvGet(env, k)) || { n: 0 };
   return { auth, role, limit, used: o.n, k, resetAt: nextReset() };
 }
-const consume = (env, q) => kvPut(env, q.k, { n: q.used + 1 }, 172800);
+async function consume(env, q) {
+  await kvPut(env, q.k, { n: q.used + 1 }, 172800);
+  await statsBump(env, "uploads");
+}
 
 function meOf(q) {
   const u = q.auth && q.auth.user;
@@ -173,6 +270,8 @@ function meOf(q) {
     loggedIn: !!u,
     name: u ? u.name : null,
     role: q.role,
+    grade: u && u.role ? u.role : null,
+    staff: isStaffUser(u),
     limit: q.limit,
     used: q.used,
     left: q.limit === null ? null : Math.max(0, q.limit - q.used),
@@ -188,6 +287,106 @@ function limitMsg(q) {
   return q.role === "guest"
     ? base + " Login untuk dapat 10 upload per hari, atau pakai kode VIP untuk unlimited."
     : base + " Pakai kode VIP untuk unlimited.";
+}
+
+/* ---------- kode acak (dibuat owner) ---------- */
+function genCode() {
+  const r = crypto.getRandomValues(new Uint8Array(8));
+  let s = "";
+  for (const b of r) s += CODE_CHARS[b % CODE_CHARS.length];
+  return "ALEX-" + s.slice(0, 4) + "-" + s.slice(4);
+}
+const codeLabel = (m) =>
+  m.type === "vip" ? "VIP permanen"
+  : m.type === "vip7" ? "VIP " + m.days + " hari"
+  : m.type === "access" ? "Akses upload"
+  : "Role " + (GRADES[m.role] || m.role);
+
+function applyCode(u, m) {
+  if (m.type === "vip") {
+    u.vip = true;
+    return "VIP aktif. Upload unlimited.";
+  }
+  if (m.type === "vip7") {
+    u.vipUntil = Math.max(Date.now(), u.vipUntil || 0) + m.days * DAY_MS;
+    return "VIP " + m.days + " hari aktif. Upload unlimited.";
+  }
+  if (m.type === "access") {
+    u.unlocked = true;
+    return "Akses upload aktif. Upload animasi, model, video, mesh, dan plugin sudah terbuka.";
+  }
+  u.role = m.role;
+  return "Role " + (GRADES[m.role] || m.role) + " aktif.";
+}
+
+async function codesRoute(path, req, env) {
+  if (!env.CLOUDPC) return json({ error: "KV CLOUDPC belum di-bind" }, 500);
+  const auth = await getAuth(req, env);
+  if (!auth || roleOf(auth.user) !== "owner")
+    return json({ error: "Hanya owner yang bisa mengelola kode." }, 403);
+
+  if (path === "/codes/list" && req.method === "GET") {
+    const idx = ((await kvGet(env, CODE_IDX)) || []).slice(0, 100);
+    const metas = await Promise.all(idx.map((c) => kvGet(env, "cdx:" + c)));
+    const items = [];
+    idx.forEach((c, i) => {
+      const m = metas[i];
+      if (!m) return;
+      items.push({
+        code: c,
+        label: codeLabel(m),
+        note: m.note || "",
+        created: m.created,
+        used: (m.uses || 0) >= (m.max || 1),
+        usedBy: (m.usedBy || [])[0] || null,
+        usedAt: m.usedAt || null,
+      });
+    });
+    return json({ ok: true, items });
+  }
+
+  if (req.method !== "POST") return json({ error: "Method tidak didukung" }, 405);
+  const b = await req.json().catch(() => ({}));
+
+  if (path === "/codes/create") {
+    const type = clean(b.type);
+    if (!CODE_TYPES.includes(type)) return json({ error: "Jenis kode tidak valid" }, 400);
+    let days = 0, role = "";
+    if (type === "vip7") {
+      days = Math.round(+b.days);
+      if (!(days >= 1 && days <= 365)) return json({ error: "Jumlah hari harus 1 sampai 365" }, 400);
+    }
+    if (type === "role") {
+      role = clean(b.role);
+      if (!GRADES[role]) return json({ error: "Role tidak valid" }, 400);
+    }
+    const count = Math.min(20, Math.max(1, Math.round(+b.count) || 1));
+    const note = clean(b.note).slice(0, 40);
+    const made = [];
+    for (let i = 0; i < count; i++) {
+      const code = genCode();
+      await kvPut(env, "cdx:" + code, {
+        type, days, role, note,
+        created: Date.now(), by: auth.user.name,
+        max: 1, uses: 0, usedBy: [],
+      });
+      made.push(code);
+    }
+    const idx = (await kvGet(env, CODE_IDX)) || [];
+    await kvPut(env, CODE_IDX, [...made, ...idx].slice(0, 300));
+    return json({ ok: true, codes: made, label: codeLabel({ type, days, role }) });
+  }
+
+  if (path === "/codes/delete") {
+    const code = clean(b.code).toUpperCase();
+    if (!/^ALEX-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(code)) return json({ error: "Kode tidak valid" }, 400);
+    await env.CLOUDPC.delete("cdx:" + code);
+    const idx = (await kvGet(env, CODE_IDX)) || [];
+    await kvPut(env, CODE_IDX, idx.filter((c) => c !== code));
+    return json({ ok: true });
+  }
+
+  return json({ error: "Endpoint tidak ditemukan" }, 404);
 }
 
 async function authRoute(path, req, env) {
@@ -215,9 +414,10 @@ async function authRoute(path, req, env) {
     const lower = name.toLowerCase();
     if (await kvGet(env, "user:" + lower)) return json({ error: "Username sudah dipakai" }, 409);
     const salt = randHex(16);
-    const user = { name, salt, hash: await hashPw(pw, salt), created: Date.now(), owner: false, vip: false, vipUntil: 0, unlocked: false, redeemed: [] };
+    const user = { name, salt, hash: await hashPw(pw, salt), created: Date.now(), owner: false, vip: false, vipUntil: 0, unlocked: false, role: "", redeemed: [] };
     await kvPut(env, "user:" + lower, user);
     await rlAdd(env, "rl:reg:" + ip, 3600);
+    await statsBump(env, "users");
     const token = await newSession(env, lower);
     const q = await quota(env, new Request(req.url, { headers: { authorization: "Bearer " + token, "cf-connecting-ip": ip } }));
     return json({ ok: true, token, me: meOf(q) });
@@ -266,10 +466,18 @@ async function authRoute(path, req, env) {
       u.unlocked = true;
       label = "Akses upload aktif. Upload animasi, model, video, mesh, dan plugin sudah terbuka.";
     } else {
-      await rlAdd(env, "rl:redeem:" + ip, 600);
-      // diagnosa sementara: hapus 2 baris di bawah kalau semua kode sudah jalan
-      const unset = ["OWNER_CODE", "VIP_CODE", "VIP_WEEK_CODE", "ACCESS_CODE"].filter((n) => !clean(env[n]));
-      return json({ error: "Kode tidak valid" + (unset.length ? " (di server belum diisi: " + unset.join(", ") + ")" : "") }, 400);
+      // kode acak buatan owner
+      const up = code.toUpperCase();
+      const m = /^ALEX-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(up) ? await kvGet(env, "cdx:" + up) : null;
+      if (!m || (m.uses || 0) >= (m.max || 1)) {
+        await rlAdd(env, "rl:redeem:" + ip, 600);
+        return json({ error: "Kode tidak valid atau sudah dipakai" }, 400);
+      }
+      m.uses = (m.uses || 0) + 1;
+      m.usedBy = [...(m.usedBy || []), u.name];
+      m.usedAt = Date.now();
+      await kvPut(env, "cdx:" + up, m);
+      label = applyCode(u, m);
     }
     await kvPut(env, "user:" + auth.lower, u);
     const q = await quota(env, req);
@@ -329,6 +537,125 @@ async function chatRoute(req, env) {
 
   await kvPut(env, k, { n: used + 1 }, 172800);
   return json({ ok: true, reply, limit, left: limit === null ? null : Math.max(0, limit - used - 1) });
+}
+
+/* ---------- Kode AI: scan error, perbaiki bug, deobfuscate, jelaskan ---------- */
+function sysKode(mode, lang) {
+  const dasar =
+    "Kamu ahli kode untuk " + lang + ". Jawab dalam bahasa Indonesia. " +
+    "Jangan mengarang: kalau tidak yakin, katakan tidak yakin. ";
+  if (mode === "scan")
+    return dasar +
+      "Tugas: scan script dan temukan error sintaks, bug logika, dan kesalahan API " +
+      "(untuk Roblox: client/server salah tempat, WaitForChild kurang, nilai nil, koneksi event bocor, RemoteEvent tanpa validasi di server, dll). " +
+      "Jangan ubah script. Format: daftar temuan, tiap temuan berisi nomor baris (perkiraan), masalah, penyebab, dan saran perbaikan singkat. " +
+      "Urutkan dari paling serius. Jika tidak ada masalah, katakan dengan jelas.";
+  if (mode === "fix")
+    return dasar +
+      "Tugas: perbaiki bug di script. Pertahankan fitur dan gaya penulisan aslinya, jangan ubah hal yang tidak perlu. " +
+      "Keluarkan SCRIPT LENGKAP hasil perbaikan dalam satu blok kode (tanpa dipotong atau diringkas), " +
+      "lalu setelah blok kode tulis daftar singkat apa saja yang diubah dan alasannya.";
+  if (mode === "deob")
+    return dasar +
+      "Tugas: ubah script yang di-obfuscate menjadi script yang terbaca. Dekode string (base64, escape numerik seperti \\ddd, string.char, tabel string), " +
+      "sederhanakan ekspresi, beri nama variabel dan fungsi yang bermakna, rapikan indentasi. Keluarkan hasilnya dalam satu blok kode. " +
+      "Setelah itu tulis: (1) ringkasan fungsi script, (2) bagian yang gagal dibongkar bila ada, " +
+      "(3) peringatan keamanan: tandai pola mencurigakan seperti require(angka) ke modul asing, loadstring, getfenv/setfenv, " +
+      "HttpService ke URL asing, pengiriman data pemain keluar, atau pemberian izin admin tersembunyi. " +
+      "Jangan mengaku sudah membongkar jika ternyata sebagian masih tidak terbaca.";
+  return dasar +
+    "Tugas: jelaskan cara kerja script bagian per bagian dengan bahasa sederhana, sebutkan fungsi tiap bagian penting dan hal yang perlu diwaspadai.";
+}
+
+async function codeAiRoute(req, env) {
+  if (!env.CLOUDPC) return json({ error: "KV CLOUDPC belum di-bind" }, 500);
+  if (req.method !== "POST") return json({ error: "Method tidak didukung" }, 405);
+  const auth = await getAuth(req, env);
+  if (!auth) return json({ error: "Login dulu untuk memakai Kode AI" }, 401);
+  if (!env.AI)
+    return json({ error: "Workers AI belum dipasang. Di Cloudflare: Settings, Bindings, Add, Workers AI, nama variabel AI, lalu Retry deployment." }, 500);
+
+  const role = roleOf(auth.user);
+  const limit = role === "user" ? CODE_LIMIT : null;
+  const k = "aic:u:" + auth.lower + ":" + dayId();
+  const used = ((await kvGet(env, k)) || { n: 0 }).n;
+  if (limit !== null && used >= limit)
+    return json({ error: "Batas Kode AI hari ini habis (" + used + "/" + limit + "). Reset jam 17:00 WIB. VIP unlimited.", code: "LIMIT" }, 429);
+
+  const b = await req.json().catch(() => ({}));
+  const mode = clean(b.mode);
+  if (!["scan", "fix", "deob", "explain"].includes(mode)) return json({ error: "Mode tidak valid" }, 400);
+  const code = String(b.code == null ? "" : b.code);
+  if (!code.trim()) return json({ error: "Script kosong" }, 400);
+  if (code.length > CODE_INPUT_MAX)
+    return json({ error: "Script terlalu panjang (" + code.length + " huruf, maks " + CODE_INPUT_MAX + "). Bagi jadi beberapa bagian." }, 400);
+  const lang = clean(b.lang).slice(0, 40) || "otomatis";
+  const note = clean(b.note).slice(0, 600);
+
+  const user = "Script:\n```\n" + code + "\n```" + (note ? "\n\nCatatan atau error dari pengguna:\n" + note : "");
+  const msgs = [{ role: "system", content: sysKode(mode, lang) }, { role: "user", content: user }];
+
+  let out, lastErr;
+  for (const model of CODE_MODELS) {
+    try {
+      out = await env.AI.run(model, { messages: msgs, max_tokens: 2500 });
+      break;
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  if (!out) return json({ error: "Kode AI gagal: " + ((lastErr && lastErr.message) || lastErr) }, 502);
+
+  const reply = clean(out && (out.response || (out.result && out.result.response)));
+  if (!reply) return json({ error: "Kode AI tidak memberi jawaban. Coba lagi." }, 502);
+
+  await kvPut(env, k, { n: used + 1 }, 172800);
+  return json({ ok: true, reply, limit, left: limit === null ? null : Math.max(0, limit - used - 1) });
+}
+
+/* ---------- jualan (toko) ---------- */
+async function shopRoute(path, req, env, url) {
+  if (!env.CLOUDPC) return json({ error: "KV CLOUDPC belum di-bind" }, 500);
+
+  if (path === "/shop" && req.method === "GET") {
+    const items = (await kvGet(env, SHOP_KEY)) || [];
+    const all = url.searchParams.get("all") === "1" && (await isStaff(req, env));
+    return json({ ok: true, items: all ? items : items.filter((x) => !x.hidden) });
+  }
+
+  if (path === "/shop/save" && req.method === "POST") {
+    if (!(await isStaff(req, env)))
+      return json({ error: "Hanya owner atau admin yang bisa mengubah Jualan." }, 403);
+    const b = await req.json().catch(() => ({}));
+    const src = Array.isArray(b.items) ? b.items.slice(0, 60) : [];
+    const num = (v) => {
+      const n = Math.round(+v);
+      return isFinite(n) && n >= 0 ? Math.min(n, 1000000000) : 0;
+    };
+    const items = src
+      .map((x) => {
+        let img = clean(x && x.image).slice(0, 300);
+        if (img && !/^https:\/\//i.test(img)) img = "";
+        const stockRaw = x && x.stock;
+        return {
+          id: clean(x && x.id).slice(0, 20) || randHex(4),
+          name: clean(x && x.name).slice(0, 80),
+          desc: clean(x && x.desc).slice(0, 500),
+          cat: clean(x && x.cat).slice(0, 24) || "Lainnya",
+          price: num(x && x.price),
+          rprice: num(x && x.rprice),
+          stock: stockRaw === "" || stockRaw == null ? null : num(stockRaw),
+          image: img,
+          pin: !!(x && x.pin),
+          hidden: !!(x && x.hidden),
+          at: +(x && x.at) || Date.now(),
+        };
+      })
+      .filter((x) => x.name);
+    await kvPut(env, SHOP_KEY, items);
+    return json({ ok: true, items });
+  }
+  return json({ error: "Endpoint tidak ditemukan" }, 404);
 }
 
 /* ---------- promosi & announce ---------- */
@@ -633,6 +960,10 @@ async function isOwner(req, env) {
   const a = await getAuth(req, env);
   return !!(a && roleOf(a.user) === "owner");
 }
+async function isStaff(req, env) {
+  const a = await getAuth(req, env);
+  return !!(a && isStaffUser(a.user));
+}
 const ownerOnly = () => json({ error: "Cloud PC hanya untuk owner. Login lalu masukkan kode owner." }, 403);
 
 const gh = (env, path, init = {}) =>
@@ -674,6 +1005,14 @@ async function handle(req, env) {
   if (url.pathname.startsWith("/auth/")) return authRoute(url.pathname, req, env);
 
   if (url.pathname === "/chat") return chatRoute(req, env);
+
+  if (url.pathname === "/code-ai") return codeAiRoute(req, env);
+
+  if (url.pathname.startsWith("/stats")) return statsRoute(url.pathname, req, env);
+
+  if (url.pathname.startsWith("/shop")) return shopRoute(url.pathname, req, env, url);
+
+  if (url.pathname.startsWith("/codes")) return codesRoute(url.pathname, req, env);
 
   if (url.pathname.startsWith("/promo")) return promoRoute(url.pathname, req, env);
 
