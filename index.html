@@ -675,6 +675,8 @@ code{font:12px ui-monospace,monospace;background:rgba(139,92,246,.18);border-rad
     <div class="feat"><b>♪ Pemutar Musik</b><span>Putar dan unduh lagu dari file atau Asset ID audio.</span></div>
     <div class="feat"><b>📢 Promosi &amp; Announce</b><span>Pengumuman resmi yang bisa dilihat semua pengunjung, hanya owner yang bisa mengubah.</span></div>
     <div class="feat"><b>✦ Chat AI</b><span>Asisten untuk pertanyaan Roblox dan Luau.</span></div>
+    <div class="feat"><b>⌨ Kode AI dan 🎨 Gambar AI</b><span>Scan error, perbaiki bug, deobfuscate, dan buat gambar dari deskripsi.</span></div>
+    <div class="feat"><b>🛒 Jualan, 📊 Statistik, 🎟 Kode Owner</b><span>Toko produk lewat WhatsApp, statistik pengunjung, dan pembuat kode acak untuk owner.</span></div>
     <div class="feat"><b>🖼 Latar Belakang</b><span>Sampul foto atau video yang sama untuk semua pengunjung, diatur oleh owner.</span></div>
     <div class="feat"><b>★ Premium</b><span>Upload unlimited dengan paket VIP.</span></div>
   </div>
@@ -1439,7 +1441,7 @@ function renderPremium(){
   });
 }
 function renderAbout(){
-  $('#abVer').textContent='Versi web: 6.0 · Backend: '+(beVer||'tidak terhubung');
+  $('#abVer').textContent='Versi web: 6.0 + Plus v1 · Backend: '+(beVer||'tidak terhubung');
 }
 
 /* ---------- polling operasi Roblox ---------- */
@@ -1899,7 +1901,7 @@ UPS.forEach(([key,ic,label,path,accept,rx,hint,lock])=>{
   const q=s=>sec.querySelector(s);
   const drop=q('.drop'),inp=q('input[type=file]'),box=q('.q'),st=q('.st'),bar=q('.bar i'),pvm=q('.pvm');
   let file=null,url=null;
-  const setS=(t,c,p)=>{st.className='st '+(c||'');st.textContent=t;if(p!=null)bar.style.width=p+'%'};
+    const setS=(t,c,p)=>{st.className='st '+(c||'');st.textContent=t;if(p!=null)bar.style.width=p+'%'};
   const reset=()=>{if(url)URL.revokeObjectURL(url);url=null;file=null;box.style.display='none';pvm.innerHTML='';q('.nm').value='';q('.ds').value=''};
   function pick(f){
     if(!f)return;
@@ -2221,6 +2223,503 @@ ping().catch(()=>{});
 refreshMe().then(()=>{if(isOwner())loadPC(true)});
 loadBg();
 loadPromo();
+</script>
+
+<script>
+/* ALEX STUDIO PLUS v1 (digabung langsung ke index.html)
+   Isi: tampilan baru, Kode AI, Gambar AI, Jualan, Statistik, Kode Owner */
+(function () {
+  "use strict";
+  var WA = "6283841104725";
+
+  function Q(s) { return document.querySelector(s); }
+  function el(tag, cls, txt) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (txt != null) e.textContent = txt;
+    return e;
+  }
+  function rp(n) { return "Rp " + Number(n || 0).toLocaleString("id-ID"); }
+  function waLink(t) { return "https://wa.me/" + WA + "?text=" + encodeURIComponent(t); }
+  function copyText(t, btn) {
+    var done = function () {
+      if (!btn) return;
+      var o = btn.textContent;
+      btn.textContent = "Tersalin ✓";
+      setTimeout(function () { btn.textContent = o; }, 1400);
+    };
+    var fb = function () {
+      var a = document.createElement("textarea");
+      a.value = t; document.body.appendChild(a); a.select();
+      try { document.execCommand("copy"); done(); } catch (e) {}
+      document.body.removeChild(a);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done, fb);
+    else fb();
+  }
+  function setMsg(node, t, ok) { if (node) { node.textContent = t; node.className = "msg " + (ok ? "ok" : "err"); } }
+  function isStaff() { return !!(me && me.staff); }
+  function owner() { return typeof isOwner === "function" && isOwner(); }
+
+  /* ================= TAMPILAN ================= */
+  var css = "" +
+  ":root{--bg:#05060f;--panel:#0c0e22;--panel2:#14173b;--line:rgba(255,255,255,.1)}" +
+  "body{background:radial-gradient(900px 520px at 92% -8%,rgba(139,92,246,.34),transparent 60%),radial-gradient(700px 480px at -12% 28%,rgba(34,211,238,.17),transparent 60%),radial-gradient(640px 420px at 50% 112%,rgba(251,191,36,.10),transparent 60%),var(--bg);background-attachment:fixed}" +
+  ".top{background:rgba(5,6,15,.72);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}" +
+  ".card{background:rgba(255,255,255,.045);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.1);border-radius:26px;box-shadow:0 14px 44px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.07)}" +
+  ".hero{position:relative;overflow:hidden;border-radius:28px;border:1px solid rgba(255,255,255,.14);background:linear-gradient(135deg,rgba(139,92,246,.34),rgba(34,211,238,.12) 60%,rgba(251,191,36,.10))}" +
+  ".hero::before{content:'';position:absolute;inset:-40%;background:conic-gradient(from 0deg,transparent 0 60%,rgba(255,255,255,.10) 70%,transparent 80%);animation:plSpin 14s linear infinite;pointer-events:none}" +
+  "@keyframes plSpin{to{transform:rotate(360deg)}}" +
+  ".hero>*{position:relative}" +
+  "h1{background:linear-gradient(90deg,#fff,#c4b5fd 60%,#67e8f9);-webkit-background-clip:text;background-clip:text;color:transparent}" +
+  ".btn{box-shadow:0 10px 28px rgba(99,102,241,.45)}" +
+  ".btn.ghost{background:rgba(255,255,255,.05);box-shadow:none;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}" +
+  ".drop{border-radius:26px;background:rgba(139,92,246,.07)}" +
+  ".stat,.q,.li,.plan,.feat{border-radius:20px}" +
+  ".bnav{left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom,0px));padding:8px;border-radius:28px;border:1px solid rgba(255,255,255,.12);background:rgba(10,11,28,.78);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:0 16px 40px rgba(0,0,0,.5)}" +
+  "main{padding-bottom:130px}" +
+  "@media(min-width:900px){main{padding-bottom:60px}}" +
+  ".nav.on{box-shadow:0 0 0 1px rgba(139,92,246,.4) inset}" +
+  /* kode ai */
+  ".modes{display:grid;grid-template-columns:1fr 1fr;gap:10px}" +
+  ".mode{padding:13px 8px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--mu);font-weight:700;text-align:center;cursor:pointer;font-size:14px}" +
+  ".mode.on{color:var(--tx);border-color:var(--a);background:rgba(139,92,246,.22);box-shadow:0 0 22px rgba(139,92,246,.25)}" +
+  ".editor{display:none;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:#07081a;margin-top:14px}" +
+  ".editor.on{display:block}" +
+  ".ebar{display:flex;gap:6px;align-items:center;padding:10px 12px;background:rgba(255,255,255,.05);border-bottom:1px solid var(--line);font:700 11px ui-monospace,monospace;letter-spacing:2px;color:var(--mu)}" +
+  ".ebar i{width:9px;height:9px;border-radius:50%;display:inline-block}" +
+  ".eout{margin:0;padding:14px;white-space:pre-wrap;word-break:break-word;font:12.5px/1.6 ui-monospace,Menlo,monospace;color:#d6d9ff;max-height:58vh;overflow:auto;background:none;border:0;border-radius:0}" +
+  ".eout.err{color:var(--err)}" +
+  ".cin{font:13px/1.5 ui-monospace,Menlo,monospace;min-height:180px;white-space:pre}" +
+  /* gambar */
+  ".igrid{display:grid;gap:14px;grid-template-columns:1fr}" +
+  ".igc{border-radius:22px;overflow:hidden;border:1px solid var(--line);background:rgba(255,255,255,.045)}" +
+  ".igc img{width:100%;display:block;min-height:150px;background:#000}" +
+  ".igc .cp{padding:12px}" +
+  ".igc .cp span{display:block;color:var(--mu);font-size:13px;margin-bottom:8px;word-break:break-word}" +
+  /* jualan */
+  ".scats{display:flex;gap:8px;overflow:auto;padding-bottom:6px;margin-bottom:14px}" +
+  ".scat{white-space:nowrap;padding:9px 16px;border-radius:99px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--mu);font-weight:700;cursor:pointer;font-size:13px}" +
+  ".scat.on{color:#fff;border-color:var(--a);background:rgba(139,92,246,.25)}" +
+  ".pgrid{display:grid;gap:14px;grid-template-columns:1fr}" +
+  "@media(min-width:620px){.pgrid{grid-template-columns:1fr 1fr}}" +
+  ".prd{border-radius:24px;overflow:hidden;border:1px solid var(--line);background:rgba(255,255,255,.045);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);display:flex;flex-direction:column}" +
+  ".prd img{width:100%;height:170px;object-fit:cover;display:block;background:#000}" +
+  ".prd .pb{padding:16px;display:flex;flex-direction:column;gap:8px;flex:1}" +
+  ".prd h3{margin:0;font-size:18px;word-break:break-word}" +
+  ".prd .pd{color:var(--mu);font-size:14px;line-height:1.6;white-space:pre-wrap;word-break:break-word}" +
+  ".price{font:800 22px ui-monospace,monospace;background:linear-gradient(90deg,#fbbf24,#fb923c);-webkit-background-clip:text;background-clip:text;color:transparent}" +
+  ".oldp{color:var(--mu);text-decoration:line-through;font:13px ui-monospace,monospace;margin-left:8px}" +
+  ".prd .pt{display:flex;gap:6px;flex-wrap:wrap}" +
+  ".prd .btn{margin-top:auto}" +
+  /* statistik */
+  ".sgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}" +
+  ".sc{padding:18px;border-radius:22px;border:1px solid var(--line);background:rgba(255,255,255,.05)}" +
+  ".sc small{display:block;color:var(--mu);font:700 11px ui-monospace,monospace;letter-spacing:2px;text-transform:uppercase}" +
+  ".sc b{display:block;font-size:34px;margin-top:6px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}" +
+  ".live{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--ok);box-shadow:0 0 12px var(--ok);margin-right:8px;animation:plPulse 1.6s infinite}" +
+  "@keyframes plPulse{50%{opacity:.35}}" +
+  /* kode owner */
+  ".cdr{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid var(--line)}" +
+  ".cdr:last-child{border:0}" +
+  ".cdr .cc{font:800 16px ui-monospace,monospace;letter-spacing:1px;flex:1;min-width:170px;word-break:break-all}" +
+  ".cdr small{display:block;color:var(--mu);font:12px ui-monospace,monospace;font-weight:400;letter-spacing:0;margin-top:2px}" +
+  ".gr{display:inline-block;margin-left:8px;font:700 12px ui-monospace,monospace;letter-spacing:1.5px;padding:8px 14px;border-radius:99px;border:1px solid rgba(251,191,36,.5);color:var(--warn)}";
+  var st = el("style"); st.textContent = css; document.head.appendChild(st);
+
+  /* ================= MENU ================= */
+  function at(k) { for (var i = 0; i < NAV.length; i++) if (NAV[i][0] === k) return i; return -1; }
+  NAV.splice(at("chat") + 1, 0, ["code", "⌨", "Kode AI"], ["imggen", "🎨", "Gambar AI"]);
+  NAV.splice(at("promo"), 0, ["shop", "🛒", "Jualan"]);
+  NAV.splice(at("premium") + 1, 0, ["stats", "📊", "Statistik"]);
+  NAV.splice(at("settings"), 0, ["codes", "🎟", "Kode Owner"]);
+  buildNav(Q("#navSide")); buildNav(Q("#navDr"));
+
+  /* tombol baru di Home + lencana online */
+  (function () {
+    var rows = document.querySelectorAll("#p-home > .row");
+    var last = rows[rows.length - 1];
+    if (last) {
+      var r = el("div", "row");
+      r.innerHTML =
+        '<button class="btn ghost" data-go="code">⌨ Kode AI</button>' +
+        '<button class="btn ghost" data-go="imggen">🎨 Gambar AI</button>' +
+        '<button class="btn ghost" data-go="shop">🛒 Jualan</button>' +
+        '<button class="btn ghost" data-go="stats">📊 Statistik</button>';
+      last.after(r);
+    }
+    var ci = Q("#p-home .hero .chipinfo");
+    if (ci) { var b = el("span", "badge ok", "● - online"); b.id = "bOnline"; ci.appendChild(b); }
+  })();
+
+  var main = Q("main");
+  function addPage(id, html) {
+    var s = el("section", "page"); s.id = "p-" + id; s.innerHTML = html; main.appendChild(s); return s;
+  }
+
+  /* ================= KODE AI ================= */
+  addPage("code",
+    '<div class="eyebrow">Studio AI</div><h1>Kode AI</h1>' +
+    '<p class="sub">Scan error, perbaiki bug, atau ubah script obfuscate jadi terbaca. Butuh login.</p>' +
+    '<div class="card"><div class="modes" id="cdModes">' +
+    '<div class="mode on" data-m="scan">🔍 Scan error</div><div class="mode" data-m="fix">🛠 Perbaiki bug</div>' +
+    '<div class="mode" data-m="deob">🔓 Deobfuscate</div><div class="mode" data-m="explain">📖 Jelaskan</div></div>' +
+    '<label>Bahasa</label><select id="cdLang">' +
+    '<option value="Lua (Roblox Luau)">Lua / Roblox (Luau)</option><option value="otomatis">Otomatis</option>' +
+    '<option value="JavaScript">JavaScript</option><option value="Python">Python</option><option value="HTML/CSS/JS">HTML / CSS / JS</option></select>' +
+    '<label>Script</label><textarea id="cdIn" class="cin" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Tempel script di sini (maks 5000 huruf)"></textarea>' +
+    '<label>Catatan atau error dari Output (opsional)</label><textarea id="cdNote" rows="2" style="min-height:70px"></textarea>' +
+    '<button class="btn" id="cdGo">Proses</button><div class="hint" id="cdHint"></div><div class="msg" id="cdMsg"></div></div>' +
+    '<div class="editor" id="cdEd"><div class="ebar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><span style="margin-left:6px">HASIL</span></div><pre class="eout" id="cdOut"></pre></div>' +
+    '<div class="row" id="cdAct" style="display:none;margin-top:12px"><button class="btn ghost" id="cdCopyCode">Salin kode saja</button><button class="btn ghost" id="cdCopyAll">Salin semua</button></div>');
+
+  var cdMode = "scan", cdLast = "";
+  var HINT = {
+    scan: "Mode Scan: cari bug dan error tanpa mengubah script.",
+    fix: "Mode Perbaiki: kembalikan script lengkap yang sudah diperbaiki.",
+    deob: "Mode Deobfuscate: ubah jadi kode terbaca dan cek tanda backdoor. Obfuscator berat bisa tidak terbongkar sempurna.",
+    explain: "Mode Jelaskan: terangkan cara kerja script bagian per bagian."
+  };
+  Q("#cdHint").textContent = HINT.scan;
+  Array.prototype.forEach.call(document.querySelectorAll("#cdModes .mode"), function (b) {
+    b.onclick = function () {
+      Array.prototype.forEach.call(document.querySelectorAll("#cdModes .mode"), function (x) { x.classList.remove("on"); });
+      b.classList.add("on"); cdMode = b.dataset.m; Q("#cdHint").textContent = HINT[cdMode];
+    };
+  });
+  Q("#cdGo").onclick = async function () {
+    var m = Q("#cdMsg"), code = Q("#cdIn").value;
+    if (!(me && me.loggedIn)) return setMsg(m, "Login dulu di Home untuk memakai Kode AI.", false);
+    if (!code.trim()) return setMsg(m, "Tempel script dulu.", false);
+    if (code.length > 5000) return setMsg(m, "Script terlalu panjang (" + code.length + " huruf, maks 5000). Bagi jadi beberapa bagian.", false);
+    var btn = Q("#cdGo"), out = Q("#cdOut");
+    btn.disabled = true; btn.textContent = "Memproses...";
+    m.textContent = ""; Q("#cdEd").classList.add("on"); out.className = "eout"; out.textContent = "Menganalisis...";
+    Q("#cdAct").style.display = "none";
+    try {
+      var j = await api("/code-ai", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ mode: cdMode, lang: Q("#cdLang").value, code: code, note: Q("#cdNote").value })
+      }, 90000);
+      cdLast = j.reply; out.textContent = j.reply; Q("#cdAct").style.display = "flex";
+      setMsg(m, j.left === null ? "Kode AI unlimited." : "Sisa Kode AI hari ini: " + j.left + " dari " + j.limit + ".", true);
+    } catch (e) {
+      out.className = "eout err"; out.textContent = "Gagal: " + e.message;
+    }
+    btn.disabled = false; btn.textContent = "Proses";
+  };
+  Q("#cdCopyCode").onclick = function () {
+    var m = cdLast.match(/```[\w+-]*\n([\s\S]*?)```/);
+    copyText(m ? m[1].replace(/\s+$/, "") : cdLast, Q("#cdCopyCode"));
+  };
+  Q("#cdCopyAll").onclick = function () { copyText(cdLast, Q("#cdCopyAll")); };
+
+  /* ================= GAMBAR AI ================= */
+  addPage("imggen",
+    '<div class="eyebrow">Studio AI</div><h1>Gambar AI</h1>' +
+    '<p class="sub">Buat gambar dari deskripsi. Layanan gratis Pollinations, hasil kadang butuh beberapa detik.</p>' +
+    '<div class="card"><label style="margin-top:0">Deskripsi gambar</label>' +
+    '<textarea id="igP" rows="3" placeholder="Contoh: logo naga neon ungu, gaya futuristik"></textarea>' +
+    '<label>Ukuran</label><select id="igS"><option value="1024x1024">Kotak 1:1</option><option value="768x1024">Potret 3:4</option>' +
+    '<option value="1024x768">Lanskap 4:3</option><option value="720x1280">HP 9:16</option><option value="1280x720">Wide 16:9</option></select>' +
+    '<button class="btn" id="igGo">🎨 Buat gambar</button><div class="hint" id="igH"></div></div>' +
+    '<div class="igrid" id="igGrid"></div>');
+
+  function igList() { try { return JSON.parse(LS.get("plus_imgs", "[]")) || []; } catch (e) { return []; } }
+  function igSave(l) { LS.set("plus_imgs", JSON.stringify(l.slice(0, 20))); }
+  function renderImgs() {
+    var g = Q("#igGrid"); g.innerHTML = "";
+    igList().forEach(function (it, i) {
+      var c = el("div", "igc");
+      var im = el("img"); im.src = it.url; im.loading = "lazy"; im.alt = it.p; c.appendChild(im);
+      var cp = el("div", "cp"); cp.appendChild(el("span", "", it.p));
+      var a = el("a", "copy", "Buka"); a.href = it.url; a.target = "_blank"; a.rel = "noopener";
+      a.style.textDecoration = "none"; a.style.display = "inline-block"; cp.appendChild(a);
+      var cb = el("button", "copy", "Salin link"); cb.onclick = function () { copyText(it.url, cb); }; cp.appendChild(cb);
+      var d = el("button", "copy", "Hapus");
+      d.onclick = function () { var l = igList(); l.splice(i, 1); igSave(l); renderImgs(); }; cp.appendChild(d);
+      c.appendChild(cp); g.appendChild(c);
+    });
+  }
+  Q("#igGo").onclick = function () {
+    var p = Q("#igP").value.trim();
+    if (!p) { Q("#igH").textContent = "Isi deskripsi gambar dulu."; return; }
+    var sz = Q("#igS").value.split("x");
+    var url = "https://image.pollinations.ai/prompt/" + encodeURIComponent(p) + "?width=" + sz[0] + "&height=" + sz[1] +
+      "&seed=" + Math.floor(Math.random() * 1e9) + "&nologo=true";
+    var l = igList(); l.unshift({ p: p, url: url }); igSave(l);
+    Q("#igH").textContent = "Gambar sedang dibuat, tunggu beberapa detik...";
+    renderImgs();
+    var first = Q("#igGrid img");
+    if (first) {
+      first.onload = function () { Q("#igH").textContent = "Selesai."; };
+      first.onerror = function () { Q("#igH").textContent = "Gagal memuat gambar, coba lagi."; };
+    }
+  };
+
+  /* ================= JUALAN ================= */
+  addPage("shop",
+    '<div class="eyebrow">Toko</div><h1>Jualan</h1>' +
+    '<p class="sub">Produk dan layanan dari ALEX STUDIO. Pesan lewat WhatsApp, kode dikirim setelah pembayaran.</p>' +
+    '<div class="scats" id="shCats"></div><div class="pgrid" id="shList"></div>' +
+    '<div class="card" id="shEd" style="display:none;margin-top:18px"><h2>Kelola Jualan (Owner / Admin)</h2>' +
+    '<label style="margin-top:0">Nama produk</label><input type="text" id="shName" placeholder="Contoh: VIP 7 Hari">' +
+    '<label>Harga (angka, rupiah)</label><input type="text" id="shPrice" inputmode="numeric" placeholder="25000">' +
+    '<label>Harga reseller (opsional)</label><input type="text" id="shRPrice" inputmode="numeric" placeholder="20000">' +
+    '<label>Stok (kosong = tidak terbatas)</label><input type="text" id="shStock" inputmode="numeric" placeholder="kosong">' +
+    '<label>Kategori</label><input type="text" id="shCat" placeholder="VIP, Akses, Jasa">' +
+    '<label>Deskripsi</label><textarea id="shDesc" rows="3" placeholder="Isi paket, cara aktivasi, dll"></textarea>' +
+    '<label>Link gambar (opsional, https)</label><input type="text" id="shImg" autocapitalize="off" placeholder="https://...">' +
+    '<label>Pin di atas</label><select id="shPin"><option value="0">Tidak</option><option value="1">Ya</option></select>' +
+    '<label>Tampil di toko</label><select id="shHide"><option value="0">Tampil</option><option value="1">Sembunyikan</option></select>' +
+    '<button class="btn" id="shSave">Tambah produk</button><button class="btn ghost" id="shCancel">Batal edit</button>' +
+    '<div class="msg" id="shMsg"></div></div>');
+
+  var shopItems = [], shopCat = "Semua", shopEdit = null;
+  async function loadShop() {
+    try {
+      var j = await api("/shop" + (isStaff() ? "?all=1" : ""), {}, 15000);
+      shopItems = j.items || [];
+    } catch (e) { log("Jualan gagal dimuat: " + e.message); }
+    renderShop();
+  }
+  async function saveShop(items) {
+    var j = await api("/shop/save", {
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ items: items })
+    }, 20000);
+    shopItems = j.items || []; renderShop();
+  }
+  function shopReset() {
+    shopEdit = null;
+    ["#shName", "#shPrice", "#shRPrice", "#shStock", "#shCat", "#shDesc", "#shImg"].forEach(function (s) { Q(s).value = ""; });
+    Q("#shPin").value = "0"; Q("#shHide").value = "0"; Q("#shSave").textContent = "Tambah produk";
+  }
+  function renderShop() {
+    var cats = ["Semua"];
+    shopItems.forEach(function (i) { if (cats.indexOf(i.cat) < 0) cats.push(i.cat); });
+    if (cats.indexOf(shopCat) < 0) shopCat = "Semua";
+    var cb = Q("#shCats"); cb.innerHTML = "";
+    cats.forEach(function (c) {
+      var b = el("div", "scat" + (c === shopCat ? " on" : ""), c);
+      b.onclick = function () { shopCat = c; renderShop(); };
+      cb.appendChild(b);
+    });
+    var list = shopItems.filter(function (i) { return shopCat === "Semua" || i.cat === shopCat; })
+      .sort(function (a, b) { return (b.pin ? 1 : 0) - (a.pin ? 1 : 0) || (b.at || 0) - (a.at || 0); });
+    var box = Q("#shList"); box.innerHTML = "";
+    if (!list.length) { var h = el("div", "hint", "Belum ada produk."); box.appendChild(h); }
+    var reseller = me && me.grade === "reseller";
+    list.forEach(function (p) {
+      var c = el("div", "prd");
+      if (p.image) { var im = el("img"); im.src = p.image; im.alt = p.name; im.loading = "lazy"; c.appendChild(im); }
+      var pb = el("div", "pb");
+      var pt = el("div", "pt");
+      pt.appendChild(el("span", "badge", p.cat));
+      if (p.pin) pt.appendChild(el("span", "badge no", "📌 Pin"));
+      if (p.hidden) pt.appendChild(el("span", "badge bad", "Disembunyikan"));
+      if (p.stock === 0) pt.appendChild(el("span", "badge bad", "Habis"));
+      else if (p.stock > 0) pt.appendChild(el("span", "badge ok", "Stok " + p.stock));
+      pb.appendChild(pt);
+      pb.appendChild(el("h3", "", p.name));
+      if (p.desc) pb.appendChild(el("div", "pd", p.desc));
+      var useR = reseller && p.rprice > 0;
+      var pr = el("div"); var pe = el("span", "price", p.price > 0 || useR ? rp(useR ? p.rprice : p.price) : "Hubungi admin");
+      pr.appendChild(pe);
+      if (useR && p.price > 0) pr.appendChild(el("span", "oldp", rp(p.price)));
+      pb.appendChild(pr);
+      if (p.stock === 0) {
+        var x = el("button", "btn ghost", "Stok habis"); x.disabled = true; pb.appendChild(x);
+      } else {
+        var a = el("a", "btn", "🛒 Beli lewat WhatsApp");
+        a.href = waLink("Halo, saya mau beli " + p.name + (p.price > 0 ? " (" + rp(useR ? p.rprice : p.price) + ")" : "") +
+          ".\nUsername: " + (me && me.name ? me.name : "-"));
+        a.target = "_blank"; a.rel = "noopener"; pb.appendChild(a);
+      }
+      if (isStaff()) {
+        var r = el("div"); r.style.marginTop = "6px";
+        var mk = function (t, fn) { var b = el("button", "copy", t); b.onclick = fn; r.appendChild(b); };
+        mk("Edit", function () {
+          shopEdit = p.id; Q("#shName").value = p.name; Q("#shPrice").value = p.price || "";
+          Q("#shRPrice").value = p.rprice || ""; Q("#shStock").value = p.stock == null ? "" : p.stock;
+          Q("#shCat").value = p.cat; Q("#shDesc").value = p.desc || ""; Q("#shImg").value = p.image || "";
+          Q("#shPin").value = p.pin ? "1" : "0"; Q("#shHide").value = p.hidden ? "1" : "0";
+          Q("#shSave").textContent = "Simpan perubahan"; Q("#shEd").scrollIntoView({ behavior: "smooth" });
+        });
+        mk(p.pin ? "Lepas pin" : "Pin", async function () {
+          try { await saveShop(shopItems.map(function (i) { return i.id === p.id ? Object.assign({}, i, { pin: !i.pin }) : i; })); }
+          catch (e) { setMsg(Q("#shMsg"), "✗ " + e.message, false); }
+        });
+        mk(p.hidden ? "Tampilkan" : "Sembunyikan", async function () {
+          try { await saveShop(shopItems.map(function (i) { return i.id === p.id ? Object.assign({}, i, { hidden: !i.hidden }) : i; })); }
+          catch (e) { setMsg(Q("#shMsg"), "✗ " + e.message, false); }
+        });
+        mk("Hapus", async function () {
+          if (!confirm("Hapus produk ini?")) return;
+          try { await saveShop(shopItems.filter(function (i) { return i.id !== p.id; })); }
+          catch (e) { setMsg(Q("#shMsg"), "✗ " + e.message, false); }
+        });
+        pb.appendChild(r);
+      }
+      c.appendChild(pb); box.appendChild(c);
+    });
+    Q("#shEd").style.display = isStaff() ? "block" : "none";
+  }
+  Q("#shCancel").onclick = function () { shopReset(); Q("#shMsg").textContent = ""; };
+  Q("#shSave").onclick = async function () {
+    var name = Q("#shName").value.trim();
+    if (!name) return setMsg(Q("#shMsg"), "Isi nama produk.", false);
+    var img = Q("#shImg").value.trim();
+    if (img && !/^https:\/\//i.test(img)) return setMsg(Q("#shMsg"), "Link gambar harus diawali https://", false);
+    var item = {
+      name: name, price: Q("#shPrice").value.replace(/\D/g, ""), rprice: Q("#shRPrice").value.replace(/\D/g, ""),
+      stock: Q("#shStock").value.replace(/\D/g, ""), cat: Q("#shCat").value.trim() || "Lainnya",
+      desc: Q("#shDesc").value.trim(), image: img, pin: Q("#shPin").value === "1", hidden: Q("#shHide").value === "1"
+    };
+    var items = shopEdit
+      ? shopItems.map(function (i) { return i.id === shopEdit ? Object.assign({}, i, item) : i; })
+      : [Object.assign({ id: "", at: Date.now() }, item)].concat(shopItems);
+    try { await saveShop(items); shopReset(); setMsg(Q("#shMsg"), "✓ Tersimpan.", true); }
+    catch (e) { setMsg(Q("#shMsg"), "✗ " + e.message, false); }
+  };
+
+  /* ================= STATISTIK ================= */
+  addPage("stats",
+    '<div class="eyebrow">Info</div><h1>Statistik</h1>' +
+    '<p class="sub">Berapa orang yang memakai ALEX STUDIO. Angka bersifat perkiraan.</p>' +
+    '<div class="sgrid">' +
+    '<div class="sc"><small><span class="live"></span>Online sekarang</small><b id="stOn">-</b></div>' +
+    '<div class="sc"><small>Pengunjung hari ini</small><b id="stDay">-</b></div>' +
+    '<div class="sc"><small>Total pengunjung</small><b id="stTot">-</b></div>' +
+    '<div class="sc"><small>Akun terdaftar</small><b id="stUsr">-</b></div>' +
+    '<div class="sc"><small>Total upload</small><b id="stUp">-</b></div>' +
+    '<div class="sc"><small>Diperbarui</small><b id="stAt" style="font-size:20px">-</b></div></div>' +
+    '<button class="btn ghost" id="stRef">↻ Refresh</button>' +
+    '<button class="btn ghost" id="stRec" style="display:none">Hitung ulang akun terdaftar (owner)</button>' +
+    '<div class="msg" id="stMsg2"></div>' +
+    '<div class="hint">Online = punya halaman terbuka dalam 6 menit terakhir. Pengunjung dihitung per perangkat.</div>');
+
+  async function loadStats() {
+    try {
+      var j = await api("/stats", {}, 15000);
+      var f = function (n) { return Number(n || 0).toLocaleString("id-ID"); };
+      Q("#stOn").textContent = f(j.online); Q("#stDay").textContent = f(j.today); Q("#stTot").textContent = f(j.total);
+      Q("#stUsr").textContent = f(j.users); Q("#stUp").textContent = f(j.uploads);
+      Q("#stAt").textContent = new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+      var b = Q("#bOnline"); if (b) b.textContent = "● " + f(j.online) + " online · " + f(j.total) + " pengunjung";
+    } catch (e) { log("Statistik gagal: " + e.message); }
+  }
+  Q("#stRef").onclick = loadStats;
+  Q("#stRec").onclick = async function () {
+    try { var j = await api("/stats/recount", { method: "POST" }, 30000); setMsg(Q("#stMsg2"), "✓ Akun terdaftar: " + j.users, true); loadStats(); }
+    catch (e) { setMsg(Q("#stMsg2"), "✗ " + e.message, false); }
+  };
+
+  /* ping pengguna */
+  var vid = LS.get("vid");
+  if (!/^[a-z0-9]{8,24}$/.test(vid || "")) {
+    vid = (Math.random().toString(36).slice(2, 12) + Date.now().toString(36)).slice(0, 20);
+    LS.set("vid", vid);
+  }
+  function today() { return String(Math.floor((Date.now() + 7 * 3600000) / 86400000)); }
+  async function ping() {
+    if (document.hidden) return;
+    try {
+      await api("/stats/ping", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ vid: vid, fresh: !LS.get("vreg"), newDay: LS.get("vday") !== today() })
+      }, 15000);
+      LS.set("vreg", "1"); LS.set("vday", today());
+    } catch (e) {}
+  }
+  ping(); setInterval(ping, 5 * 60000);
+  loadStats(); setInterval(function () { if (!document.hidden) loadStats(); }, 60000);
+
+  /* ================= KODE OWNER ================= */
+  addPage("codes",
+    '<div class="eyebrow">Owner</div><h1>Kode Owner</h1>' +
+    '<p class="sub">Buat kode acak untuk VIP, akses upload, atau role. Hanya owner yang bisa membuat. Satu kode hanya bisa dipakai sekali.</p>' +
+    '<div class="msg err" id="cxLock" style="display:none">Halaman ini hanya untuk owner.</div>' +
+    '<div class="card" id="cxForm"><label style="margin-top:0">Jenis kode</label>' +
+    '<select id="cxType"><option value="vip">VIP permanen</option><option value="vip7">VIP berjangka (hari)</option>' +
+    '<option value="access">Akses upload</option><option value="role_admin">Role Admin (kelola Jualan)</option>' +
+    '<option value="role_reseller">Role Reseller (harga reseller)</option></select>' +
+    '<div id="cxDaysBox" style="display:none"><label>Jumlah hari</label><input type="text" id="cxDays" inputmode="numeric" value="7"></div>' +
+    '<label>Jumlah kode (1 sampai 20)</label><input type="text" id="cxCount" inputmode="numeric" value="1">' +
+    '<label>Catatan (opsional, misalnya nama pembeli)</label><input type="text" id="cxNote" placeholder="Budi">' +
+    '<button class="btn" id="cxGo">🎟 Buat kode acak</button><div class="msg" id="cxMsg"></div><div id="cxNew"></div></div>' +
+    '<div class="card"><h2>Daftar kode</h2><div id="cxList"></div><button class="btn ghost" id="cxRef">↻ Refresh</button></div>');
+
+  Q("#cxType").onchange = function () { Q("#cxDaysBox").style.display = Q("#cxType").value === "vip7" ? "block" : "none"; };
+  function fmtT(t) { return t ? new Date(t).toLocaleString("id-ID") : ""; }
+  async function loadCodes() {
+    Q("#cxLock").style.display = owner() ? "none" : "block";
+    Q("#cxForm").style.display = owner() ? "block" : "none";
+    var box = Q("#cxList"); box.innerHTML = "";
+    if (!owner()) return;
+    try {
+      var j = await api("/codes/list", {}, 20000);
+      if (!j.items.length) { box.appendChild(el("div", "hint", "Belum ada kode.")); return; }
+      j.items.forEach(function (c) {
+        var r = el("div", "cdr");
+        var t = el("div", "cc", c.code);
+        var s = el("small", "", c.label + (c.note ? " · " + c.note : "") + " · dibuat " + fmtT(c.created));
+        t.appendChild(s); r.appendChild(t);
+        r.appendChild(el("span", "badge " + (c.used ? "bad" : "ok"), c.used ? "Dipakai: " + (c.usedBy || "-") : "Belum dipakai"));
+        var cb = el("button", "copy", "Salin"); cb.onclick = function () { copyText(c.code, cb); }; r.appendChild(cb);
+        var d = el("button", "copy", "Hapus");
+        d.onclick = async function () {
+          if (!confirm("Hapus kode " + c.code + "?")) return;
+          try { await api("/codes/delete", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ code: c.code }) }, 15000); loadCodes(); }
+          catch (e) { setMsg(Q("#cxMsg"), "✗ " + e.message, false); }
+        };
+        r.appendChild(d); box.appendChild(r);
+      });
+    } catch (e) { box.appendChild(el("div", "msg err", "✗ " + e.message)); }
+  }
+  Q("#cxRef").onclick = loadCodes;
+  Q("#cxGo").onclick = async function () {
+    var v = Q("#cxType").value, type = v, role = "";
+    if (v.indexOf("role_") === 0) { type = "role"; role = v.slice(5); }
+    var body = { type: type, role: role, days: Q("#cxDays").value, count: Q("#cxCount").value, note: Q("#cxNote").value };
+    setMsg(Q("#cxMsg"), "Membuat kode...", true);
+    try {
+      var j = await api("/codes/create", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }, 30000);
+      setMsg(Q("#cxMsg"), "✓ " + j.codes.length + " kode dibuat (" + j.label + ").", true);
+      var nb = Q("#cxNew"); nb.innerHTML = "";
+      j.codes.forEach(function (c) {
+        var r = el("div", "cdr"); r.appendChild(el("div", "cc", c));
+        var cb = el("button", "copy", "Salin"); cb.onclick = function () { copyText(c, cb); }; r.appendChild(cb); nb.appendChild(r);
+      });
+      var all = el("button", "btn ghost", "Salin semua kode baru"); all.onclick = function () { copyText(j.codes.join("\n"), all); };
+      nb.appendChild(all);
+      loadCodes();
+    } catch (e) { setMsg(Q("#cxMsg"), "✗ " + e.message, false); }
+  };
+
+  /* ================= PENGHUBUNG ================= */
+  var _go = window.go;
+  window.go = function (p) {
+    _go(p);
+    if (p === "shop") refreshMe().then(loadShop);
+    if (p === "stats") { refreshMe().then(function () { Q("#stRec").style.display = owner() ? "block" : "none"; }); loadStats(); }
+    if (p === "codes") refreshMe().then(loadCodes);
+    if (p === "imggen") renderImgs();
+  };
+
+  function sync() {
+    var own = owner();
+    Array.prototype.forEach.call(document.querySelectorAll('[data-p="codes"]'), function (b) { b.style.display = own ? "" : "none"; });
+    var rb = Q("#uRole"), gb = Q("#uGrade");
+    if (rb && !gb) { gb = el("span", "gr"); gb.id = "uGrade"; rb.after(gb); }
+    if (gb) {
+      var g = me && me.loggedIn && me.grade;
+      gb.style.display = g ? "" : "none";
+      if (g) gb.textContent = g === "admin" ? "ADMIN" : "RESELLER";
+    }
+  }
+  setInterval(sync, 1200); sync();
+  renderImgs();
+})();
 </script>
 </body>
 </html>
