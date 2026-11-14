@@ -129,6 +129,30 @@ const rlAdd = async (env, k, ttl) => {
   await kvPut(env, k, o, ttl);
 };
 
+/* ---------- lisensi proyek (dipakai panel HTML terpisah) ---------- */
+async function licenseRoute(path, req, env) {
+  if (!env.CLOUDPC) return json({ error: "KV CLOUDPC belum di-bind" }, 500);
+
+  if (path === "/check-license" && req.method === "GET") {
+    const project = new URL(req.url).searchParams.get("project");
+    if (!project) return json({ error: "project wajib diisi" }, 400);
+    const data = await kvGet(env, "lic:" + project);
+    return json({ paid: data ? !!data.paid : false });
+  }
+
+  if (path === "/set-license" && req.method === "POST") {
+    const b = await req.json().catch(() => ({}));
+    if (!env.LICENSE_SECRET || !eq(b.secret, env.LICENSE_SECRET))
+      return json({ error: "Unauthorized" }, 401);
+    const project = clean(b.project);
+    if (!project) return json({ error: "project wajib diisi" }, 400);
+    await kvPut(env, "lic:" + project, { paid: b.paid === true, at: Date.now() });
+    return json({ success: true });
+  }
+
+  return json({ error: "Endpoint tidak ditemukan" }, 404);
+}
+
 /* ---------- statistik pengguna web ---------- */
 const wibDay = (t = Date.now()) => Math.floor((t + 7 * 3600000) / DAY_MS);
 
@@ -1003,6 +1027,9 @@ async function handle(req, env) {
   if (url.pathname === "/health") return json({ ok: true, version: VERSION });
 
   if (url.pathname.startsWith("/auth/")) return authRoute(url.pathname, req, env);
+
+  if (url.pathname === "/check-license" || url.pathname === "/set-license")
+    return licenseRoute(url.pathname, req, env);
 
   if (url.pathname === "/chat") return chatRoute(req, env);
 
