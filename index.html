@@ -655,6 +655,7 @@ code{font:12px ui-monospace,monospace;background:rgba(139,92,246,.18);border-rad
     <div class="step"><div class="sn">7</div><div><h3>Animasi dan Model</h3><p>Export dari Roblox Studio sebagai <code>.rbxm</code>, lalu upload di menu masing-masing. Dua fitur ini juga butuh kode akses.</p></div></div>
     <div class="step"><div class="sn">8</div><div><h3>Cek Status</h3><p>Tempel Asset ID di menu Cek Status untuk melihat disetujui, direview, atau ditolak.</p></div></div>
     <div class="step"><div class="sn">9</div><div><h3>Pakai di Roblox</h3><p>Gunakan format <code>rbxassetid://ID</code> pada Sound atau Animation di Roblox Studio. Audio biasanya hanya bisa dipakai di game milik creator yang sama, kecuali kamu memberi izin.</p></div></div>
+    <div class="step"><div class="sn">10</div><div><h3>Kirim ke Playlist Game (owner / admin)</h3><p>Setelah audio berhasil diupload, buka menu Playlist Game lalu kirim Asset ID-nya. Game mengambil antrian ini otomatis dan memasukkannya ke Library musik di dalam game.</p></div></div>
   </div>
 </section>
 
@@ -673,6 +674,9 @@ code{font:12px ui-monospace,monospace;background:rgba(139,92,246,.18);border-rad
     <div class="feat"><b>♫ Library</b><span>Riwayat upload tersimpan di browser ini, bisa dicari dan disalin.</span></div>
     <div class="feat"><b>✧ Edit Foto HD</b><span>Perbesar dan pertajam foto langsung di HP, lalu unduh sebagai PNG atau JPG.</span></div>
     <div class="feat"><b>♪ Pemutar Musik</b><span>Putar dan unduh lagu dari file atau Asset ID audio.</span></div>
+    <div class="feat"><b>🎵 Playlist Game</b><span>Kirim Asset ID audio ke sistem musik di dalam game, otomatis masuk LAGU CUSTOM (owner dan admin).</span></div>
+    <div class="feat"><b>▦ Sprite Sheet</b><span>Ubah video jadi sprite sheet lalu upload ke Roblox.</span></div>
+    <div class="feat"><b>🔐 Lisensi Proyek</b><span>Atur status lunas proyek Roblox (owner).</span></div>
     <div class="feat"><b>📢 Promosi &amp; Announce</b><span>Pengumuman resmi yang bisa dilihat semua pengunjung, hanya owner yang bisa mengubah.</span></div>
     <div class="feat"><b>✦ Chat AI</b><span>Asisten untuk pertanyaan Roblox dan Luau.</span></div>
     <div class="feat"><b>⌨ Kode AI dan 🎨 Gambar AI</b><span>Scan error, perbaiki bug, deobfuscate, dan buat gambar dari deskripsi.</span></div>
@@ -1441,7 +1445,7 @@ function renderPremium(){
   });
 }
 function renderAbout(){
-  $('#abVer').textContent='Versi web: 6.0 + Plus v1 · Backend: '+(beVer||'tidak terhubung');
+  $('#abVer').textContent='Versi web: 6.1 + Plus v2 · Backend: '+(beVer||'tidak terhubung');
 }
 
 /* ---------- polling operasi Roblox ---------- */
@@ -2719,6 +2723,359 @@ loadPromo();
   }
   setInterval(sync, 1200); sync();
   renderImgs();
+})();
+</script>
+
+<script>
+/* ALEX STUDIO PLUS v2: Playlist Game, Sprite Sheet, Lisensi (digabung ke index.html) */
+(function () {
+  "use strict";
+  function Q(s) { return document.querySelector(s); }
+  function el(tag, cls, txt) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (txt != null) e.textContent = txt;
+    return e;
+  }
+  function setMsg(n, t, ok) { if (n) { n.textContent = t; n.className = "msg " + (ok ? "ok" : "err"); } }
+  function staff() { return !!(me && me.staff); }
+  function owner() { return isOwner(); }
+  function fmtT(t) { return t ? new Date(t).toLocaleString("id-ID") : ""; }
+
+  /* ---------- menu ---------- */
+  function at(k) { for (var i = 0; i < NAV.length; i++) if (NAV[i][0] === k) return i; return -1; }
+  NAV.splice(at("music") + 1, 0, ["sprite", "▦", "Sprite Sheet"], ["playlist", "🎵", "Playlist Game"]);
+  NAV.splice(at("settings"), 0, ["license", "🔐", "Lisensi Proyek"]);
+  buildNav(Q("#navSide")); buildNav(Q("#navDr"));
+
+  (function () {
+    var rows = document.querySelectorAll("#p-home > .row");
+    var last = rows[rows.length - 1];
+    if (last) {
+      var r = el("div", "row");
+      r.innerHTML =
+        '<button class="btn ghost" data-go="playlist">🎵 Playlist Game</button>' +
+        '<button class="btn ghost" data-go="sprite">▦ Sprite Sheet</button>';
+      last.after(r);
+    }
+  })();
+
+  var main = Q("main");
+  function addPage(id, html) {
+    var s = el("section", "page"); s.id = "p-" + id; s.innerHTML = html; main.appendChild(s); return s;
+  }
+
+  /* ================= PLAYLIST GAME ================= */
+  addPage("playlist",
+    '<div class="eyebrow">Game</div><h1>Playlist Game</h1>' +
+    '<p class="sub">Kirim Asset ID audio ke sistem musik di dalam game. Game mengambil antrian ini sekitar tiap 2 sampai 3 menit, memeriksa audionya, lalu langsung memasukkannya ke LAGU CUSTOM.</p>' +
+    '<div class="msg err" id="pgLock" style="display:none">Halaman ini hanya untuk owner atau admin.</div>' +
+    '<div id="pgBody">' +
+    '<div class="card"><h2>Kirim lagu</h2>' +
+    '<label style="margin-top:0">Asset ID audio (boleh banyak)</label>' +
+    '<input type="text" id="pgId" inputmode="numeric" placeholder="1234567890 9876543210">' +
+    '<label>Nama lagu (opsional, hanya jika 1 ID)</label><input type="text" id="pgName" placeholder="Kosongkan untuk memakai nama dari Roblox">' +
+    '<label>Speed di game (opsional, 0.5 sampai 2)</label><input type="text" id="pgSpd" inputmode="decimal" placeholder="1">' +
+    '<button class="btn" id="pgSend">🎵 Kirim ke Playlist</button>' +
+    '<label>Otomatis kirim setelah upload audio berhasil</label>' +
+    '<select id="pgAuto"><option value="0">Tidak</option><option value="1">Ya</option></select>' +
+    '<div class="msg" id="pgMsg"></div></div>' +
+    '<div class="card"><h2>Dari Library</h2><div id="pgLib"></div>' +
+    '<button class="btn ghost" id="pgLibAll">Kirim semua audio Library</button></div>' +
+    '<div class="card"><h2>Menunggu diambil game</h2><div id="pgPend"></div>' +
+    '<button class="btn ghost" id="pgRef">↻ Refresh</button></div>' +
+    '<div class="card"><h2>Hasil terakhir dari game</h2><div id="pgLog"></div></div>' +
+    '</div>');
+
+  function mqSend(items) {
+    return api("/musicqueue/add", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ items: items })
+    }, 20000);
+  }
+
+  async function pgLoad() {
+    var ok = staff();
+    Q("#pgLock").style.display = ok ? "none" : "block";
+    Q("#pgBody").style.display = ok ? "block" : "none";
+    if (!ok) return;
+    Q("#pgAuto").value = LS.get("plus_autosend", "0");
+
+    /* library */
+    var lb = Q("#pgLib"); lb.innerHTML = "";
+    var h = hist().filter(function (e) { return e.st !== "fail" && e.type === "Audio" && e.id; }).slice(0, 20);
+    if (!h.length) lb.appendChild(el("div", "hint", "Library belum punya audio."));
+    h.forEach(function (e) {
+      var d = el("div", "hi");
+      var t = el("div", "t", e.name); t.appendChild(el("small", "", e.id)); d.appendChild(t);
+      var b = el("button", "copy", "Kirim");
+      b.onclick = async function () {
+        b.disabled = true;
+        try { var j = await mqSend([{ id: e.id, name: e.name }]); b.textContent = j.added ? "✓ Terkirim" : "Sudah di antrian"; pgLoad(); }
+        catch (x) { b.textContent = "✗ " + x.message; b.disabled = false; }
+      };
+      d.appendChild(b); lb.appendChild(d);
+    });
+
+    /* antrian + hasil */
+    var pb = Q("#pgPend"), lg = Q("#pgLog"); pb.innerHTML = ""; lg.innerHTML = "";
+    try {
+      var j = await api("/musicqueue/list", {}, 15000);
+      if (!j.pending.length) pb.appendChild(el("div", "hint", "Antrian kosong."));
+      j.pending.forEach(function (p) {
+        var d = el("div", "hi");
+        var t = el("div", "t", p.name || ("Audio " + p.id));
+        t.appendChild(el("small", "", p.id + " · oleh " + p.by + " · " + fmtT(p.at)));
+        d.appendChild(t);
+        var x = el("button", "copy", "✕");
+        x.onclick = async function () {
+          try { await api("/musicqueue/remove", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: p.id }) }, 15000); pgLoad(); }
+          catch (e) { setMsg(Q("#pgMsg"), "✗ " + e.message, false); }
+        };
+        d.appendChild(x); pb.appendChild(d);
+      });
+      if (!j.log.length) lg.appendChild(el("div", "hint", "Belum ada laporan dari game."));
+      j.log.forEach(function (l) {
+        var d = el("div", "hi");
+        var t = el("div", "t", (l.ok ? "✓ " : "✗ ") + (l.name || l.id));
+        t.appendChild(el("small", "", l.id + " · " + l.msg + " · " + fmtT(l.at)));
+        d.appendChild(t);
+        d.appendChild(el("span", "badge " + (l.ok ? "ok" : "bad"), l.ok ? "Masuk" : "Ditolak"));
+        lg.appendChild(d);
+      });
+    } catch (e) { pb.appendChild(el("div", "msg err", "✗ " + e.message)); }
+  }
+
+  Q("#pgRef").onclick = pgLoad;
+  Q("#pgAuto").onchange = function () { LS.set("plus_autosend", Q("#pgAuto").value); };
+  Q("#pgSend").onclick = async function () {
+    var ids = parseIds(Q("#pgId").value);
+    if (!ids.length) return setMsg(Q("#pgMsg"), "Isi minimal satu Asset ID.", false);
+    var nm = ids.length === 1 ? Q("#pgName").value.trim() : "";
+    var sp = Q("#pgSpd").value.trim();
+    var items = ids.map(function (id) { return { id: id, name: nm, speed: sp }; });
+    setMsg(Q("#pgMsg"), "Mengirim...", true);
+    try {
+      var j = await mqSend(items);
+      setMsg(Q("#pgMsg"), "✓ " + j.added + " dikirim" + (j.skipped ? ", " + j.skipped + " dilewati (sudah di antrian / antrian penuh)" : "") + ". Game akan memprosesnya dalam beberapa menit.", true);
+      Q("#pgId").value = ""; Q("#pgName").value = ""; pgLoad();
+    } catch (e) { setMsg(Q("#pgMsg"), "✗ " + e.message, false); }
+  };
+  Q("#pgLibAll").onclick = async function () {
+    var items = hist().filter(function (e) { return e.st !== "fail" && e.type === "Audio" && e.id; })
+      .slice(0, 20).map(function (e) { return { id: e.id, name: e.name }; });
+    if (!items.length) return setMsg(Q("#pgMsg"), "Library belum punya audio.", false);
+    try { var j = await mqSend(items); setMsg(Q("#pgMsg"), "✓ " + j.added + " dikirim, " + j.skipped + " dilewati.", true); pgLoad(); }
+    catch (e) { setMsg(Q("#pgMsg"), "✗ " + e.message, false); }
+  };
+
+  /* otomatis kirim setelah upload audio berhasil */
+  var _push = window.pushHist;
+  window.pushHist = function (e) {
+    _push(e);
+    try {
+      if (e && e.type === "Audio" && staff() && LS.get("plus_autosend", "0") === "1") {
+        mqSend([{ id: e.id, name: e.name }])
+          .then(function () { log("Dikirim ke Playlist game: " + e.name); })
+          .catch(function (err) { log("Kirim playlist gagal: " + err.message); });
+      }
+    } catch (x) {}
+  };
+
+  /* tombol "Kirim ke Playlist" di Library */
+  var _rl = window.renderLibrary;
+  window.renderLibrary = function () {
+    _rl();
+    if (!staff()) return;
+    Array.prototype.forEach.call(document.querySelectorAll("#libList .li"), function (card) {
+      var sub = card.querySelector(".ls"), idEl = card.querySelector(".lid");
+      if (!sub || !idEl || sub.textContent.indexOf("Audio") !== 0) return;
+      var b = el("button", "copy", "🎵 Kirim ke Playlist");
+      b.onclick = async function () {
+        b.disabled = true;
+        try { var j = await mqSend([{ id: idEl.textContent.trim(), name: card.querySelector(".ln").textContent }]); b.textContent = j.added ? "✓ Terkirim" : "Sudah di antrian"; }
+        catch (e) { b.textContent = "✗ " + e.message; b.disabled = false; }
+      };
+      card.lastElementChild.appendChild(b);
+    });
+  };
+  Q("#libQ").oninput = window.renderLibrary;
+  Q("#libF").onchange = window.renderLibrary;
+
+  /* ================= SPRITE SHEET ================= */
+  addPage("sprite",
+    '<div class="eyebrow">Tools / Video</div><h1>Sprite Sheet</h1>' +
+    '<p class="sub">Potong video lalu ubah jadi satu sprite sheet (grid gambar) dan upload ke Roblox. Diproses di HP-mu, video tidak diupload.</p>' +
+    '<div class="drop" id="spDrop"><div class="ic">▦</div><h3>Pilih file video</h3><p>MP4, MOV, WEBM</p>' +
+    '<input type="file" id="spFile" accept="video/*" hidden></div>' +
+    '<div class="card"><video id="spVid" controls muted playsinline style="display:none;width:100%;border-radius:14px;max-height:320px;background:#000"></video>' +
+    '<div class="tr2" style="margin-top:12px"><div><label style="margin-top:0">Mulai (detik)</label><input type="number" id="spT0" value="0" step="0.1" min="0"></div>' +
+    '<div><label style="margin-top:0">Selesai (detik)</label><input type="number" id="spT1" step="0.1" min="0"></div></div>' +
+    '<button class="btn ghost" id="spPrev">▶ Putar bagian terpilih</button></div>' +
+    '<div class="card"><label style="margin-top:0">Ukuran per frame (px)</label><input type="number" id="spSize" value="256" min="32" max="1024" step="32">' +
+    '<div class="tr2"><div><label>Kolom</label><input type="number" id="spCols" value="10" min="1" max="20"></div>' +
+    '<div><label>Baris</label><input type="number" id="spRows" value="10" min="1" max="20"></div></div>' +
+    '<label>Total frame</label><input type="number" id="spTotal" value="100" min="1">' +
+    '<div class="hint" id="spInfo">Pilih video dulu.</div></div>' +
+    '<button class="btn" id="spGen">✨ Buat Sprite Sheet</button>' +
+    '<div class="bar"><i id="spBar"></i></div><div class="msg" id="spSt"></div>' +
+    '<div class="card" id="spRes" style="display:none;margin-top:18px"><h2>Hasil</h2>' +
+    '<canvas id="spCv" style="max-width:100%;border-radius:12px;border:1px solid var(--line);background:#000"></canvas>' +
+    '<div class="row"><button class="btn ghost" id="spDl">⬇ Unduh PNG</button><button class="btn" id="spUp">⇧ Upload ke Roblox</button></div>' +
+    '<div class="msg" id="spUpSt"></div></div>' +
+    '<div class="card" id="spSnip" style="display:none"><h2>Tempel ke script</h2><pre id="spCode"></pre></div>');
+
+  var spFile = null, spBlob = null, spCfg = null, spV = Q("#spVid");
+  function spRange() {
+    var d = spV.duration || 0;
+    var t0 = Math.max(0, +Q("#spT0").value || 0), t1 = Math.min(d, +Q("#spT1").value || d);
+    return { t0: t0, t1: t1, dur: t1 - t0 };
+  }
+  function spInfo() {
+    if (!spV.duration) return;
+    var r = spRange(), total = +Q("#spTotal").value || 1, h = Q("#spInfo");
+    if (r.dur <= 0) { h.textContent = "Rentang tidak valid (selesai harus lebih besar dari mulai)."; return; }
+    var fps = total / r.dur;
+    h.textContent = "Rentang " + r.dur.toFixed(1) + " detik · FPS efektif " + fps.toFixed(1) +
+      (fps < 8 ? " · bisa patah-patah, perpendek rentang atau kurangi frame." : fps > 30 ? " · sudah lebih dari halus, frame bisa dikurangi." : " · cukup mulus.");
+  }
+  ["#spT0", "#spT1", "#spSize", "#spTotal"].forEach(function (s) { Q(s).oninput = spInfo; });
+  Q("#spCols").oninput = Q("#spRows").oninput = function () {
+    Q("#spTotal").value = (+Q("#spCols").value || 1) * (+Q("#spRows").value || 1); spInfo();
+  };
+  function spPick(f) {
+    if (!f || !/^video\//.test(f.type || "")) return setMsg(Q("#spSt"), "Pilih file video.", false);
+    if (spV.src) URL.revokeObjectURL(spV.src);
+    spFile = f; spV.src = URL.createObjectURL(f); spV.style.display = "block";
+    spV.onloadedmetadata = function () { Q("#spT1").value = spV.duration.toFixed(1); spInfo(); };
+  }
+  Q("#spDrop").onclick = function () { Q("#spFile").click(); };
+  Q("#spFile").onchange = function () { spPick(Q("#spFile").files[0]); Q("#spFile").value = ""; };
+  ["dragover", "dragenter"].forEach(function (ev) { Q("#spDrop").addEventListener(ev, function (e) { e.preventDefault(); Q("#spDrop").classList.add("hot"); }); });
+  ["dragleave", "drop"].forEach(function (ev) { Q("#spDrop").addEventListener(ev, function (e) { e.preventDefault(); Q("#spDrop").classList.remove("hot"); }); });
+  Q("#spDrop").addEventListener("drop", function (e) { spPick(e.dataTransfer.files[0]); });
+  Q("#spPrev").onclick = function () {
+    if (!spV.duration) return setMsg(Q("#spSt"), "Pilih video dulu.", false);
+    var r = spRange(); spV.currentTime = r.t0; spV.play().catch(function () {});
+    spV.ontimeupdate = function () { if (spV.currentTime >= r.t1) { spV.pause(); spV.ontimeupdate = null; } };
+  };
+  function seekTo(v, t) {
+    return new Promise(function (res) {
+      var d = false;
+      function f() { if (!d) { d = true; v.removeEventListener("seeked", f); res(); } }
+      v.addEventListener("seeked", f); v.currentTime = t; setTimeout(f, 4000);
+    });
+  }
+  Q("#spGen").onclick = async function () {
+    var m = Q("#spSt");
+    if (!spFile) return setMsg(m, "Pilih video dulu.", false);
+    var size = +Q("#spSize").value, cols = +Q("#spCols").value, rows = +Q("#spRows").value, total = +Q("#spTotal").value, r = spRange();
+    if (!(size >= 32 && cols >= 1 && rows >= 1 && total >= 1)) return setMsg(m, "Isi ukuran, kolom, baris, dan total frame dengan benar.", false);
+    if (r.dur <= 0) return setMsg(m, "Rentang potong tidak valid.", false);
+    if (size * cols > 8000 || size * rows > 8000) return setMsg(m, "Ukuran sprite sheet melebihi 8000×8000 px. Kecilkan frame, kolom, atau baris.", false);
+    if (total > cols * rows) return setMsg(m, "Total frame melebihi kolom × baris.", false);
+    var btn = Q("#spGen"); btn.disabled = true; Q("#spBar").style.width = "0%";
+    try {
+      var cv = document.createElement("canvas"); cv.width = size * cols; cv.height = size * rows;
+      var ctx = cv.getContext("2d");
+      var vt = document.createElement("video"); vt.muted = true; vt.playsInline = true; vt.preload = "auto"; vt.src = spV.src;
+      await new Promise(function (ok, no) { vt.onloadedmetadata = ok; vt.onerror = function () { no(new Error("Video tidak bisa dibaca.")); }; });
+      for (var i = 0; i < total; i++) {
+        await seekTo(vt, Math.min(vt.duration - 0.01, r.t0 + (i / total) * r.dur + 0.001));
+        var s = Math.min(vt.videoWidth, vt.videoHeight), sx = (vt.videoWidth - s) / 2, sy = (vt.videoHeight - s) / 2;
+        ctx.drawImage(vt, sx, sy, s, s, (i % cols) * size, Math.floor(i / cols) * size, size, size);
+        Q("#spBar").style.width = Math.round((i + 1) / total * 100) + "%";
+        setMsg(m, "Frame " + (i + 1) + " dari " + total + "...", true);
+        await sleep(0);
+      }
+      spBlob = await new Promise(function (res) { cv.toBlob(res, "image/png"); });
+      if (!spBlob) throw new Error("Gagal membuat gambar hasil.");
+      if (spBlob.size > 20 * 1048576) throw new Error("Hasil " + (spBlob.size / 1048576).toFixed(1) + " MB, terlalu besar. Kecilkan frame atau jumlah frame.");
+      spCfg = { size: size, cols: cols, rows: rows, total: total };
+      var out = Q("#spCv"); out.width = cv.width; out.height = cv.height; out.getContext("2d").drawImage(cv, 0, 0);
+      Q("#spRes").style.display = "block"; Q("#spSnip").style.display = "none";
+      setMsg(m, "✓ Selesai. " + cv.width + "×" + cv.height + " px, " + (spBlob.size / 1048576).toFixed(2) + " MB.", true);
+    } catch (e) { setMsg(m, "✗ " + e.message, false); }
+    btn.disabled = false;
+  };
+  Q("#spDl").onclick = function () {
+    if (!spBlob) return;
+    var a = document.createElement("a"); a.href = URL.createObjectURL(spBlob); a.download = "spritesheet.png";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 10000);
+  };
+  Q("#spUp").onclick = async function () {
+    if (!spBlob) return;
+    var need = needSettings(), m = Q("#spUpSt");
+    if (need) return setMsg(m, "✗ " + need, false);
+    var b = Q("#spUp"); b.disabled = true;
+    try {
+      var fd = new FormData();
+      fd.append("file", spBlob, "spritesheet.png"); fd.append("name", "SpriteSheet");
+      fd.append("description", "Sprite sheet via ALEX STUDIO");
+      fd.append("creatorType", LS.get("ctype", "User")); fd.append("creatorId", LS.get("cid"));
+      setMsg(m, "Mengupload ke Roblox...", true);
+      var j = await api("/upload-image", { method: "POST", body: fd });
+      setMsg(m, "Menunggu proses Roblox...", true);
+      var id = await waitOp(j.operationId);
+      bump(true);
+      pushHist({ name: "SpriteSheet", type: "Gambar", id: String(id), size: spBlob.size, at: new Date().toLocaleString() });
+      setMsg(m, "✓ Berhasil! Asset ID: " + id, true);
+      copyBtn(m, String(id), "Salin ID");
+      Q("#spCode").textContent =
+        'local IMAGE_ID = "' + id + '"\nlocal FRAME_SIZE = ' + spCfg.size + "\nlocal COLUMNS = " + spCfg.cols +
+        "\nlocal ROWS = " + spCfg.rows + "\nlocal TOTAL_FRAMES = " + spCfg.total;
+      Q("#spSnip").style.display = "block";
+    } catch (e) { bump(false); setMsg(m, "✗ " + e.message, false); }
+    b.disabled = false; refreshMe();
+  };
+
+  /* ================= LISENSI PROYEK (owner) ================= */
+  addPage("license",
+    '<div class="eyebrow">Owner</div><h1>Lisensi Proyek</h1>' +
+    '<p class="sub">Atur status lunas proyek Roblox (dipakai script lewat /check-license).</p>' +
+    '<div class="msg err" id="lcLock" style="display:none">Halaman ini hanya untuk owner.</div>' +
+    '<div class="card" id="lcBody"><label style="margin-top:0">Nama proyek</label>' +
+    '<input type="text" id="lcProj" autocapitalize="off" placeholder="Contoh: AlexDonateRobux">' +
+    '<label>Status</label><select id="lcPaid"><option value="0">Belum lunas</option><option value="1">Lunas</option></select>' +
+    '<label>Token rahasia (LICENSE_SECRET)</label><input type="password" id="lcSec" autocomplete="off" placeholder="Token rahasia Worker">' +
+    '<button class="btn" id="lcGo">Simpan Perubahan</button>' +
+    '<button class="btn ghost" id="lcChk">Cek status proyek</button>' +
+    '<div class="msg" id="lcMsg"></div></div>');
+
+  function lcState() {
+    Q("#lcLock").style.display = owner() ? "none" : "block";
+    Q("#lcBody").style.display = owner() ? "block" : "none";
+  }
+  Q("#lcGo").onclick = async function () {
+    var p = Q("#lcProj").value.trim(), sec = Q("#lcSec").value.trim(), paid = Q("#lcPaid").value === "1";
+    if (!p || !sec) return setMsg(Q("#lcMsg"), "Nama proyek dan token wajib diisi.", false);
+    try {
+      await api("/set-license", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ project: p, paid: paid, secret: sec }) }, 20000);
+      setMsg(Q("#lcMsg"), '✓ "' + p + '" sekarang: ' + (paid ? "LUNAS" : "BELUM LUNAS"), true);
+    } catch (e) { setMsg(Q("#lcMsg"), "✗ " + e.message, false); }
+  };
+  Q("#lcChk").onclick = async function () {
+    var p = Q("#lcProj").value.trim();
+    if (!p) return setMsg(Q("#lcMsg"), "Isi nama proyek.", false);
+    try {
+      var j = await api("/check-license?project=" + encodeURIComponent(p), {}, 15000);
+      setMsg(Q("#lcMsg"), '"' + p + '": ' + (j.paid ? "LUNAS" : "BELUM LUNAS"), true);
+    } catch (e) { setMsg(Q("#lcMsg"), "✗ " + e.message, false); }
+  };
+
+  /* ================= PENGHUBUNG ================= */
+  var _g = window.go;
+  window.go = function (p) {
+    _g(p);
+    if (p === "playlist") refreshMe().then(pgLoad);
+    if (p === "license") refreshMe().then(lcState);
+  };
+  function sync() {
+    Array.prototype.forEach.call(document.querySelectorAll('[data-p="license"]'), function (b) { b.style.display = owner() ? "" : "none"; });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-p="playlist"]'), function (b) { b.style.display = staff() ? "" : "none"; });
+  }
+  setInterval(sync, 1200); sync();
 })();
 </script>
 </body>
