@@ -1,4 +1,4 @@
-const VERSION = "6.0.0-pages";
+const VERSION = "6.1.0-pages";
 const API = "https://apis.roblox.com/assets/v1";
 const MAX_BYTES = 20 * 1024 * 1024;
 const GH_REPO = "alexxsidu-netizen/ALEX-STUDIO";
@@ -74,6 +74,10 @@ const PROMO_KEY = "promo:list";
 const SHOP_KEY = "shop:items";
 const STATS_KEY = "stats";
 const ONLINE_WINDOW = 6 * 60000; // dianggap online jika ping terakhir < 6 menit
+
+// antrian musik ke game
+const MQ_KEY = "musicqueue:pending";
+const MQ_LOG = "musicqueue:log";
 
 // kode acak buatan owner
 const CODE_IDX = "cdx_idx";
@@ -244,7 +248,7 @@ function roleOf(u) {
 const canPremium = (u) =>
   !!u && !!(u.owner || u.vip || (u.vipUntil && u.vipUntil > Date.now()) || u.unlocked);
 
-// staf = owner atau role admin (boleh kelola Jualan)
+// staf = owner atau role admin (boleh kelola Jualan dan Playlist Game)
 const isStaffUser = (u) => !!u && !!(u.owner || u.role === "admin");
 
 function accessMsg(q, what) {
@@ -717,6 +721,94 @@ async function promoRoute(path, req, env) {
   return json({ error: "Endpoint tidak ditemukan" }, 404);
 }
 
+/* ---------- antrian musik ke game (Playlist Game) ---------- */
+async function musicQueueRoute(path, req, env) {
+  if (!env.CLOUDPC) return json({ error: "KV CLOUDPC belum di-bind" }, 500);
+
+  const fromGame = () =>
+    !!env.MUSIC_SECRET && eq(req.headers.get("x-music-secret"), env.MUSIC_SECRET);
+
+  // game mengambil antrian
+  if (path === "/musicqueue" && req.method === "GET") {
+    if (!fromGame()) return json({ error: "Unauthorized" }, 401);
+    const list = (await kvGet(env, MQ_KEY)) || [];
+    return json({ ok: true, items: list.slice(0, 20) });
+  }
+
+  // game melaporkan hasil, item yang selesai dihapus dari antrian
+  if (path === "/musicqueue/done" && req.method === "POST") {
+    if (!fromGame()) return json({ error: "Unauthorized" }, 401);
+    const b = await req.json().catch(() => ({}));
+    const res = Array.isArray(b.results) ? b.results.slice(0, 50) : [];
+    const ids = new Set(res.map((r) => String(r.id)));
+    const pend = (await kvGet(env, MQ_KEY)) || [];
+    const log = (await kvGet(env, MQ_LOG)) || [];
+    const now = Date.now();
+    for (const r of res) {
+      const it = pend.find((x) => x.id === String(r.id));
+      log.unshift({
+        id: String(r.id),
+        name: it ? it.name : "",
+        by: it ? it.by : "",
+        ok: !!r.ok,
+        msg: clean(r.msg).slice(0, 120),
+        at: now,
+      });
+    }
+    await kvPut(env, MQ_KEY, pend.filter((x) => !ids.has(x.id)));
+    await kvPut(env, MQ_LOG, log.slice(0, 30));
+    return json({ ok: true });
+  }
+
+  // sisanya khusus owner / admin
+  const auth = await getAuth(req, env);
+  if (!auth || !isStaffUser(auth.user))
+    return json({ error: "Hanya owner atau admin yang bisa mengirim lagu ke playlist game." }, 403);
+
+  if (path === "/musicqueue/list" && req.method === "GET") {
+    return json({
+      ok: true,
+      pending: (await kvGet(env, MQ_KEY)) || [],
+      log: (await kvGet(env, MQ_LOG)) || [],
+    });
+  }
+
+  if (req.method !== "POST") return json({ error: "Method tidak didukung" }, 405);
+  const b = await req.json().catch(() => ({}));
+
+  if (path === "/musicqueue/add") {
+    const src = Array.isArray(b.items) ? b.items.slice(0, 20) : [];
+    const pend = (await kvGet(env, MQ_KEY)) || [];
+    let added = 0, skipped = 0;
+    for (const x of src) {
+      const id = clean(x && x.id);
+      if (!/^\d{6,16}$/.test(id) || pend.some((p) => p.id === id)) { skipped++; continue; }
+      if (pend.length >= 50) { skipped++; continue; }
+      let speed = parseFloat(x && x.speed);
+      speed = isFinite(speed) && speed >= 0.5 && speed <= 2 ? speed : null;
+      pend.push({
+        id,
+        name: clean(x && x.name).slice(0, 40),
+        speed,
+        by: auth.user.name,
+        at: Date.now(),
+      });
+      added++;
+    }
+    await kvPut(env, MQ_KEY, pend);
+    return json({ ok: true, added, skipped, pending: pend.length });
+  }
+
+  if (path === "/musicqueue/remove") {
+    const id = clean(b.id);
+    const pend = (await kvGet(env, MQ_KEY)) || [];
+    await kvPut(env, MQ_KEY, pend.filter((p) => p.id !== id));
+    return json({ ok: true });
+  }
+
+  return json({ error: "Endpoint tidak ditemukan" }, 404);
+}
+
 /* ---------- sampul / latar belakang global ---------- */
 async function bgInfo(env) {
   const m = await kvGet(env, BG_META);
@@ -1042,6 +1134,8 @@ async function handle(req, env) {
   if (url.pathname.startsWith("/codes")) return codesRoute(url.pathname, req, env);
 
   if (url.pathname.startsWith("/promo")) return promoRoute(url.pathname, req, env);
+
+  if (url.pathname.startsWith("/musicqueue")) return musicQueueRoute(url.pathname, req, env);
 
   /* ---------- sampul / latar belakang global ---------- */
   if (url.pathname.startsWith("/bg")) {
