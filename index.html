@@ -184,6 +184,246 @@ code{font:12px ui-monospace,monospace;background:rgba(139,92,246,.18);border-rad
 }
 </style>
 </head>
+<script>
+/* ALEX STUDIO PLUS v4: Logo ke Model Part (penulis RBXM biner) */
+(function () {
+  "use strict";
+  function Q(s) { return document.querySelector(s); }
+  function setMsg(n, t, ok) { if (n) { n.textContent = t; n.className = "msg " + (ok ? "ok" : "err"); } }
+
+  var anchor = Q("#lgOut");
+  if (!anchor || !Q("#lgCv")) return;
+
+  var card = document.createElement("div");
+  card.className = "card";
+  card.id = "lpCard";
+  card.innerHTML =
+    '<h2>Model Part 3D (tanpa Decal)</h2>' +
+    '<div class="hint" style="margin-top:0">Hasil berupa Model berisi Part berwarna dari gambar yang sudah dihapus latarnya. Ukuran dan ketebalan mengikuti kartu Bentuk 3D di atas.</div>' +
+    '<label>Detail (jumlah blok)</label>' +
+    '<select id="lpRes"><option value="90">Tinggi (90)</option><option value="60" selected>Sedang (60)</option><option value="40">Rendah (40)</option></select>' +
+    '<label>Jumlah warna</label>' +
+    '<select id="lpCol"><option value="3">Sedikit (27 warna)</option><option value="5" selected>Sedang (125 warna)</option><option value="8">Banyak (512 warna)</option></select>' +
+    '<label>Batas jumlah Part</label>' +
+    '<select id="lpMax"><option value="1500">1.500</option><option value="3000" selected>3.000</option><option value="6000">6.000</option></select>' +
+    '<button class="btn" id="lpMk">🧱 Buat Model Part</button>' +
+    '<div class="hint" id="lpSt"></div>' +
+    '<div class="row"><button class="btn ghost" id="lpDl">⬇ Unduh RBXM</button>' +
+    '<button class="btn" id="lpUp">⇧ Upload Model ke Roblox</button></div>' +
+    '<div class="msg" id="lpM"></div>';
+  anchor.parentNode.insertBefore(card, anchor);
+
+  /* ---------- helper byte ---------- */
+  function cat(list) {
+    var n = 0, i;
+    for (i = 0; i < list.length; i++) n += list[i].length;
+    var o = new Uint8Array(n), p = 0;
+    for (i = 0; i < list.length; i++) { o.set(list[i], p); p += list[i].length; }
+    return o;
+  }
+  function u32(n) { var b = new Uint8Array(4); new DataView(b.buffer).setUint32(0, n >>> 0, true); return b; }
+  function i32(n) { var b = new Uint8Array(4); new DataView(b.buffer).setInt32(0, n | 0, true); return b; }
+  function str(s) { var e = new TextEncoder().encode(s); return cat([u32(e.length), e]); }
+  function inter(vals) {
+    var n = vals.length, o = new Uint8Array(n * 4);
+    for (var i = 0; i < n; i++) {
+      var v = vals[i] >>> 0;
+      o[i] = v >>> 24; o[n + i] = (v >>> 16) & 255; o[2 * n + i] = (v >>> 8) & 255; o[3 * n + i] = v & 255;
+    }
+    return o;
+  }
+  function zig(n) { return ((n << 1) ^ (n >> 31)) >>> 0; }
+  function refs(arr) {
+    var p = 0;
+    return inter(arr.map(function (v) { var d = v - p; p = v; return zig(d); }));
+  }
+  var fv = new DataView(new ArrayBuffer(4));
+  function rotf(f) {
+    fv.setFloat32(0, f, true);
+    var b = fv.getUint32(0, true);
+    return ((b << 1) | (b >>> 31)) >>> 0;
+  }
+  function floats(arr) { return inter(arr.map(rotf)); }
+  function bytes(n, v) { var b = new Uint8Array(n); b.fill(v); return b; }
+  function chunk(name, data) {
+    var nm = new Uint8Array(4);
+    for (var i = 0; i < 4; i++) nm[i] = name.charCodeAt(i) || 0;
+    return cat([nm, u32(0), u32(data.length), u32(0), data]);
+  }
+  function prop(cls, name, type, data) {
+    return chunk("PROP", cat([i32(cls), str(name), new Uint8Array([type]), data]));
+  }
+
+  /* ---------- penulis RBXM biner ---------- */
+  function buildRbxm(P, modelName) {
+    var N = P.length, i, parts = [];
+    var ids = []; for (i = 0; i < N; i++) ids.push(i + 1);
+
+    parts.push(chunk("INST", cat([i32(0), str("Model"), new Uint8Array([0]), i32(1), refs([0])])));
+    parts.push(chunk("INST", cat([i32(1), str("Part"), new Uint8Array([0]), i32(N), refs(ids)])));
+
+    parts.push(prop(0, "Name", 0x01, str(modelName)));
+
+    var names = P.map(function () { return str("Pixel"); });
+    parts.push(prop(1, "Name", 0x01, cat(names)));
+
+    var sx = P.map(function (p) { return p.w; }), sy = P.map(function (p) { return p.h; }), sz = P.map(function (p) { return p.d; });
+    var sizeData = cat([floats(sx), floats(sy), floats(sz)]);
+    parts.push(prop(1, "size", 0x0E, sizeData));
+    parts.push(prop(1, "Size", 0x0E, sizeData));
+
+    var px = P.map(function (p) { return p.x; }), py = P.map(function (p) { return p.y; }), pz = P.map(function (p) { return p.z; });
+    parts.push(prop(1, "CFrame", 0x10, cat([bytes(N, 0x02), floats(px), floats(py), floats(pz)])));
+
+    var R = new Uint8Array(N), G = new Uint8Array(N), B = new Uint8Array(N);
+    for (i = 0; i < N; i++) { R[i] = P[i].r; G[i] = P[i].g; B[i] = P[i].b; }
+    parts.push(prop(1, "Color3uint8", 0x1A, cat([R, G, B])));
+
+    parts.push(prop(1, "Anchored", 0x02, bytes(N, 1)));
+    parts.push(prop(1, "Material", 0x12, inter(P.map(function () { return 272; }))));
+    parts.push(prop(1, "TopSurface", 0x12, inter(P.map(function () { return 0; }))));
+    parts.push(prop(1, "BottomSurface", 0x12, inter(P.map(function () { return 0; }))));
+
+    var kids = [0].concat(ids), pars = [-1];
+    for (i = 0; i < N; i++) pars.push(0);
+    parts.push(chunk("PRNT", cat([new Uint8Array([0]), i32(N + 1), refs(kids), refs(pars)])));
+    parts.push(chunk("END", new TextEncoder().encode("</roblox>")));
+
+    var head = cat([
+      new TextEncoder().encode("<roblox!"),
+      new Uint8Array([0x89, 0xFF, 0x0D, 0x0A, 0x1A, 0x0A]),
+      new Uint8Array([0, 0]),
+      i32(2), i32(N + 1),
+      new Uint8Array(8)
+    ]);
+    return new Blob([head].concat(parts), { type: "model/x-rbxm" });
+  }
+
+  /* ---------- gambar jadi blok ---------- */
+  function grid(data, W, H, res, lv) {
+    var aspect = W / H;
+    var gw = aspect >= 1 ? res : Math.max(2, Math.round(res * aspect));
+    var gh = aspect >= 1 ? Math.max(2, Math.round(res / aspect)) : res;
+    var keys = new Int32Array(gw * gh).fill(-1);
+    var step = 255 / (lv - 1);
+    for (var gy = 0; gy < gh; gy++) for (var gx = 0; gx < gw; gx++) {
+      var xa = Math.floor(gx * W / gw), xb = Math.max(xa + 1, Math.floor((gx + 1) * W / gw));
+      var ya = Math.floor(gy * H / gh), yb = Math.max(ya + 1, Math.floor((gy + 1) * H / gh));
+      var c = 0, r = 0, g = 0, b = 0;
+      for (var y = ya; y < yb; y++) for (var x = xa; x < xb; x++) {
+        var k = (y * W + x) * 4;
+        if (data[k + 3] >= 128) { c++; r += data[k]; g += data[k + 1]; b += data[k + 2]; }
+      }
+      if (c * 2 > (xb - xa) * (yb - ya)) {
+        var qr = Math.round(Math.round(r / c / step) * step);
+        var qg = Math.round(Math.round(g / c / step) * step);
+        var qb = Math.round(Math.round(b / c / step) * step);
+        keys[gy * gw + gx] = (qr << 16) | (qg << 8) | qb;
+      }
+    }
+    var seen = new Uint8Array(gw * gh), rects = [];
+    for (var y0 = 0; y0 < gh; y0++) for (var x0 = 0; x0 < gw; x0++) {
+      var i0 = y0 * gw + x0;
+      if (seen[i0] || keys[i0] < 0) continue;
+      var key = keys[i0], rw = 1, rh = 1;
+      while (x0 + rw < gw && !seen[y0 * gw + x0 + rw] && keys[y0 * gw + x0 + rw] === key) rw++;
+      for (;;) {
+        if (y0 + rh >= gh) break;
+        var ok = true;
+        for (var xx = 0; xx < rw; xx++) {
+          var q = (y0 + rh) * gw + x0 + xx;
+          if (seen[q] || keys[q] !== key) { ok = false; break; }
+        }
+        if (!ok) break;
+        rh++;
+      }
+      for (var yy = 0; yy < rh; yy++) for (var xx2 = 0; xx2 < rw; xx2++) seen[(y0 + yy) * gw + x0 + xx2] = 1;
+      rects.push({ x: x0, y: y0, w: rw, h: rh, key: key });
+    }
+    return { gw: gw, gh: gh, rects: rects };
+  }
+
+  var last = { blob: null, count: 0, name: "Logo3D" };
+
+  Q("#lpMk").onclick = async function () {
+    var m = Q("#lpSt"), cv = Q("#lgCv");
+    if (!cv || cv.width < 4 || cv.height < 4) return setMsg(m, "Pilih gambar dan hapus latar dulu (kartu di atas).", false);
+    var size = +Q("#lgSize").value;
+    if (!(size > 0)) return setMsg(m, "Isi ukuran dengan benar di kartu Bentuk 3D.", false);
+    var depPct = +Q("#lgDep").value;
+    var maxParts = +Q("#lpMax").value, lv = +Q("#lpCol").value, res = +Q("#lpRes").value;
+    var btn = Q("#lpMk"); btn.disabled = true; setMsg(m, "Membuat model...", true);
+    await new Promise(function (r) { setTimeout(r, 30); });
+    try {
+      var W = cv.width, H = cv.height;
+      var data = cv.getContext("2d").getImageData(0, 0, W, H).data;
+      var g = grid(data, W, H, res, lv);
+      while (g.rects.length > maxParts && res > 16) {
+        res = Math.floor(res * 0.85);
+        g = grid(data, W, H, res, lv);
+      }
+      if (!g.rects.length) throw new Error("Tidak ada piksel padat. Cek hasil Hapus Latar.");
+      var s = size / Math.max(g.gw, g.gh);
+      var depth = Math.max(0.05, size * depPct / 100);
+      var P = g.rects.map(function (r) {
+        return {
+          w: Math.max(0.05, r.w * s), h: Math.max(0.05, r.h * s), d: depth,
+          x: (r.x + r.w / 2 - g.gw / 2) * s, y: (g.gh / 2 - (r.y + r.h / 2)) * s, z: 0,
+          r: (r.key >> 16) & 255, g: (r.key >> 8) & 255, b: r.key & 255
+        };
+      });
+      var nm = (Q("#lgName").value.trim() || "Logo3D").slice(0, 40);
+      last.blob = buildRbxm(P, nm);
+      last.count = P.length; last.name = nm;
+      if (last.blob.size > 20 * 1048576) throw new Error("File terlalu besar. Pilih detail lebih rendah.");
+      Q("#lgOut").style.display = "block";
+      setMsg(m, "✓ Selesai. " + P.length.toLocaleString("id-ID") + " Part, grid " + g.gw + "×" + g.gh + ", file " + (last.blob.size / 1024).toFixed(1) + " KB.", true);
+      setMsg(Q("#lpM"), "", true);
+    } catch (e) { last.blob = null; setMsg(m, "✗ " + e.message, false); }
+    btn.disabled = false;
+  };
+
+  Q("#lpDl").onclick = function () {
+    if (!last.blob) return setMsg(Q("#lpM"), "Buat model dulu.", false);
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(last.blob);
+    a.download = safeName(last.name) + ".rbxm";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 10000);
+  };
+
+  Q("#lpUp").onclick = async function () {
+    var m = Q("#lpM");
+    if (!last.blob) return setMsg(m, "Buat model dulu.", false);
+    var need = needSettings();
+    if (need) return setMsg(m, "✗ " + need, false);
+    var b = Q("#lpUp"); b.disabled = true;
+    var nm = last.name;
+    try {
+      var fd = new FormData();
+      fd.append("file", last.blob, safeName(nm) + ".rbxm");
+      fd.append("name", nm);
+      fd.append("description", "Model Part 3D via ALEX STUDIO");
+      fd.append("creatorType", LS.get("ctype", "User"));
+      fd.append("creatorId", LS.get("cid"));
+      setMsg(m, "Mengupload ke Roblox (" + (last.blob.size / 1024).toFixed(1) + " KB)...", true);
+      var j = await api("/upload-model", { method: "POST", body: fd });
+      setMsg(m, "Menunggu proses Roblox...", true);
+      var id = await waitOp(j.operationId);
+      bump(true);
+      pushHist({ name: nm, type: "Model", id: String(id), size: last.blob.size, at: new Date().toLocaleString() });
+      setMsg(m, "✓ Berhasil! Model ID: " + id, true);
+      copyBtn(m, String(id), "Salin ID");
+    } catch (e) {
+      bump(false);
+      setMsg(m, "✗ " + e.message, false);
+      pushFail(nm, "Model", last.blob.size, e.message);
+    }
+    b.disabled = false;
+    refreshMe();
+  };
+})();
+</script>
 <body>
 
 <div id="bgWrap"><div id="bgDim"></div></div>
