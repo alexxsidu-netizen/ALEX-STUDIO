@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#070812">
+<meta name="theme-color" content="#07090a">
 <title>ALEX STUDIO</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
 <style>
@@ -18,7 +18,6 @@ body{margin:0;color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Rob
   background:radial-gradient(700px 420px at 85% -5%,rgba(139,92,246,.28),transparent 60%),
              radial-gradient(600px 400px at -10% 25%,rgba(34,211,238,.14),transparent 60%),var(--bg);
   background-attachment:fixed}
-/* latar belakang foto/video */
 #bgWrap{position:fixed;inset:0;z-index:-1;display:none;overflow:hidden;background:#000}
 #bgWrap.on{display:block}
 #bgMedia{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scale(1.06)}
@@ -166,27 +165,18 @@ code{font:12px ui-monospace,monospace;background:rgba(139,92,246,.18);border-rad
 .feat span{color:var(--mu);font-size:14px;line-height:1.6}
 .page{display:none;animation:fade .25s}.page.on{display:block}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-
-/* jam */
 .clock{text-align:center;padding:20px 12px;border-radius:24px;border:1px solid #3b3470;margin-bottom:18px;background:linear-gradient(135deg,rgba(139,92,246,.2),rgba(34,211,238,.08)),var(--panel)}
 .clkT{font:800 clamp(38px,12vw,58px) ui-monospace,monospace;letter-spacing:4px;margin:8px 0 2px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
 .clkD{color:var(--mu);font-size:14px;margin-bottom:12px}
 .clkZ{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
-
-/* promo */
 .pmx{white-space:pre-wrap;word-break:break-word;line-height:1.6;margin-top:8px;font-size:15px}
-
-/* edit foto HD */
 #hdCv{max-width:100%;height:auto;border-radius:14px;border:1px solid var(--line);background:#000;display:block;margin:0 auto}
-
-/* pemutar musik */
 .mp-t{font-weight:800;font-size:20px;text-align:center;word-break:break-word;margin:4px 0 14px}
 .mp-c{display:flex;gap:10px;justify-content:center;align-items:center;margin:14px 0}
 .mp-c button{width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--panel2);color:var(--tx);font-size:18px;cursor:pointer}
 .mp-c button.big{width:64px;height:64px;background:var(--grad);border:0;font-size:24px}
 .mp-c button.on{border-color:var(--a2);color:var(--a2)}
 .mp-s{display:flex;align-items:center;gap:10px;font:12px ui-monospace,monospace;color:var(--mu)}
-
 @media(min-width:900px){
   .side{display:block;position:fixed;inset:0 auto 0 0;width:270px;background:rgba(14,16,32,.9);border-right:1px solid var(--line);padding:18px 14px;overflow:auto;z-index:30}
   .bnav{display:none}.mb{display:none}.dr{display:none!important}
@@ -270,7 +260,6 @@ code{font:12px ui-monospace,monospace;background:rgba(139,92,246,.18);border-rad
     <button class="btn ghost" data-go="promo">📢 Promosi &amp; Announce</button>
   </div>
 
-  <!-- AKUN & LIMIT -->
   <div class="card" style="margin-top:18px" id="acct">
     <h2>Akun &amp; Limit</h2>
 
@@ -447,8 +436,6 @@ code{font:12px ui-monospace,monospace;background:rgba(139,92,246,.18);border-rad
     <button class="btn ghost" id="clearM">Hapus Semua</button>
   </div>
 </section>
-
-<!-- (Gambar, Stiker, Video, Mesh, MeshPart, Plugin dibuat otomatis oleh script di bawah) -->
 
 <!-- CEK STATUS -->
 <section class="page" id="p-status">
@@ -656,6 +643,7 @@ code{font:12px ui-monospace,monospace;background:rgba(139,92,246,.18);border-rad
     <div class="step"><div class="sn">8</div><div><h3>Cek Status</h3><p>Tempel Asset ID di menu Cek Status untuk melihat disetujui, direview, atau ditolak.</p></div></div>
     <div class="step"><div class="sn">9</div><div><h3>Pakai di Roblox</h3><p>Gunakan format <code>rbxassetid://ID</code> pada Sound atau Animation di Roblox Studio. Audio biasanya hanya bisa dipakai di game milik creator yang sama, kecuali kamu memberi izin.</p></div></div>
     <div class="step"><div class="sn">10</div><div><h3>Kirim ke Playlist Game (owner / admin)</h3><p>Setelah audio berhasil diupload, buka menu Playlist Game lalu kirim Asset ID-nya. Game mengambil antrian ini otomatis dan memasukkannya ke Library musik di dalam game.</p></div></div>
+    <div class="step"><div class="sn">11</div><div><h3>Logo ke 3D</h3><p>Buka menu Logo ke 3D, pilih foto atau logo, hapus latarnya, buat 3D, lalu upload sebagai MeshPart (butuh kode akses).</p></div></div>
   </div>
 </section>
 
@@ -670,6 +658,7 @@ code{font:12px ui-monospace,monospace;background:rgba(139,92,246,.18);border-rad
     <div class="feat"><b>✪ Animasi, ▣ Model, ⬡ Plugin</b><span>Publish file RBXM langsung ke Roblox (butuh kode akses).</span></div>
     <div class="feat"><b>▤ Gambar, ☺ Stiker, ▶ Video</b><span>Publish gambar dan stiker sebagai Decal, serta video MP4 atau MOV.</span></div>
     <div class="feat"><b>◆ Mesh dan ◇ MeshPart</b><span>Publish file FBX, GLB, atau GLTF (butuh kode akses).</span></div>
+    <div class="feat"><b>🧊 Logo ke 3D</b><span>Hapus latar foto atau logo, ubah jadi MeshPart 3D, lalu upload ke Roblox.</span></div>
     <div class="feat"><b>⌕ Cek Status</b><span>Pantau moderasi banyak asset ID sekaligus, dengan preview audio.</span></div>
     <div class="feat"><b>♫ Library</b><span>Riwayat upload tersimpan di browser ini, bisa dicari dan disalin.</span></div>
     <div class="feat"><b>✧ Edit Foto HD</b><span>Perbesar dan pertajam foto langsung di HP, lalu unduh sebagai PNG atau JPG.</span></div>
@@ -679,6 +668,8 @@ code{font:12px ui-monospace,monospace;background:rgba(139,92,246,.18);border-rad
     <div class="feat"><b>🔐 Lisensi Proyek</b><span>Atur status lunas proyek Roblox (owner).</span></div>
     <div class="feat"><b>📢 Promosi &amp; Announce</b><span>Pengumuman resmi yang bisa dilihat semua pengunjung, hanya owner yang bisa mengubah.</span></div>
     <div class="feat"><b>✦ Chat AI</b><span>Asisten untuk pertanyaan Roblox dan Luau.</span></div>
+    <div class="feat"><b>💬 Chat Global</b><span>Ngobrol bareng semua pengguna ALEX STUDIO.</span></div>
+    <div class="feat"><b>🎬 Video Tutorial</b><span>Video panduan dari owner di menu Tutorial.</span></div>
     <div class="feat"><b>⌨ Kode AI dan 🎨 Gambar AI</b><span>Scan error, perbaiki bug, deobfuscate, dan buat gambar dari deskripsi.</span></div>
     <div class="feat"><b>🛒 Jualan, 📊 Statistik, 🎟 Kode Owner</b><span>Toko produk lewat WhatsApp, statistik pengunjung, dan pembuat kode acak untuk owner.</span></div>
     <div class="feat"><b>🖼 Latar Belakang</b><span>Sampul foto atau video yang sama untuk semua pengunjung, diatur oleh owner.</span></div>
@@ -1183,8 +1174,7 @@ $('#libClear').onclick=()=>{
   if(!confirm('Kosongkan seluruh Library di browser ini?'))return;
   saveHist([]);renderLibrary();renderHist();
 };
-
-/* ---------- Cloud PC (AnyDesk), khusus owner ---------- */
+  /* ---------- Cloud PC (AnyDesk), khusus owner ---------- */
 let pcTimer=null,pcWait=0,pcShowPw=false,pcBusy=false;
 function fmtPC(id){return String(id).replace(/\s/g,'').replace(/(\d{3})(?=\d)/g,'$1 ')}
 function ago(ms){
@@ -1445,7 +1435,7 @@ function renderPremium(){
   });
 }
 function renderAbout(){
-  $('#abVer').textContent='Versi web: 6.1 + Plus v2 · Backend: '+(beVer||'tidak terhubung');
+  $('#abVer').textContent='Versi web: 6.2 + Plus v3 · Backend: '+(beVer||'tidak terhubung');
 }
 
 /* ---------- polling operasi Roblox ---------- */
@@ -1557,7 +1547,6 @@ function render(){
     rb.onclick=()=>{it.t0=0;it.t1=null;fill();showTrim()};
     trb.appendChild(pb);trb.appendChild(rb);
 
-    /* unduh hasil olahan (sudah dipotong, speed, dan pitch) */
     const dl=document.createElement('button');dl.className='copy';dl.textContent='⬇ Unduh hasil';
     dl.onclick=async()=>{
       dl.disabled=true;
@@ -1881,8 +1870,7 @@ $('#goM').onclick=async()=>{
   btn.disabled=false;
   refreshMe();
 };
-
-/* ---------- upload Gambar, Stiker, Video, Mesh, MeshPart, Plugin ---------- */
+  /* ---------- upload Gambar, Stiker, Video, Mesh, MeshPart, Plugin ---------- */
 const UPS=[
   ['image','▤','Gambar','/upload-image','.png,.jpg,.jpeg,.bmp,.tga','png|jpe?g|bmp|tga','Publish gambar ke Roblox sebagai Decal. Maksimal 8000×8000 piksel.',false],
   ['sticker','☺','Stiker','/upload-sticker','.png,.jpg,.jpeg','png|jpe?g','Publish stiker (PNG transparan paling bagus) sebagai Decal.',false],
@@ -1905,7 +1893,7 @@ UPS.forEach(([key,ic,label,path,accept,rx,hint,lock])=>{
   const q=s=>sec.querySelector(s);
   const drop=q('.drop'),inp=q('input[type=file]'),box=q('.q'),st=q('.st'),bar=q('.bar i'),pvm=q('.pvm');
   let file=null,url=null;
-    const setS=(t,c,p)=>{st.className='st '+(c||'');st.textContent=t;if(p!=null)bar.style.width=p+'%'};
+  const setS=(t,c,p)=>{st.className='st '+(c||'');st.textContent=t;if(p!=null)bar.style.width=p+'%'};
   const reset=()=>{if(url)URL.revokeObjectURL(url);url=null;file=null;box.style.display='none';pvm.innerHTML='';q('.nm').value='';q('.ds').value=''};
   function pick(f){
     if(!f)return;
@@ -2230,8 +2218,7 @@ loadPromo();
 </script>
 
 <script>
-/* ALEX STUDIO PLUS v1 (digabung langsung ke index.html)
-   Isi: tampilan baru, Kode AI, Gambar AI, Jualan, Statistik, Kode Owner */
+/* ALEX STUDIO PLUS v1: tampilan, Kode AI, Gambar AI, Jualan, Statistik, Kode Owner */
 (function () {
   "use strict";
   var WA = "6283841104725";
@@ -2284,7 +2271,6 @@ loadPromo();
   "main{padding-bottom:130px}" +
   "@media(min-width:900px){main{padding-bottom:60px}}" +
   ".nav.on{box-shadow:0 0 0 1px rgba(139,92,246,.4) inset}" +
-  /* kode ai */
   ".modes{display:grid;grid-template-columns:1fr 1fr;gap:10px}" +
   ".mode{padding:13px 8px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--mu);font-weight:700;text-align:center;cursor:pointer;font-size:14px}" +
   ".mode.on{color:var(--tx);border-color:var(--a);background:rgba(139,92,246,.22);box-shadow:0 0 22px rgba(139,92,246,.25)}" +
@@ -2295,13 +2281,11 @@ loadPromo();
   ".eout{margin:0;padding:14px;white-space:pre-wrap;word-break:break-word;font:12.5px/1.6 ui-monospace,Menlo,monospace;color:#d6d9ff;max-height:58vh;overflow:auto;background:none;border:0;border-radius:0}" +
   ".eout.err{color:var(--err)}" +
   ".cin{font:13px/1.5 ui-monospace,Menlo,monospace;min-height:180px;white-space:pre}" +
-  /* gambar */
   ".igrid{display:grid;gap:14px;grid-template-columns:1fr}" +
   ".igc{border-radius:22px;overflow:hidden;border:1px solid var(--line);background:rgba(255,255,255,.045)}" +
   ".igc img{width:100%;display:block;min-height:150px;background:#000}" +
   ".igc .cp{padding:12px}" +
   ".igc .cp span{display:block;color:var(--mu);font-size:13px;margin-bottom:8px;word-break:break-word}" +
-  /* jualan */
   ".scats{display:flex;gap:8px;overflow:auto;padding-bottom:6px;margin-bottom:14px}" +
   ".scat{white-space:nowrap;padding:9px 16px;border-radius:99px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--mu);font-weight:700;cursor:pointer;font-size:13px}" +
   ".scat.on{color:#fff;border-color:var(--a);background:rgba(139,92,246,.25)}" +
@@ -2316,14 +2300,12 @@ loadPromo();
   ".oldp{color:var(--mu);text-decoration:line-through;font:13px ui-monospace,monospace;margin-left:8px}" +
   ".prd .pt{display:flex;gap:6px;flex-wrap:wrap}" +
   ".prd .btn{margin-top:auto}" +
-  /* statistik */
   ".sgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}" +
   ".sc{padding:18px;border-radius:22px;border:1px solid var(--line);background:rgba(255,255,255,.05)}" +
   ".sc small{display:block;color:var(--mu);font:700 11px ui-monospace,monospace;letter-spacing:2px;text-transform:uppercase}" +
   ".sc b{display:block;font-size:34px;margin-top:6px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}" +
   ".live{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--ok);box-shadow:0 0 12px var(--ok);margin-right:8px;animation:plPulse 1.6s infinite}" +
   "@keyframes plPulse{50%{opacity:.35}}" +
-  /* kode owner */
   ".cdr{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid var(--line)}" +
   ".cdr:last-child{border:0}" +
   ".cdr .cc{font:800 16px ui-monospace,monospace;letter-spacing:1px;flex:1;min-width:170px;word-break:break-all}" +
@@ -2339,7 +2321,6 @@ loadPromo();
   NAV.splice(at("settings"), 0, ["codes", "🎟", "Kode Owner"]);
   buildNav(Q("#navSide")); buildNav(Q("#navDr"));
 
-  /* tombol baru di Home + lencana online */
   (function () {
     var rows = document.querySelectorAll("#p-home > .row");
     var last = rows[rows.length - 1];
@@ -2618,7 +2599,6 @@ loadPromo();
     catch (e) { setMsg(Q("#stMsg2"), "✗ " + e.message, false); }
   };
 
-  /* ping pengguna */
   var vid = LS.get("vid");
   if (!/^[a-z0-9]{8,24}$/.test(vid || "")) {
     vid = (Math.random().toString(36).slice(2, 12) + Date.now().toString(36)).slice(0, 20);
@@ -2724,10 +2704,8 @@ loadPromo();
   setInterval(sync, 1200); sync();
   renderImgs();
 })();
-</script>
-
 <script>
-/* ALEX STUDIO PLUS v2: Playlist Game, Sprite Sheet, Lisensi (digabung ke index.html) */
+/* ALEX STUDIO PLUS v2: Playlist Game, Sprite Sheet, Lisensi */
 (function () {
   "use strict";
   function Q(s) { return document.querySelector(s); }
@@ -2742,7 +2720,6 @@ loadPromo();
   function owner() { return isOwner(); }
   function fmtT(t) { return t ? new Date(t).toLocaleString("id-ID") : ""; }
 
-  /* ---------- menu ---------- */
   function at(k) { for (var i = 0; i < NAV.length; i++) if (NAV[i][0] === k) return i; return -1; }
   NAV.splice(at("music") + 1, 0, ["sprite", "▦", "Sprite Sheet"], ["playlist", "🎵", "Playlist Game"]);
   NAV.splice(at("settings"), 0, ["license", "🔐", "Lisensi Proyek"]);
@@ -2801,7 +2778,6 @@ loadPromo();
     if (!ok) return;
     Q("#pgAuto").value = LS.get("plus_autosend", "0");
 
-    /* library */
     var lb = Q("#pgLib"); lb.innerHTML = "";
     var h = hist().filter(function (e) { return e.st !== "fail" && e.type === "Audio" && e.id; }).slice(0, 20);
     if (!h.length) lb.appendChild(el("div", "hint", "Library belum punya audio."));
@@ -2817,7 +2793,6 @@ loadPromo();
       d.appendChild(b); lb.appendChild(d);
     });
 
-    /* antrian + hasil */
     var pb = Q("#pgPend"), lg = Q("#pgLog"); pb.innerHTML = ""; lg.innerHTML = "";
     try {
       var j = await api("/musicqueue/list", {}, 15000);
@@ -2869,7 +2844,6 @@ loadPromo();
     catch (e) { setMsg(Q("#pgMsg"), "✗ " + e.message, false); }
   };
 
-  /* otomatis kirim setelah upload audio berhasil */
   var _push = window.pushHist;
   window.pushHist = function (e) {
     _push(e);
@@ -2882,7 +2856,6 @@ loadPromo();
     } catch (x) {}
   };
 
-  /* tombol "Kirim ke Playlist" di Library */
   var _rl = window.renderLibrary;
   window.renderLibrary = function () {
     _rl();
@@ -3064,7 +3037,6 @@ loadPromo();
     } catch (e) { setMsg(Q("#lcMsg"), "✗ " + e.message, false); }
   };
 
-  /* ================= PENGHUBUNG ================= */
   var _g = window.go;
   window.go = function (p) {
     _g(p);
@@ -3076,6 +3048,522 @@ loadPromo();
     Array.prototype.forEach.call(document.querySelectorAll('[data-p="playlist"]'), function (b) { b.style.display = staff() ? "" : "none"; });
   }
   setInterval(sync, 1200); sync();
+})();
+</script>
+
+<style>
+:root{--bg:#07090a;--panel:#0d130f;--panel2:#131c15;--line:rgba(250,204,21,.16);--tx:#f6f8ec;--mu:#9aa88f;--a:#facc15;--a2:#4ade80;--grad:linear-gradient(135deg,#fde047 0%,#a3e635 50%,#22c55e 100%)}
+body{background:radial-gradient(800px 480px at 90% -8%,rgba(250,204,21,.22),transparent 60%),radial-gradient(700px 460px at -12% 30%,rgba(34,197,94,.18),transparent 60%),radial-gradient(600px 400px at 50% 115%,rgba(163,230,53,.10),transparent 60%),var(--bg)!important;background-attachment:fixed!important}
+.top{border-bottom:1px solid rgba(250,204,21,.18)!important;background:rgba(7,9,10,.78)!important}
+.logo,.nav.on i,.bn.on i,.drop .ic,.mb2.u,.sn{color:#14210a!important}
+.logo{box-shadow:0 6px 22px rgba(163,230,53,.45)!important;font-size:18px}
+.drop .ic{box-shadow:0 8px 24px rgba(163,230,53,.4)!important}
+.btn:not(.ghost):not(.danger){color:#14210a!important;box-shadow:0 10px 28px rgba(132,204,22,.38)!important}
+.btn.ghost{color:var(--tx)!important;background:rgba(250,204,21,.05)!important;border:1px solid rgba(250,204,21,.22)!important}
+.btn.ghost:active{background:rgba(250,204,21,.14)!important}
+.card{border:1px solid rgba(250,204,21,.16)!important;background:linear-gradient(180deg,rgba(250,204,21,.05),rgba(34,197,94,.03))!important}
+.hero{background:linear-gradient(135deg,rgba(250,204,21,.26),rgba(34,197,94,.14) 60%,rgba(163,230,53,.08))!important;border:1px solid rgba(250,204,21,.3)!important}
+h1{background:linear-gradient(90deg,#fff,#fde047 55%,#86efac)!important;-webkit-background-clip:text!important;background-clip:text!important;color:transparent!important}
+.eyebrow{color:#a3e635!important}
+.clock{background:linear-gradient(135deg,rgba(250,204,21,.16),rgba(34,197,94,.08)),var(--panel)!important;border:1px solid rgba(250,204,21,.28)!important}
+.nav{padding:10px!important;border-radius:16px!important}
+.nav i{width:36px!important;height:36px!important;border-radius:12px!important;background:rgba(250,204,21,.1)!important}
+.nav.on{background:linear-gradient(90deg,rgba(250,204,21,.22),rgba(34,197,94,.06),transparent)!important;border-color:rgba(250,204,21,.4)!important;box-shadow:0 0 0 1px rgba(250,204,21,.18) inset!important}
+.nav.on i{background:var(--grad)!important}
+.sec{color:#a3e635!important;display:flex;align-items:center;gap:8px}
+.sec::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(250,204,21,.35),transparent)}
+.drp,.side{background:rgba(8,11,9,.96)!important;border-color:rgba(250,204,21,.18)!important}
+.bnav{border:1px solid rgba(250,204,21,.22)!important;background:rgba(8,11,9,.82)!important}
+.bn.on i{box-shadow:0 4px 16px rgba(163,230,53,.4)}
+.chip.on,.mode.on,.scat.on,.tab{border-color:var(--a)!important;background:rgba(250,204,21,.16)!important;box-shadow:none!important}
+.sn{border-color:var(--a)!important;background:var(--grad)!important}
+.copy{background:rgba(250,204,21,.12)!important;border-color:rgba(250,204,21,.25)!important}
+.drop{background:rgba(250,204,21,.05)!important;border-color:rgba(250,204,21,.3)!important}
+.drop.hot{border-color:#4ade80!important;background:rgba(74,222,128,.1)!important}
+input:focus,select:focus,textarea:focus{border-color:var(--a)!important;box-shadow:0 0 0 3px rgba(250,204,21,.18)!important}
+input[type=range],input[type=checkbox]{accent-color:#a3e635!important}
+code{background:rgba(250,204,21,.12)!important;color:#bef264!important}
+.pv{color:#bef264!important}
+.badge.ok{color:#86efac}
+.plan.cur{border-color:#a3e635!important;box-shadow:0 0 0 1px #a3e635 inset!important}
+.stat,.q,.li,.feat,.plan{border:1px solid rgba(250,204,21,.14)!important}
+.mp-c button.big{color:#14210a!important}
+#p-home>.row{display:grid!important;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px}
+#p-home>.row .btn{min-width:0!important;margin:0!important;padding:14px 6px!important;font-size:12.5px!important;line-height:1.3;border-radius:18px!important;min-height:66px;display:flex;align-items:center;justify-content:center;text-align:center;flex:initial!important}
+.tvc{border:1px solid rgba(250,204,21,.16);border-radius:20px;padding:14px;margin-bottom:14px;background:rgba(0,0,0,.25)}
+.tvc h3{margin:0 0 4px;font-size:17px;word-break:break-word}
+.tvc p{margin:0 0 10px;color:var(--mu);font-size:14px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+.tvc video,.tvc iframe{width:100%;border-radius:14px;background:#000;border:0;display:block}
+.tvc iframe{aspect-ratio:16/9}
+.gcbox{display:flex;flex-direction:column;gap:10px;min-height:260px;max-height:56vh;overflow:auto;padding:4px 2px}
+.gcm{align-self:flex-start;max-width:92%;padding:10px 13px;border-radius:16px;border-bottom-left-radius:6px;background:rgba(255,255,255,.06);border:1px solid rgba(250,204,21,.14)}
+.gcm.me{align-self:flex-end;border-bottom-left-radius:16px;border-bottom-right-radius:6px;background:linear-gradient(135deg,rgba(250,204,21,.22),rgba(34,197,94,.16));border-color:rgba(163,230,53,.35)}
+.gch{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px}
+.gch b{font-size:14px;color:#fde047;word-break:break-all}
+.gch small{color:var(--mu);font:11px ui-monospace,monospace;margin-left:auto}
+.gcx{font-size:15px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.gct{font:700 10px ui-monospace,monospace;letter-spacing:1px;padding:3px 8px;border-radius:99px;border:1px solid var(--line)}
+.gct.owner{color:#67e8f9;border-color:rgba(103,232,249,.5)}
+.gct.admin,.gct.reseller{color:#86efac;border-color:rgba(134,239,172,.5)}
+.gct.vip{color:#fde047;border-color:rgba(253,224,71,.5)}
+</style>
+
+<script>
+/* ALEX STUDIO PLUS v3: Video Tutorial + Chat Global */
+(function () {
+  "use strict";
+  function Q(s) { return document.querySelector(s); }
+  function el(t, c, x) { var e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; }
+  function setMsg(n, t, ok) { if (n) { n.textContent = t; n.className = "msg " + (ok ? "ok" : "err"); } }
+  function at(k) { for (var i = 0; i < NAV.length; i++) if (NAV[i][0] === k) return i; return -1; }
+
+  NAV.splice(at("chat") + 1, 0, ["gchat", "💬", "Chat Global"]);
+  buildNav(Q("#navSide")); buildNav(Q("#navDr"));
+
+  var rows = document.querySelectorAll("#p-home > .row"), last = rows[rows.length - 1];
+  if (last) {
+    var r = el("div", "row");
+    r.innerHTML = '<button class="btn ghost" data-go="gchat">💬 Chat Global</button><button class="btn ghost" data-go="tutorial">🎬 Video Tutorial</button>';
+    last.after(r);
+  }
+
+  /* ================= VIDEO TUTORIAL ================= */
+  var tp = Q("#p-tutorial"), tbox = el("div");
+  tbox.innerHTML =
+    '<div class="card"><h2>🎬 Video Tutorial</h2><div id="tvList"><div class="hint">Memuat...</div></div></div>' +
+    '<div class="card" id="tvEd" style="display:none"><h2>Tambah video (Owner)</h2>' +
+    '<label style="margin-top:0">Judul</label><input type="text" id="tvT" placeholder="Cara upload audio">' +
+    '<label>Keterangan (opsional)</label><input type="text" id="tvD">' +
+    '<label>File video (MP4, WEBM, MOV, maks 20 MB)</label><input type="file" id="tvF" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov">' +
+    '<label>Atau link YouTube (untuk video panjang)</label><input type="text" id="tvY" autocapitalize="off" placeholder="https://youtu.be/...">' +
+    '<button class="btn" id="tvGo">⇧ Tambah video</button><div class="msg" id="tvM"></div></div>';
+  tp.querySelector(".sub").after(tbox);
+
+  var tvItems = [];
+  function tvRender() {
+    var b = Q("#tvList"); b.innerHTML = "";
+    if (!tvItems.length) b.appendChild(el("div", "hint", "Belum ada video tutorial."));
+    tvItems.forEach(function (v) {
+      var c = el("div", "tvc");
+      c.appendChild(el("h3", "", v.title));
+      if (v.desc) c.appendChild(el("p", "", v.desc));
+      if (v.kind === "yt") {
+        var f = document.createElement("iframe");
+        f.src = "https://www.youtube.com/embed/" + encodeURIComponent(v.yt);
+        f.allow = "accelerometer; encrypted-media; picture-in-picture; fullscreen"; f.allowFullscreen = true; f.loading = "lazy";
+        c.appendChild(f);
+      } else {
+        var vd = document.createElement("video");
+        vd.controls = true; vd.preload = "metadata"; vd.playsInline = true;
+        vd.src = base() + "/tutorial/video?id=" + encodeURIComponent(v.id);
+        c.appendChild(vd);
+      }
+      if (isOwner()) {
+        var d = el("button", "copy", "Hapus");
+        d.style.marginTop = "10px";
+        d.onclick = async function () {
+          if (!confirm("Hapus video ini?")) return;
+          try { var j = await api("/tutorial/delete", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: v.id }) }, 20000); tvItems = j.items || []; tvRender(); }
+          catch (e) { setMsg(Q("#tvM"), "✗ " + e.message, false); }
+        };
+        c.appendChild(d);
+      }
+      b.appendChild(c);
+    });
+    Q("#tvEd").style.display = isOwner() ? "block" : "none";
+  }
+  async function tvLoad() {
+    try { var j = await api("/tutorial", {}, 15000); tvItems = j.items || []; } catch (e) { log("Tutorial gagal dimuat: " + e.message); }
+    tvRender();
+  }
+  Q("#tvGo").onclick = async function () {
+    var m = Q("#tvM"), title = Q("#tvT").value.trim(), f = Q("#tvF").files[0], yt = Q("#tvY").value.trim();
+    if (!title) return setMsg(m, "Isi judul dulu.", false);
+    if (!f && !yt) return setMsg(m, "Pilih file video atau isi link YouTube.", false);
+    if (f && f.size > 20 * 1048576) return setMsg(m, "Video " + (f.size / 1048576).toFixed(1) + " MB, maksimal 20 MB. Kecilkan atau pakai link YouTube.", false);
+    var fd = new FormData();
+    fd.append("title", title); fd.append("desc", Q("#tvD").value.trim());
+    if (f) fd.append("file", f, f.name); else fd.append("yt", yt);
+    var b = Q("#tvGo"); b.disabled = true; setMsg(m, "Mengupload...", true);
+    try {
+      var j = await api("/tutorial/add", { method: "POST", body: fd }, 180000);
+      tvItems = j.items || []; tvRender();
+      Q("#tvT").value = ""; Q("#tvD").value = ""; Q("#tvF").value = ""; Q("#tvY").value = "";
+      setMsg(m, "✓ Video ditambahkan.", true);
+    } catch (e) { setMsg(m, "✗ " + e.message, false); }
+    b.disabled = false;
+  };
+
+  /* ================= CHAT GLOBAL ================= */
+  var gp = el("section", "page"); gp.id = "p-gchat";
+  gp.innerHTML =
+    '<div class="eyebrow">Komunitas</div><h1>Chat Global</h1>' +
+    '<p class="sub">Ngobrol bareng semua pengguna ALEX STUDIO. Sopan ya, pesan spam akan dihapus admin.</p>' +
+    '<div class="card"><div class="msg err" id="gcLock" style="display:none;margin:0 0 12px">Login dulu di Home untuk ikut chat.</div>' +
+    '<div class="gcbox" id="gcBox"></div>' +
+    '<div class="chatbox"><textarea id="gcIn" maxlength="300" placeholder="Tulis pesan..." rows="1"></textarea><button class="btn" id="gcSend">Kirim</button></div>' +
+    '<div class="msg" id="gcM"></div>' +
+    '<div class="hint">Chat diperbarui otomatis tiap 4 detik. Menyimpan 100 pesan terakhir.</div></div>';
+  Q("main").appendChild(gp);
+
+  var gcSig = "", gcBusy = false;
+  function gcRender(items) {
+    var b = Q("#gcBox"), near = b.scrollHeight - b.scrollTop - b.clientHeight < 90 || !b.children.length;
+    b.innerHTML = "";
+    if (!items.length) b.appendChild(el("div", "hint", "Belum ada pesan. Jadi yang pertama menyapa!"));
+    items.forEach(function (m) {
+      var mine = me && me.loggedIn && String(me.name).toLowerCase() === String(m.n).toLowerCase();
+      var d = el("div", "gcm" + (mine ? " me" : ""));
+      var h = el("div", "gch"); h.appendChild(el("b", "", m.n));
+      var tag = m.r === "owner" ? "OWNER" : m.g === "admin" ? "ADMIN" : (m.r === "vip" || m.r === "vip7") ? "VIP" : m.g === "reseller" ? "RESELLER" : "";
+      if (tag) h.appendChild(el("span", "gct " + tag.toLowerCase(), tag));
+      h.appendChild(el("small", "", new Date(m.at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })));
+      d.appendChild(h); d.appendChild(el("div", "gcx", m.t));
+      if (me && me.staff) {
+        var x = el("button", "copy", "Hapus"); x.style.marginTop = "6px";
+        x.onclick = async function () {
+          try { await api("/gchat/delete", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: m.id }) }, 15000); gcLoad(true); }
+          catch (e) { setMsg(Q("#gcM"), "✗ " + e.message, false); }
+        };
+        d.appendChild(x);
+      }
+      b.appendChild(d);
+    });
+    if (near) b.scrollTop = b.scrollHeight;
+  }
+  async function gcLoad(force) {
+    if (gcBusy) return; gcBusy = true;
+    try {
+      var j = await api("/gchat", {}, 15000), it = j.items || [];
+      var sig = it.length + ":" + (it.length ? it[it.length - 1].id : "");
+      if (force || sig !== gcSig) { gcSig = sig; gcRender(it); }
+    } catch (e) {}
+    gcBusy = false;
+  }
+  function gcState() {
+    var lo = !!(me && me.loggedIn);
+    Q("#gcLock").style.display = lo ? "none" : "block";
+    Q("#gcSend").disabled = !lo;
+  }
+  async function gcSend() {
+    var t = Q("#gcIn").value.trim();
+    if (!t) return;
+    if (!(me && me.loggedIn)) return gcState();
+    Q("#gcSend").disabled = true;
+    try {
+      await api("/gchat/send", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text: t }) }, 15000);
+      Q("#gcIn").value = ""; setMsg(Q("#gcM"), "", true); await gcLoad(true);
+    } catch (e) { setMsg(Q("#gcM"), "✗ " + e.message, false); }
+    gcState();
+  }
+  Q("#gcSend").onclick = gcSend;
+  Q("#gcIn").onkeydown = function (e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); gcSend(); } };
+  setInterval(function () {
+    if (!document.hidden && Q("#p-gchat").classList.contains("on")) gcLoad(false);
+  }, 4000);
+
+  var _g2 = window.go;
+  window.go = function (p) {
+    _g2(p);
+    if (p === "tutorial") refreshMe().then(tvLoad);
+    if (p === "gchat") { refreshMe().then(function () { gcState(); gcLoad(true); }); }
+  };
+})();
+</script>
+
+<script>
+/* ALEX STUDIO PLUS v3: Logo ke 3D */
+(function () {
+  "use strict";
+  function Q(s) { return document.querySelector(s); }
+  function el(t, c, x) { var e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; }
+  function setMsg(n, t, ok) { if (n) { n.textContent = t; n.className = "msg " + (ok ? "ok" : "err"); } }
+  function at(k) { for (var i = 0; i < NAV.length; i++) if (NAV[i][0] === k) return i; return -1; }
+
+  NAV.splice(at("meshpart") + 1, 0, ["logo3d", "🧊", "Logo ke 3D"]);
+  buildNav(Q("#navSide")); buildNav(Q("#navDr"));
+  var rows = document.querySelectorAll("#p-home > .row"), last = rows[rows.length - 1];
+  if (last) { var rr = el("div", "row"); rr.innerHTML = '<button class="btn ghost" data-go="logo3d">🧊 Logo ke 3D</button>'; last.after(rr); }
+
+  var sec = el("section", "page"); sec.id = "p-logo3d";
+  sec.innerHTML =
+    '<div class="eyebrow">Tools / 3D</div><h1>Logo ke 3D</h1>' +
+    '<p class="sub">Upload foto atau logo, latarnya dihapus otomatis, lalu bentuknya dijadikan MeshPart 3D (file GLB) dan bisa langsung diupload ke Roblox. Diproses di HP-mu.</p>' +
+    '<div class="lock">🔒 Upload MeshPart butuh kode akses. <a href="https://wa.me/6283841104725" target="_blank" rel="noopener">Chat WhatsApp 083841104725</a></div>' +
+    '<div class="drop" id="lgDrop"><div class="ic">🧊</div><h3>Pilih foto / logo</h3><p>PNG, JPG, WEBP (PNG transparan paling bagus)</p><input type="file" id="lgFile" accept="image/*" hidden></div>' +
+    '<div class="card"><canvas id="lgCv" width="1" height="1" style="max-width:100%;max-height:340px;display:block;margin:0 auto;border-radius:14px;border:1px solid var(--line);background:conic-gradient(#1b1f1b 25%,#2a2f2a 0 50%,#1b1f1b 0 75%,#2a2f2a 0) 0 0/20px 20px"></canvas>' +
+    '<div class="hint" id="lgInfo">Belum ada gambar.</div>' +
+    '<label>Cara hapus latar</label><select id="lgMode"><option value="flood">Dari tepi gambar (disarankan)</option><option value="global">Semua warna yang mirip latar</option><option value="none">Jangan hapus (gambar sudah transparan)</option></select>' +
+    '<label>Toleransi warna latar</label><div class="pitch"><input type="range" id="lgTol" min="5" max="100" value="35"><div class="pv" id="lgTolV">35</div></div>' +
+    '<label>Kikis tepi (buang sisa latar)</label><select id="lgEr"><option value="0">0 (tidak)</option><option value="1">1 piksel</option><option value="2">2 piksel</option><option value="3">3 piksel</option></select>' +
+    '<button class="btn" id="lgRm">✂ Hapus Latar</button></div>' +
+    '<div class="card"><h2>Bentuk 3D</h2>' +
+    '<label style="margin-top:0">Ukuran sisi terpanjang (studs)</label><input type="number" id="lgSize" value="4" min="0.5" max="100" step="0.5">' +
+    '<label>Ketebalan (% dari ukuran)</label><div class="pitch"><input type="range" id="lgDep" min="2" max="40" value="8"><div class="pv" id="lgDepV">8%</div></div>' +
+    '<label>Detail maksimal</label><select id="lgRes"><option value="160">Tinggi (160)</option><option value="110">Sedang (110)</option><option value="70">Rendah (70)</option></select>' +
+    '<button class="btn" id="lgMk">🧊 Buat 3D</button><div class="hint" id="lgSt"></div></div>' +
+    '<div class="card" id="lgOut" style="display:none"><h2>Hasil</h2>' +
+    '<label style="margin-top:0">Nama asset</label><input type="text" id="lgName" value="Logo3D">' +
+    '<div class="row"><button class="btn ghost" id="lgDlG">⬇ Unduh GLB</button><button class="btn ghost" id="lgDlP">⬇ PNG transparan</button></div>' +
+    '<button class="btn" id="lgUpM">⇧ Upload MeshPart ke Roblox</button>' +
+    '<button class="btn ghost" id="lgUpD">⇧ Upload PNG sebagai Decal (untuk tekstur)</button>' +
+    '<div class="hint">Di Studio: Insert dari Toolbox/Asset ID. Kalau tekstur tidak muncul, pasang ID Decal di MeshPart (SurfaceAppearance, ColorMap). Kalau arah hadap salah, putar 90°/180° di Studio.</div>' +
+    '<div class="msg" id="lgM"></div></div>';
+  Q("main").appendChild(sec);
+
+  var lg = { src: null, w: 0, h: 0, o: null, glb: null };
+  Q("#lgTol").oninput = function (e) { Q("#lgTolV").textContent = e.target.value; };
+  Q("#lgDep").oninput = function (e) { Q("#lgDepV").textContent = e.target.value + "%"; };
+
+  Q("#lgDrop").onclick = function () { Q("#lgFile").click(); };
+  Q("#lgFile").onchange = function () {
+    var f = Q("#lgFile").files[0]; Q("#lgFile").value = "";
+    if (!f) return;
+    var im = new Image();
+    im.onload = function () {
+      var sc = Math.min(1, 1024 / Math.max(im.naturalWidth, im.naturalHeight));
+      var w = Math.max(2, Math.round(im.naturalWidth * sc)), h = Math.max(2, Math.round(im.naturalHeight * sc));
+      var c = document.createElement("canvas"); c.width = w; c.height = h;
+      c.getContext("2d").drawImage(im, 0, 0, w, h);
+      lg.src = c; lg.w = w; lg.h = h; lg.o = null; lg.glb = null;
+      Q("#lgName").value = safeName(f.name.replace(/\.[^.]+$/, "")).slice(0, 40) || "Logo3D";
+      Q("#lgOut").style.display = "none";
+      lgRemove();
+      URL.revokeObjectURL(im.src);
+    };
+    im.onerror = function () { setMsg(Q("#lgSt"), "Gambar tidak bisa dibaca.", false); };
+    im.src = URL.createObjectURL(f);
+  };
+
+  function lgRemove() {
+    if (!lg.src) return setMsg(Q("#lgInfo"), "Pilih gambar dulu.", false);
+    var w = lg.w, h = lg.h, n = w * h;
+    var d = lg.src.getContext("2d").getImageData(0, 0, w, h).data;
+    var mode = Q("#lgMode").value, tol = +Q("#lgTol").value * 2.2, er = +Q("#lgEr").value;
+    var bg = new Uint8Array(n), i, x, y;
+    for (i = 0; i < n; i++) if (d[i * 4 + 3] < 40) bg[i] = 1;
+
+    if (mode !== "none") {
+      var cnt = {}, best = null, bc = 0;
+      var samp = function (px, py) {
+        var k = (py * w + px) * 4; if (d[k + 3] < 40) return;
+        var key = (d[k] >> 5) + "," + (d[k + 1] >> 5) + "," + (d[k + 2] >> 5);
+        var o = cnt[key] || (cnt[key] = { n: 0, r: 0, g: 0, b: 0 });
+        o.n++; o.r += d[k]; o.g += d[k + 1]; o.b += d[k + 2];
+        if (o.n > bc) { bc = o.n; best = o; }
+      };
+      for (x = 0; x < w; x++) { samp(x, 0); samp(x, h - 1); }
+      for (y = 0; y < h; y++) { samp(0, y); samp(w - 1, y); }
+      if (best) {
+        var R = best.r / best.n, G = best.g / best.n, B = best.b / best.n;
+        var near = function (p) {
+          var dr = d[p * 4] - R, dg = d[p * 4 + 1] - G, db = d[p * 4 + 2] - B;
+          return Math.sqrt(dr * dr + dg * dg + db * db) <= tol;
+        };
+        if (mode === "global") {
+          for (i = 0; i < n; i++) if (near(i)) bg[i] = 1;
+        } else {
+          var st = new Int32Array(n), sp = 0;
+          var push = function (p) { if (!bg[p] && near(p)) { bg[p] = 1; st[sp++] = p; } };
+          for (x = 0; x < w; x++) { push(x); push((h - 1) * w + x); }
+          for (y = 0; y < h; y++) { push(y * w); push(y * w + w - 1); }
+          while (sp) {
+            var p = st[--sp], px = p % w, py = (p / w) | 0;
+            if (px > 0) push(p - 1); if (px < w - 1) push(p + 1);
+            if (py > 0) push(p - w); if (py < h - 1) push(p + w);
+          }
+        }
+      }
+    }
+    for (var it = 0; it < er; it++) {
+      var nb = bg.slice();
+      for (y = 0; y < h; y++) for (x = 0; x < w; x++) {
+        var q = y * w + x; if (bg[q]) continue;
+        if (x === 0 || y === 0 || x === w - 1 || y === h - 1 || bg[q - 1] || bg[q + 1] || bg[q - w] || bg[q + w]) nb[q] = 1;
+      }
+      bg = nb;
+    }
+    var x0 = w, y0 = h, x1 = -1, y1 = -1, cntSolid = 0;
+    for (y = 0; y < h; y++) for (x = 0; x < w; x++) if (!bg[y * w + x]) {
+      cntSolid++; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+    }
+    if (!cntSolid) return setMsg(Q("#lgInfo"), "Semua piksel terhapus. Turunkan toleransi atau ganti cara hapus latar.", false);
+    var cw = x1 - x0 + 1, ch = y1 - y0 + 1;
+    var oc = document.createElement("canvas"); oc.width = cw; oc.height = ch;
+    var octx = oc.getContext("2d"), od = octx.createImageData(cw, ch), mask = new Uint8Array(cw * ch);
+    for (y = 0; y < ch; y++) for (x = 0; x < cw; x++) {
+      var s = (y + y0) * w + (x + x0), t = y * cw + x;
+      if (!bg[s]) {
+        mask[t] = 1;
+        od.data[t * 4] = d[s * 4]; od.data[t * 4 + 1] = d[s * 4 + 1]; od.data[t * 4 + 2] = d[s * 4 + 2]; od.data[t * 4 + 3] = 255;
+      }
+    }
+    octx.putImageData(od, 0, 0);
+    lg.o = { cv: oc, mask: mask, w: cw, h: ch }; lg.glb = null;
+    var pv = Q("#lgCv"); pv.width = cw; pv.height = ch; pv.getContext("2d").drawImage(oc, 0, 0);
+    setMsg(Q("#lgInfo"), "Latar dihapus. Ukuran hasil " + cw + " × " + ch + " px. Kalau masih ada sisa latar, naikkan toleransi atau kikis tepi, lalu tekan Hapus Latar lagi.", true);
+  }
+  Q("#lgRm").onclick = lgRemove;
+
+  function lgMesh(o, size, depthPct, maxRes) {
+    var aspect = o.w / o.h, res = maxRes, gw, gh, g, tris;
+    for (;;) {
+      gw = aspect >= 1 ? res : Math.max(2, Math.round(res * aspect));
+      gh = aspect >= 1 ? Math.max(2, Math.round(res / aspect)) : res;
+      g = new Uint8Array(gw * gh);
+      for (var gy = 0; gy < gh; gy++) for (var gx = 0; gx < gw; gx++) {
+        var xa = Math.floor(gx * o.w / gw), xb = Math.max(xa + 1, Math.floor((gx + 1) * o.w / gw));
+        var ya = Math.floor(gy * o.h / gh), yb = Math.max(ya + 1, Math.floor((gy + 1) * o.h / gh));
+        var sum = 0;
+        for (var yy = ya; yy < yb; yy++) for (var xx = xa; xx < xb; xx++) sum += o.mask[yy * o.w + xx];
+        if (sum * 2 > (xb - xa) * (yb - ya)) g[gy * gw + gx] = 1;
+      }
+      var runs = 0, sides = 0;
+      for (gy = 0; gy < gh; gy++) for (gx = 0; gx < gw; gx++) {
+        if (!g[gy * gw + gx]) continue;
+        if (gx === 0 || !g[gy * gw + gx - 1]) { runs++; sides++; }
+        if (gx === gw - 1 || !g[gy * gw + gx + 1]) sides++;
+        if (gy === 0 || !g[(gy - 1) * gw + gx]) sides++;
+        if (gy === gh - 1 || !g[(gy + 1) * gw + gx]) sides++;
+      }
+      tris = 4 * runs + 2 * sides;
+      if (tris <= 19000 || res <= 16) break;
+      res = Math.floor(res * 0.88);
+    }
+    var P = [], N = [], T = [], I = [];
+    var quad = function (a, b, c, d2, n, uv) {
+      var base = P.length / 3;
+      [a, b, c, d2].forEach(function (p, k) { P.push(p[0], p[1], p[2]); N.push(n[0], n[1], n[2]); T.push(uv[k][0], uv[k][1]); });
+      I.push(base, base + 1, base + 2, base, base + 2, base + 3);
+    };
+    var s = size / Math.max(gw, gh), D = size * depthPct / 100, zf = D / 2, zb = -D / 2;
+    var X = function (x) { return (x - gw / 2) * s; }, Y = function (y) { return (gh / 2 - y) * s; };
+    var U = function (x, y) { return [x / gw, y / gh]; };
+    var solid = function (x, y) { return x >= 0 && y >= 0 && x < gw && y < gh && g[y * gw + x] === 1; };
+    for (var y = 0; y < gh; y++) {
+      var x = 0;
+      while (x < gw) {
+        if (!solid(x, y)) { x++; continue; }
+        var xs = x; while (x < gw && solid(x, y)) x++;
+        quad([X(xs), Y(y), zf], [X(xs), Y(y + 1), zf], [X(x), Y(y + 1), zf], [X(x), Y(y), zf], [0, 0, 1], [U(xs, y), U(xs, y + 1), U(x, y + 1), U(x, y)]);
+        quad([X(xs), Y(y), zb], [X(x), Y(y), zb], [X(x), Y(y + 1), zb], [X(xs), Y(y + 1), zb], [0, 0, -1], [U(xs, y), U(x, y), U(x, y + 1), U(xs, y + 1)]);
+      }
+    }
+    for (y = 0; y < gh; y++) for (x = 0; x < gw; x++) {
+      if (!solid(x, y)) continue;
+      var c = U(x + 0.5, y + 0.5), cc = [c, c, c, c];
+      var xl = X(x), xr = X(x + 1), yt = Y(y), yb2 = Y(y + 1);
+      if (!solid(x, y - 1)) quad([xl, yt, zf], [xr, yt, zf], [xr, yt, zb], [xl, yt, zb], [0, 1, 0], cc);
+      if (!solid(x, y + 1)) quad([xl, yb2, zf], [xl, yb2, zb], [xr, yb2, zb], [xr, yb2, zf], [0, -1, 0], cc);
+      if (!solid(x - 1, y)) quad([xl, yt, zf], [xl, yt, zb], [xl, yb2, zb], [xl, yb2, zf], [-1, 0, 0], cc);
+      if (!solid(x + 1, y)) quad([xr, yt, zf], [xr, yb2, zf], [xr, yb2, zb], [xr, yt, zb], [1, 0, 0], cc);
+    }
+    return { P: P, N: N, T: T, I: I, tris: I.length / 3, gw: gw, gh: gh };
+  }
+
+  async function lgGlb(o, m, name) {
+    var pos = new Float32Array(m.P), nor = new Float32Array(m.N), uv = new Float32Array(m.T), idx = new Uint32Array(m.I);
+    var pb = await new Promise(function (r) { o.cv.toBlob(r, "image/png"); });
+    if (!pb) throw new Error("Gagal membuat tekstur PNG.");
+    var png = new Uint8Array(await pb.arrayBuffer());
+    var mn = [1e9, 1e9, 1e9], mx = [-1e9, -1e9, -1e9], i, k;
+    for (i = 0; i < pos.length; i += 3) for (k = 0; k < 3; k++) { if (pos[i + k] < mn[k]) mn[k] = pos[i + k]; if (pos[i + k] > mx[k]) mx[k] = pos[i + k]; }
+    var views = [], bufs = [], off = 0;
+    var add = function (u8, target) {
+      var len = u8.byteLength;
+      var v = { buffer: 0, byteOffset: off, byteLength: len }; if (target) v.target = target; views.push(v);
+      bufs.push(u8); var pad = (4 - len % 4) % 4; if (pad) bufs.push(new Uint8Array(pad)); off += len + pad;
+    };
+    add(new Uint8Array(pos.buffer), 34962); add(new Uint8Array(nor.buffer), 34962);
+    add(new Uint8Array(uv.buffer), 34962); add(new Uint8Array(idx.buffer), 34963); add(png, 0);
+    var json = {
+      asset: { version: "2.0", generator: "ALEX STUDIO" }, scene: 0, scenes: [{ nodes: [0] }],
+      nodes: [{ mesh: 0, name: name }],
+      meshes: [{ name: name, primitives: [{ attributes: { POSITION: 0, NORMAL: 1, TEXCOORD_0: 2 }, indices: 3, material: 0 }] }],
+      materials: [{ pbrMetallicRoughness: { baseColorTexture: { index: 0 }, metallicFactor: 0, roughnessFactor: 1 }, alphaMode: "MASK", alphaCutoff: 0.5 }],
+      textures: [{ sampler: 0, source: 0 }],
+      samplers: [{ magFilter: 9729, minFilter: 9729, wrapS: 33071, wrapT: 33071 }],
+      images: [{ bufferView: 4, mimeType: "image/png" }],
+      buffers: [{ byteLength: off }], bufferViews: views,
+      accessors: [
+        { bufferView: 0, componentType: 5126, count: pos.length / 3, type: "VEC3", min: mn, max: mx },
+        { bufferView: 1, componentType: 5126, count: nor.length / 3, type: "VEC3" },
+        { bufferView: 2, componentType: 5126, count: uv.length / 2, type: "VEC2" },
+        { bufferView: 3, componentType: 5125, count: idx.length, type: "SCALAR" }
+      ]
+    };
+    var jb = new TextEncoder().encode(JSON.stringify(json)), jl = jb.length + ((4 - jb.length % 4) % 4);
+    var jpad = new Uint8Array(jl); jpad.fill(0x20); jpad.set(jb);
+    var hd = new DataView(new ArrayBuffer(20));
+    hd.setUint32(0, 0x46546C67, true); hd.setUint32(4, 2, true); hd.setUint32(8, 12 + 8 + jl + 8 + off, true);
+    hd.setUint32(12, jl, true); hd.setUint32(16, 0x4E4F534A, true);
+    var bh = new DataView(new ArrayBuffer(8)); bh.setUint32(0, off, true); bh.setUint32(4, 0x004E4942, true);
+    return new Blob([hd.buffer, jpad, bh.buffer].concat(bufs), { type: "model/gltf-binary" });
+  }
+
+  Q("#lgMk").onclick = async function () {
+    var m = Q("#lgSt");
+    if (!lg.o) return setMsg(m, "Pilih gambar dan hapus latar dulu.", false);
+    var size = +Q("#lgSize").value;
+    if (!(size > 0)) return setMsg(m, "Isi ukuran dengan benar.", false);
+    var b = Q("#lgMk"); b.disabled = true; setMsg(m, "Membuat 3D...", true);
+    await sleep(30);
+    try {
+      var nm = (Q("#lgName").value.trim() || "Logo3D").slice(0, 40);
+      var mesh = lgMesh(lg.o, size, +Q("#lgDep").value, +Q("#lgRes").value);
+      lg.glb = await lgGlb(lg.o, mesh, nm);
+      Q("#lgOut").style.display = "block";
+      setMsg(m, "✓ Selesai. Grid " + mesh.gw + "×" + mesh.gh + ", " + mesh.tris.toLocaleString("id-ID") + " segitiga (batas Roblox 20.000), file " + (lg.glb.size / 1048576).toFixed(2) + " MB.", true);
+      setMsg(Q("#lgM"), "", true);
+    } catch (e) { setMsg(m, "✗ " + e.message, false); }
+    b.disabled = false;
+  };
+
+  function dl(blob, name) {
+    var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 10000);
+  }
+  var nmOf = function () { return safeName((Q("#lgName").value.trim() || "Logo3D")); };
+  Q("#lgDlG").onclick = function () { if (lg.glb) dl(lg.glb, nmOf() + ".glb"); };
+  Q("#lgDlP").onclick = function () { if (lg.o) lg.o.cv.toBlob(function (b) { dl(b, nmOf() + ".png"); }, "image/png"); };
+
+  async function lgUp(path, blob, fname, type, label) {
+    var m = Q("#lgM"), need = needSettings();
+    if (need) return setMsg(m, "✗ " + need, false);
+    try {
+      var nm = (Q("#lgName").value.trim() || "Logo3D").slice(0, 50);
+      var fd = new FormData();
+      fd.append("file", blob, fname); fd.append("name", nm);
+      fd.append("description", label + " via ALEX STUDIO");
+      fd.append("creatorType", LS.get("ctype", "User")); fd.append("creatorId", LS.get("cid"));
+      setMsg(m, "Mengupload ke Roblox (" + (blob.size / 1048576).toFixed(2) + " MB)...", true);
+      var j = await api(path, { method: "POST", body: fd });
+      setMsg(m, "Menunggu proses Roblox...", true);
+      var id = await waitOp(j.operationId);
+      bump(true);
+      pushHist({ name: nm, type: type, id: String(id), size: blob.size, at: new Date().toLocaleString() });
+      setMsg(m, "✓ Berhasil! " + label + " ID: " + id, true);
+      copyBtn(m, String(id), "Salin ID");
+    } catch (e) {
+      bump(false); setMsg(m, "✗ " + e.message, false);
+      pushFail(Q("#lgName").value.trim() || "Logo3D", type, blob.size, e.message);
+    }
+    refreshMe();
+  }
+  Q("#lgUpM").onclick = async function () {
+    if (!lg.glb) return;
+    var b = Q("#lgUpM"); b.disabled = true;
+    await lgUp("/upload-meshpart", lg.glb, nmOf() + ".glb", "MeshPart", "MeshPart");
+    b.disabled = false;
+  };
+  Q("#lgUpD").onclick = async function () {
+    if (!lg.o) return;
+    var b = Q("#lgUpD"); b.disabled = true;
+    var pb = await new Promise(function (r) { lg.o.cv.toBlob(r, "image/png"); });
+    await lgUp("/upload-image", pb, nmOf() + ".png", "Gambar", "Decal");
+    b.disabled = false;
+  };
 })();
 </script>
 </body>
