@@ -1,4 +1,4 @@
-const VERSION = "6.1.0-pages";
+const VERSION = "6.2.0-pages";
 const API = "https://apis.roblox.com/assets/v1";
 const MAX_BYTES = 20 * 1024 * 1024;
 const GH_REPO = "alexxsidu-netizen/ALEX-STUDIO";
@@ -7,9 +7,8 @@ const GH_WF = "cloudpc.yml";
 const GUEST_LIMIT = 5;
 const USER_LIMIT = 10;
 const CHAT_LIMIT = 15;
-const CODE_LIMIT = 10; // pemakaian Kode AI per hari untuk akun biasa
+const CODE_LIMIT = 10;
 const CODE_INPUT_MAX = 5000;
-// model utama + cadangan; kalau satu dihentikan Cloudflare, otomatis coba berikutnya
 const CHAT_MODELS = [
   "@cf/meta/llama-3.1-8b-instruct-fast",
   "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
@@ -19,13 +18,12 @@ const CODE_MODELS = [
   "@cf/meta/llama-3.1-8b-instruct-fast",
 ];
 const DAY_MS = 86400000;
-const RESET_SHIFT = 10 * 3600000; // 17:00 WIB = 10:00 UTC
+const RESET_SHIFT = 10 * 3600000;
 const SESSION_TTL = 30 * 86400;
 
 const WA_NUMBER = "6283841104725";
 const WA_DISPLAY = "083841104725";
 
-// sampul/latar belakang global (disimpan di KV, batas KV 25 MB per nilai)
 const BG_DATA = "bg:data";
 const BG_META = "bg:meta";
 const BG_MAX = { image: 10 * 1024 * 1024, video: 20 * 1024 * 1024 };
@@ -60,7 +58,6 @@ const MIME = {
   fbx: "model/fbx", glb: "model/gltf-binary", gltf: "model/gltf+json",
 };
 
-// path: [assetType Roblox, ekstensi yang boleh, nama gate (null = bebas, tanpa kode akses)]
 const UPLOADS = {
   "/upload-image":    ["Decal", ["png", "jpg", "jpeg", "bmp", "tga"], null],
   "/upload-sticker":  ["Decal", ["png", "jpg", "jpeg"], null],
@@ -73,17 +70,20 @@ const UPLOADS = {
 const PROMO_KEY = "promo:list";
 const SHOP_KEY = "shop:items";
 const STATS_KEY = "stats";
-const ONLINE_WINDOW = 6 * 60000; // dianggap online jika ping terakhir < 6 menit
+const ONLINE_WINDOW = 6 * 60000;
 
-// antrian musik ke game
 const MQ_KEY = "musicqueue:pending";
 const MQ_LOG = "musicqueue:log";
 
-// kode acak buatan owner
 const CODE_IDX = "cdx_idx";
 const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const CODE_TYPES = ["vip", "vip7", "access", "role"];
 const GRADES = { admin: "Admin", reseller: "Reseller" };
+
+const TUT_KEY = "tut:list";
+const TUT_MAX = 20 * 1024 * 1024;
+const TUT_TYPES = { "video/mp4": 1, "video/webm": 1, "video/quicktime": 1 };
+const GC_KEY = "gchat:msgs";
 
 const extOf = (n) => String(n || "").split(".").pop().toLowerCase();
 
@@ -133,7 +133,7 @@ const rlAdd = async (env, k, ttl) => {
   await kvPut(env, k, o, ttl);
 };
 
-/* ---------- lisensi proyek (dipakai panel HTML terpisah) ---------- */
+/* ---------- lisensi proyek ---------- */
 async function licenseRoute(path, req, env) {
   if (!env.CLOUDPC) return json({ error: "KV CLOUDPC belum di-bind" }, 500);
 
@@ -157,7 +157,7 @@ async function licenseRoute(path, req, env) {
   return json({ error: "Endpoint tidak ditemukan" }, 404);
 }
 
-/* ---------- statistik pengguna web ---------- */
+/* ---------- statistik ---------- */
 const wibDay = (t = Date.now()) => Math.floor((t + 7 * 3600000) / DAY_MS);
 
 async function statsGet(env) {
@@ -216,7 +216,6 @@ async function statsRoute(path, req, env) {
     return json({ ok: true });
   }
 
-  // hitung ulang jumlah akun terdaftar (owner)
   if (path === "/stats/recount" && req.method === "POST") {
     if (!(await isOwner(req, env))) return json({ error: "Hanya owner." }, 403);
     let n = 0, cursor;
@@ -248,7 +247,6 @@ function roleOf(u) {
 const canPremium = (u) =>
   !!u && !!(u.owner || u.vip || (u.vipUntil && u.vipUntil > Date.now()) || u.unlocked);
 
-// staf = owner atau role admin (boleh kelola Jualan dan Playlist Game)
 const isStaffUser = (u) => !!u && !!(u.owner || u.role === "admin");
 
 function accessMsg(q, what) {
@@ -494,7 +492,6 @@ async function authRoute(path, req, env) {
       u.unlocked = true;
       label = "Akses upload aktif. Upload animasi, model, video, mesh, dan plugin sudah terbuka.";
     } else {
-      // kode acak buatan owner
       const up = code.toUpperCase();
       const m = /^ALEX-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(up) ? await kvGet(env, "cdx:" + up) : null;
       if (!m || (m.uses || 0) >= (m.max || 1)) {
@@ -515,7 +512,7 @@ async function authRoute(path, req, env) {
   return json({ error: "Endpoint tidak ditemukan" }, 404);
 }
 
-/* ---------- Chat AI (Cloudflare Workers AI) ---------- */
+/* ---------- Chat AI ---------- */
 async function chatRoute(req, env) {
   if (!env.CLOUDPC) return json({ error: "KV CLOUDPC belum di-bind" }, 500);
   if (req.method !== "POST") return json({ error: "Method tidak didukung" }, 405);
@@ -567,7 +564,7 @@ async function chatRoute(req, env) {
   return json({ ok: true, reply, limit, left: limit === null ? null : Math.max(0, limit - used - 1) });
 }
 
-/* ---------- Kode AI: scan error, perbaiki bug, deobfuscate, jelaskan ---------- */
+/* ---------- Kode AI ---------- */
 function sysKode(mode, lang) {
   const dasar =
     "Kamu ahli kode untuk " + lang + ". Jawab dalam bahasa Indonesia. " +
@@ -641,7 +638,7 @@ async function codeAiRoute(req, env) {
   return json({ ok: true, reply, limit, left: limit === null ? null : Math.max(0, limit - used - 1) });
 }
 
-/* ---------- jualan (toko) ---------- */
+/* ---------- jualan ---------- */
 async function shopRoute(path, req, env, url) {
   if (!env.CLOUDPC) return json({ error: "KV CLOUDPC belum di-bind" }, 500);
 
@@ -690,11 +687,9 @@ async function shopRoute(path, req, env, url) {
 async function promoRoute(path, req, env) {
   if (!env.CLOUDPC) return json({ error: "KV CLOUDPC belum di-bind" }, 500);
 
-  // publik: semua pengunjung bisa melihat
   if (path === "/promo" && req.method === "GET")
     return json({ ok: true, items: (await kvGet(env, PROMO_KEY)) || [] });
 
-  // hanya owner yang bisa menambah, mengubah, pin, dan menghapus
   if (path === "/promo/save" && req.method === "POST") {
     if (!(await isOwner(req, env)))
       return json({ error: "Hanya owner yang bisa mengubah promosi." }, 403);
@@ -721,21 +716,19 @@ async function promoRoute(path, req, env) {
   return json({ error: "Endpoint tidak ditemukan" }, 404);
 }
 
-/* ---------- antrian musik ke game (Playlist Game) ---------- */
+/* ---------- antrian musik ke game ---------- */
 async function musicQueueRoute(path, req, env) {
   if (!env.CLOUDPC) return json({ error: "KV CLOUDPC belum di-bind" }, 500);
 
   const fromGame = () =>
     !!env.MUSIC_SECRET && eq(req.headers.get("x-music-secret"), env.MUSIC_SECRET);
 
-  // game mengambil antrian
   if (path === "/musicqueue" && req.method === "GET") {
     if (!fromGame()) return json({ error: "Unauthorized" }, 401);
     const list = (await kvGet(env, MQ_KEY)) || [];
     return json({ ok: true, items: list.slice(0, 20) });
   }
 
-  // game melaporkan hasil, item yang selesai dihapus dari antrian
   if (path === "/musicqueue/done" && req.method === "POST") {
     if (!fromGame()) return json({ error: "Unauthorized" }, 401);
     const b = await req.json().catch(() => ({}));
@@ -760,7 +753,6 @@ async function musicQueueRoute(path, req, env) {
     return json({ ok: true });
   }
 
-  // sisanya khusus owner / admin
   const auth = await getAuth(req, env);
   if (!auth || !isStaffUser(auth.user))
     return json({ error: "Hanya owner atau admin yang bisa mengirim lagu ke playlist game." }, 403);
@@ -809,22 +801,13 @@ async function musicQueueRoute(path, req, env) {
   return json({ error: "Endpoint tidak ditemukan" }, 404);
 }
 
-/* ---------- sampul / latar belakang global ---------- */
-async function bgInfo(env) {
-  const m = await kvGet(env, BG_META);
-  return m ? { ok: true, has: true, ...m } : { ok: true, has: false };
-}
-
-// publik: semua pengunjung bisa melihat. Mendukung Range supaya video lancar di HP.
-async function bgServe(req, env) {
-  const { value, metadata } = await env.CLOUDPC.getWithMetadata(BG_DATA, "arrayBuffer");
-  if (!value) return json({ error: "Belum ada latar" }, 404);
-  const type = (metadata && metadata.type) || "application/octet-stream";
+/* ---------- potong range (video / latar) ---------- */
+function serveRange(req, value, type, cache) {
   const total = value.byteLength;
   const h = {
     "content-type": type,
     "accept-ranges": "bytes",
-    "cache-control": "public, max-age=86400",
+    "cache-control": cache || "public, max-age=3600",
     "x-content-type-options": "nosniff",
     ...CORS,
   };
@@ -846,6 +829,135 @@ async function bgServe(req, env) {
     });
   }
   return new Response(value, { headers: { ...h, "content-length": String(total) } });
+}
+
+/* ---------- video tutorial ---------- */
+async function tutorialRoute(path, req, env, url) {
+  if (!env.CLOUDPC) return json({ error: "KV CLOUDPC belum di-bind" }, 500);
+
+  if (path === "/tutorial" && req.method === "GET")
+    return json({ ok: true, items: (await kvGet(env, TUT_KEY)) || [] });
+
+  if (path === "/tutorial/video" && req.method === "GET") {
+    const id = clean(url.searchParams.get("id"));
+    if (!/^[a-f0-9]{8}$/.test(id)) return json({ error: "id tidak valid" }, 400);
+    const { value, metadata } = await env.CLOUDPC.getWithMetadata("tut:v:" + id, "arrayBuffer");
+    if (!value) return json({ error: "Video tidak ditemukan" }, 404);
+    return serveRange(req, value, (metadata && metadata.type) || "video/mp4");
+  }
+
+  if (req.method !== "POST") return json({ error: "Method tidak didukung" }, 405);
+  if (!(await isOwner(req, env)))
+    return json({ error: "Hanya owner yang bisa mengelola video tutorial." }, 403);
+  const list = (await kvGet(env, TUT_KEY)) || [];
+
+  if (path === "/tutorial/add") {
+    const fd = await req.formData().catch(() => null);
+    if (!fd) return json({ error: "Form tidak valid" }, 400);
+    const title = clean(fd.get("title")).slice(0, 80);
+    const desc = clean(fd.get("desc")).slice(0, 300);
+    if (!title) return json({ error: "Judul wajib diisi" }, 400);
+    if (list.length >= 15) return json({ error: "Maksimal 15 video. Hapus yang lama dulu." }, 400);
+    const item = { id: randHex(4), title, desc, at: Date.now() };
+    const yt = clean(fd.get("yt"));
+    const file = fd.get("file");
+    if (file && typeof file !== "string" && file.size) {
+      let type = String(file.type || "").split(";")[0].toLowerCase();
+      if (!TUT_TYPES[type]) type = BG_EXT[extOf(file.name)] || "";
+      if (!TUT_TYPES[type]) return json({ error: "Format video harus MP4, WEBM, atau MOV." }, 400);
+      const bytes = await file.arrayBuffer();
+      if (bytes.byteLength > TUT_MAX)
+        return json({ error: "Video terlalu besar. Maksimal 20 MB (pakai link YouTube untuk video panjang)." }, 413);
+      await env.CLOUDPC.put("tut:v:" + item.id, bytes, { metadata: { type } });
+      item.kind = "file";
+      item.size = bytes.byteLength;
+    } else if (yt) {
+      const m = yt.match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([\w-]{11})/);
+      if (!m) return json({ error: "Link YouTube tidak dikenali." }, 400);
+      item.kind = "yt";
+      item.yt = m[1];
+    } else {
+      return json({ error: "Pilih file video atau isi link YouTube." }, 400);
+    }
+    list.push(item);
+    await kvPut(env, TUT_KEY, list);
+    return json({ ok: true, items: list });
+  }
+
+  if (path === "/tutorial/delete") {
+    const b = await req.json().catch(() => ({}));
+    const id = clean(b.id);
+    const it = list.find((x) => x.id === id);
+    if (it && it.kind === "file") await env.CLOUDPC.delete("tut:v:" + id);
+    const rest = list.filter((x) => x.id !== id);
+    await kvPut(env, TUT_KEY, rest);
+    return json({ ok: true, items: rest });
+  }
+  return json({ error: "Endpoint tidak ditemukan" }, 404);
+}
+
+/* ---------- chat global ---------- */
+async function gchatRoute(path, req, env) {
+  if (!env.CLOUDPC) return json({ error: "KV CLOUDPC belum di-bind" }, 500);
+
+  if (path === "/gchat" && req.method === "GET") {
+    const list = (await kvGet(env, GC_KEY)) || [];
+    return json({ ok: true, items: list.slice(-60) });
+  }
+
+  if (req.method !== "POST") return json({ error: "Method tidak didukung" }, 405);
+  const auth = await getAuth(req, env);
+  if (!auth) return json({ error: "Login dulu untuk ikut chat." }, 401);
+  const b = await req.json().catch(() => ({}));
+
+  if (path === "/gchat/send") {
+    const text = clean(b.text).replace(/\s+/g, " ").slice(0, 300);
+    if (!text) return json({ error: "Pesan kosong" }, 400);
+    const rk = "gcl:" + auth.lower;
+    const last = await kvGet(env, rk);
+    if (last && Date.now() - last.t < 2500)
+      return json({ error: "Pelan-pelan, tunggu sebentar sebelum kirim lagi." }, 429);
+    await kvPut(env, rk, { t: Date.now() }, 60);
+    const list = (await kvGet(env, GC_KEY)) || [];
+    list.push({
+      id: randHex(4),
+      n: auth.user.name,
+      r: roleOf(auth.user),
+      g: auth.user.role || "",
+      t: text,
+      at: Date.now(),
+    });
+    await kvPut(env, GC_KEY, list.slice(-100));
+    return json({ ok: true });
+  }
+
+  if (path === "/gchat/delete") {
+    if (!isStaffUser(auth.user)) return json({ error: "Hanya owner atau admin." }, 403);
+    const id = clean(b.id);
+    const list = (await kvGet(env, GC_KEY)) || [];
+    await kvPut(env, GC_KEY, list.filter((x) => x.id !== id));
+    return json({ ok: true });
+  }
+
+  if (path === "/gchat/clear") {
+    if (roleOf(auth.user) !== "owner") return json({ error: "Hanya owner." }, 403);
+    await kvPut(env, GC_KEY, []);
+    return json({ ok: true });
+  }
+  return json({ error: "Endpoint tidak ditemukan" }, 404);
+}
+
+/* ---------- sampul / latar belakang global ---------- */
+async function bgInfo(env) {
+  const m = await kvGet(env, BG_META);
+  return m ? { ok: true, has: true, ...m } : { ok: true, has: false };
+}
+
+async function bgServe(req, env) {
+  const { value, metadata } = await env.CLOUDPC.getWithMetadata(BG_DATA, "arrayBuffer");
+  if (!value) return json({ error: "Belum ada latar" }, 404);
+  const type = (metadata && metadata.type) || "application/octet-stream";
+  return serveRange(req, value, type, "public, max-age=86400");
 }
 
 const ownerOnlyBg = () => json({ error: "Hanya owner yang bisa mengubah latar belakang." }, 403);
@@ -948,7 +1060,6 @@ async function createAsset(key, fd, assetType, allowedExt) {
   return json({ ok: true, operationId: opId });
 }
 
-// gate = nama fitur yang butuh kode akses (mis. "animasi"), atau null kalau bebas
 async function gatedUpload(req, env, key, assetType, exts, gate) {
   if (!key) return json({ error: "API key kosong" }, 400);
   if (!env.CLOUDPC) return json({ error: "KV CLOUDPC belum di-bind" }, 500);
@@ -1137,7 +1248,10 @@ async function handle(req, env) {
 
   if (url.pathname.startsWith("/musicqueue")) return musicQueueRoute(url.pathname, req, env);
 
-  /* ---------- sampul / latar belakang global ---------- */
+  if (url.pathname.startsWith("/tutorial")) return tutorialRoute(url.pathname, req, env, url);
+
+  if (url.pathname.startsWith("/gchat")) return gchatRoute(url.pathname, req, env);
+
   if (url.pathname.startsWith("/bg")) {
     if (!env.CLOUDPC) return json({ error: "KV CLOUDPC belum di-bind" }, 500);
     if (url.pathname === "/bg" && req.method === "GET") return bgServe(req, env);
@@ -1176,7 +1290,6 @@ async function handle(req, env) {
   if (url.pathname === "/upload-model" && req.method === "POST")
     return gatedUpload(req, env, key, "Model", ["rbxm"], "model");
 
-  // gambar, stiker, video, mesh, meshpart, plugin
   if (UPLOADS[url.pathname] && req.method === "POST") {
     const [type, exts, gate] = UPLOADS[url.pathname];
     return gatedUpload(req, env, key, type, exts, gate);
@@ -1195,8 +1308,6 @@ async function handle(req, env) {
   }
 
   /* ---------- Cloud PC (AnyDesk), khusus owner ---------- */
-
-  // dipanggil oleh workflow setelah ID AnyDesk didapat
   if (url.pathname === "/cloudpc/report" && req.method === "POST") {
     if (!env.CLOUDPC) return json({ error: "KV CLOUDPC belum di-bind" }, 500);
     const tok = req.headers.get("x-report-token") || "";
@@ -1264,7 +1375,6 @@ async function handle(req, env) {
     return json({ ok: true, cancelled: n });
   }
 
-  // selain API di atas: tampilkan file web (index.html)
   return env.ASSETS.fetch(req);
 }
 
